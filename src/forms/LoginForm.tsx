@@ -17,7 +17,7 @@ const LoginForm: React.FC = () => {
     const dummyPassword = "password123"
 
     if (email === dummyEmail && password === dummyPassword) {
-      window.location.href = "http://localhost:5173/"
+      window.location.href = "http://localhost:5173/dashboard"
     } else {
       alert("Invalid email or password")
     }
