@@ -5,7 +5,7 @@ import {
   Briefcase,
   Library,
   Menu,
-  X
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -44,48 +44,43 @@ export function Navbar() {
       {/* Desktop Navigation */}
       <nav className="fixed top-0 left-0 right-0 h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center px-6 z-50 w-full">
         <div className="flex items-center justify-between w-full">
-  {/* Logo */}
-  <div className="flex items-center gap-2">
-    <img 
-      src="/OODC logo.png" 
-      alt="Company Logo"
-      className="h-10 w-auto" 
-    />
-  </div>
+          {/* Logo */}
+          <div className="flex items-center gap-2">
+            <img src="/OODC logo.png" alt="Company Logo" className="h-10 w-auto" />
+          </div>
 
-  {/* Navigation Links - Centered */}
-  <div className="flex items-center gap-1 mx-auto">
-    {routes.map((route) => (
-      <Link key={route.path} to={route.path}>
-        <Button
-          variant="ghost"
-          className={cn(
-            "flex items-center gap-2 px-3 text-sm transition-colors",
-            location.pathname === route.path
-              ? "bg-blue-100 text-blue-700 font-semibold"
-              : "text-muted-foreground hover:bg-accent/50 hover:text-primary"
-          )}
-        >
-          <route.icon className="h-4 w-4" />
-          <span>{route.label}</span>
-        </Button>
-      </Link>
-    ))}
-  </div>
+          {/* Navigation Links */}
+          <div className="flex items-center gap-1 mx-auto">
+            {routes.map((route) => (
+              <Link key={route.path} to={route.path}>
+                <Button
+                  variant="ghost"
+                  className={cn(
+                    "flex items-center gap-2 px-3 text-sm transition-colors",
+                    location.pathname === route.path
+                      ? "bg-blue-100 text-blue-700 font-semibold"
+                      : "text-muted-foreground hover:bg-accent/50 hover:text-primary"
+                  )}
+                >
+                  <route.icon className="h-4 w-4" />
+                  <span>{route.label}</span>
+                </Button>
+              </Link>
+            ))}
+          </div>
 
-  {/* User Profile */}
-  <div className="flex items-center gap-2">
-    <div className="rounded-full bg-primary h-8 w-8 flex items-center justify-center text-white">
-      U
-    </div>
-    <span>Username</span>
-  </div>
-</div>
-
+          {/* User Profile */}
+          <div className="flex items-center gap-2">
+            <div className="rounded-full bg-primary h-8 w-8 flex items-center justify-center text-white">
+              U
+            </div>
+            <span>Username</span>
+          </div>
+        </div>
       </nav>
 
       {/* Mobile Navigation */}
-      <nav className="md:hidden fixed top-0 left-0 right-0 h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center px-6 z-50"> {/* Changed px-4 to px-6 */}
+      <nav className="md:hidden fixed top-0 left-0 right-0 h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center px-6 z-50">
         <div className="flex items-center justify-between w-full">
           {/* Mobile Menu Button */}
           <Sheet>
@@ -99,15 +94,15 @@ export function Navbar() {
               <div className="flex flex-col h-full">
                 {/* Logo in mobile menu */}
                 <div className="p-4 border-b">
-                  <Link 
-                    to="/dashboard" 
+                  <Link
+                    to="/dashboard"
                     className="flex items-center gap-2"
                     onClick={() => setMobileOpen(false)}
                   >
-                    <img 
-                      src="/OODC logo.png" 
+                    <img
+                      src="/OODC logo.png"
                       alt="Company Logo"
-                      className="h-7 w-auto" 
+                      className="h-7 w-auto"
                     />
                   </Link>
                 </div>
@@ -121,17 +116,17 @@ export function Navbar() {
                       onClick={() => setMobileOpen(false)}
                     >
                       <Button
-  variant="ghost"
-  className={cn(
-    "w-full justify-start gap-3 px-4 py-6 text-base transition-colors",
-    location.pathname === route.path
-      ? "bg-blue-100 text-blue-700 font-semibold"
-      : "text-muted-foreground hover:bg-accent/50 hover:text-primary"
-  )}
->
-  <route.icon className="h-5 w-5" />
-  <span>{route.label}</span>
-</Button>
+                        variant="ghost"
+                        className={cn(
+                          "w-full justify-start gap-3 px-4 py-6 text-base transition-colors",
+                          location.pathname === route.path
+                            ? "bg-blue-100 text-blue-700 font-semibold"
+                            : "text-muted-foreground hover:bg-accent/50 hover:text-primary"
+                        )}
+                      >
+                        <route.icon className="h-5 w-5" />
+                        <span>{route.label}</span>
+                      </Button>
                     </Link>
                   ))}
                 </div>
@@ -152,19 +147,15 @@ export function Navbar() {
             </SheetContent>
           </Sheet>
 
-          {/* Mobile Logo (centered) */}
-          <Link 
-            to="/dashboard" 
+          {/* Mobile Logo */}
+          <Link
+            to="/dashboard"
             className="absolute left-1/2 transform -translate-x-1/2"
           >
-            <img 
-              src="/OODC logo.png" 
-              alt="Company Logo"
-              className="h-7 w-auto" 
-            />
+            <img src="/OODC logo.png" alt="Company Logo" className="h-7 w-auto" />
           </Link>
 
-          {/* Empty div to balance the layout */}
+          {/* Empty Div */}
           <div className="w-9"></div>
         </div>
       </nav>
