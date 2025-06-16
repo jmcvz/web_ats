@@ -16,7 +16,7 @@ const Login: React.FC = () => {
         </div>
 
         {/* Login Form Area */}
-        <div className="w-full md:w-[55%] bg-gray-50 flex items-center justify-center px-6 sm:px-8 py-10">
+        <div className="w-full md:w-[55%] bg-gray-100 flex items-center justify-center px-6 sm:px-8 py-10">
           <div className="w-full max-w-2xl relative z-10">
             <LoginForm />
           </div>
