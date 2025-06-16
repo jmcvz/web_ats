@@ -91,9 +91,15 @@ const LoginForm: React.FC = () => {
         </label>
       </div>
 
-      <Button type="submit" className="w-full text-lg py-6 bg-blue-800">
-        LOG IN
-      </Button>
+      {/* Update the Button with the correct variant */}
+     <Button
+  type="submit"
+  variant="default" // This ensures bg-blue-800 will be applied
+  size="lg"
+  className="w-full text-lg py-6"
+>
+  LOG IN
+</Button>
     </form>
   )
 }

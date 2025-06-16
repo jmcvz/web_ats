@@ -1,19 +1,14 @@
 import * as React from "react"
-
 import { cn } from "@/lib/utils"
 
 function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
-    <div
-      data-slot="table-container"
-      className="relative w-full overflow-x-auto"
-    >
-      <table
-        data-slot="table"
-        className={cn("w-full caption-bottom text-sm", className)}
-        {...props}
-      />
-    </div>
+    <table
+      data-slot="table"
+      className={cn("w-full caption-bottom text-sm table-fixed", className)} // table-fixed for fixed layout
+      style={{ tableLayout: "fixed" }} // Ensuring fixed layout
+      {...props}
+    />
   )
 }
 
@@ -68,7 +63,7 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
     <th
       data-slot="table-head"
       className={cn(
-        "text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+        "text-foreground h-10 px-1 text-left align-middle font-medium whitespace-nowrap text-xs sm:text-sm",
         className
       )}
       {...props}
@@ -81,13 +76,14 @@ function TableCell({ className, ...props }: React.ComponentProps<"td">) {
     <td
       data-slot="table-cell"
       className={cn(
-        "p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+        "p-2 align-middle whitespace-normal overflow-hidden text-ellipsis",
         className
       )}
       {...props}
     />
   )
 }
+
 
 function TableCaption({
   className,
