@@ -5,8 +5,13 @@ import { Separator } from "@/components/ui/separator"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Calendar, Users, UserCheck, MessageSquare, Clock, MapPin, Video, Pin, FolderSearch, FolderSearch2, CircleUser, ClockAlert} from "lucide-react"
 import { Navbar } from "@/reusables/Navbar"
+import { useEffect } from "react"
 
 export default function Dashboard() {
+    useEffect(() => {
+    document.title = "Dashboard";
+  }, []);
+
   // Sample data
   const weekDays = [
     { day: "Mon", date: "15", events: 2 },
@@ -125,6 +130,7 @@ export default function Dashboard() {
         <div className="mx-auto max-w-7xl space-y-6">
           <h1 className="text-3xl font-bold text-gray-800">Dashboard</h1>
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            
           {/* Left Column */}
           <div className="space-y-6 lg:col-span-2">
             {/* Upcoming Events */}

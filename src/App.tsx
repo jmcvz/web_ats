@@ -1,9 +1,12 @@
 import './App.css'
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { Navbar } from "@/reusables/Navbar"
-import Login from "@/pages/Login";
-import Page from "@/app/DashboardCall";
-/* import { Button } from "@/components/ui/button" */
+import Login from "@/pages/Login"
+import Page from "@/app/DashboardCall"
+import Applicants from '@/pages/Applicants'
+import Positions from '@/pages/Positions'
+import Library from '@/pages/Library'
+import Requests from '@/pages/Requests'
 
 export default function App() {
   return (
@@ -12,6 +15,10 @@ export default function App() {
         <Route path="/" element={<Navbar />} />
       <Route path="/login" element={<Login />} />
       <Route path="/dashboard/*" element={<Page />} />
+      <Route path="/applicants/*" element={<Applicants />} />
+      <Route path="/positions/*" element={<Positions />} />
+      <Route path="/library/*" element={<Library />} />
+      <Route path="/requests/*" element={<Requests />} />
       </Routes>
     </BrowserRouter>
   );
