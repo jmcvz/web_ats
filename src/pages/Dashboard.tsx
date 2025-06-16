@@ -14,39 +14,35 @@ export default function Dashboard() {
 
   // Sample data
   const weekDays = [
-    {
-      day: "Mon", date: "15", events: [
-        { event: "Interview", candidate: "Sarah Johnson", avatar: "https://ui-avatars.com/api/?name=Sarah+Johnson&size=40", type: "phone" },
-        { event: "Assessment", candidate: "Mike Chen", avatar: "https://ui-avatars.com/api/?name=Mike+Chen&size=40", type: "notebookpen" }
-      ]
-    },
-    {
-      day: "Tue", date: "16", events: [{ event: "Assessment", candidate: "Emily Davis", avatar: "https://ui-avatars.com/api/?name=Emily+Davis&size=40", type: "phone-red" }
-
-      ]
-    },
-    {
-      day: "Wed", date: "17", events: [
-        
-      ]
-    },
-    {
-      day: "Thu", date: "18", events: [
-        { event: "Final Interview", candidate: "Alex Rodriguez", avatar: "https://ui-avatars.com/api/?name=Alex+Rodriguez&size=40", type: "phone-red" },
-      ]
-    },
-    {
-      day: "Fri", date: "19", events: []
-    },
-    {
-      day: "Sat", date: "20", events: [
-        { event: "Task Test", candidate: "Lisa Wang", avatar: "https://ui-avatars.com/api/?name=Lisa+Wang&size=40", type: "clipboard" }
-      ]
-    },
-    {
-      day: "Sun", date: "21", events: []
-    },
-  ];
+  {
+    day: "Mon", date: "15", events: [
+      { event: "Interview", candidate: "Sarah Johnson", avatar: "https://i.pravatar.cc/40?img=1", type: "phone" },
+      { event: "Assessment", candidate: "Mike Chen", avatar: "https://i.pravatar.cc/40?img=2", type: "notebookpen" }
+    ]
+  },
+  {
+    day: "Tue", date: "16", events: [{ event: "Assessment", candidate: "Emily Davis", avatar: "https://i.pravatar.cc/40?img=3", type: "phone-red" }]
+  },
+  {
+    day: "Wed", date: "17", events: []
+  },
+  {
+    day: "Thu", date: "18", events: [
+      { event: "Final Interview", candidate: "Alex Rodriguez", avatar: "https://i.pravatar.cc/40?img=4", type: "phone-red" },
+    ]
+  },
+  {
+    day: "Fri", date: "19", events: []
+  },
+  {
+    day: "Sat", date: "20", events: [
+      { event: "Task Test", candidate: "Lisa Wang", avatar: "https://i.pravatar.cc/40?img=5", type: "clipboard" }
+    ]
+  },
+  {
+    day: "Sun", date: "21", events: []
+  },
+];
 
   // Helper function to generate pastel colors with opacity
 const getPastelColor = (color: string, opacity: number = 0.3) => {
@@ -104,32 +100,37 @@ const getBorderColor = (color: string) => {
   ]
 
   const ongoingProcesses = [
-    {
-      name: "Sarah Johnson",
-      job: "Frontend Developer",
-      status: "Interview",
-      avatar: "/placeholder.svg?height=40&width=40",
-    },
-    {
-      name: "Mike Chen",
-      job: "Backend Developer",
-      status: "Assessment",
-      avatar: "/placeholder.svg?height=40&width=40",
-    },
-    { name: "Emily Davis", job: "UI/UX Designer", status: "Offer Sent", avatar: "/placeholder.svg?height=40&width=40" },
-    {
-      name: "Alex Rodriguez",
-      job: "Product Manager",
-      status: "Interview",
-      avatar: "/placeholder.svg?height=40&width=40",
-    },
-    {
-      name: "Lisa Wang",
-      job: "Frontend Developer",
-      status: "Assessment",
-      avatar: "/placeholder.svg?height=40&width=40",
-    },
-  ]
+  {
+    name: "Sarah Johnson",
+    job: "Frontend Developer",
+    status: "Interview",
+    avatar: "https://i.pravatar.cc/40?img=6",
+  },
+  {
+    name: "Mike Chen",
+    job: "Backend Developer",
+    status: "Assessment",
+    avatar: "https://i.pravatar.cc/40?img=7",
+  },
+  {
+    name: "Emily Davis", 
+    job: "UI/UX Designer", 
+    status: "Offer Sent", 
+    avatar: "https://i.pravatar.cc/40?img=8"
+  },
+  {
+    name: "Alex Rodriguez",
+    job: "Product Manager",
+    status: "Interview",
+    avatar: "https://i.pravatar.cc/40?img=9",
+  },
+  {
+    name: "Lisa Wang",
+    job: "Frontend Developer",
+    status: "Assessment",
+    avatar: "https://i.pravatar.cc/40?img=10",
+  },
+];
 
   const metrics = [
     { title: "Job Opening", value: "12", icon: Users, color: "bg-blue-500" },
@@ -231,14 +232,11 @@ const getBorderColor = (color: string) => {
                                 day.events.map((event, idx) => (
                                   <div key={idx} className="flex items-center space-x-1">
                                     <Avatar className="w-6 h-6">
-                                      <AvatarImage
-                                        src={event.avatar}
-                                        alt={`Avatar for ${event.candidate}`}
-                                      />
-                                      <AvatarFallback>
-                                        {event.candidate.split(" ")[0][0]}
-                                      </AvatarFallback>
-                                    </Avatar>
+  <AvatarImage src={event.avatar} alt={`Avatar for ${event.candidate}`} />
+  <AvatarFallback>
+    {event.candidate.split(" ")[0][0]} {/* This shows the first letter of the first name */}
+  </AvatarFallback>
+</Avatar>
                                     <div className="w-4 h-4">{getEventIcon(event.type)}</div>
                                   </div>
                                 ))
@@ -346,22 +344,22 @@ const getBorderColor = (color: string) => {
       <h3 className="font-semibold text-gray-900">Ongoing Process</h3>
       <div className="space-y-3">
         {ongoingProcesses.map((process, index) => (
-          <div key={index} className="flex items-center justify-between rounded-lg border p-3">
-            <div className="flex items-center gap-3">
-              <Avatar className="h-10 w-10">
-                <AvatarImage src={process.avatar || "/placeholder.svg"} alt={process.name} />
-                <AvatarFallback>
-                  {process.name.split(" ").map((n) => n[0]).join("")}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <div className="font-medium">{process.name}</div>
-                <div className="text-sm text-gray-500">{process.job}</div>
-              </div>
-            </div>
-            <Badge className={getStatusColor(process.status)}>{process.status}</Badge>
-          </div>
-        ))}
+  <div key={index} className="flex items-center justify-between rounded-lg border p-3">
+    <div className="flex items-center gap-3">
+      <Avatar className="h-10 w-10">
+        <AvatarImage src={process.avatar} alt={process.name} />
+        <AvatarFallback>
+          {process.name.split(" ").map((n) => n[0]).join("")}
+        </AvatarFallback>
+      </Avatar>
+      <div>
+        <div className="font-medium">{process.name}</div>
+        <div className="text-sm text-gray-500">{process.job}</div>
+      </div>
+    </div>
+    <Badge className={getStatusColor(process.status)}>{process.status}</Badge>
+  </div>
+))}
       </div>
     </div>
   </div>

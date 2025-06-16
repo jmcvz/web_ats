@@ -203,3 +203,9 @@ button:focus-visible {
 .flex-nowrap {
   flex-wrap: nowrap;
 }
+/* Add margin only on zoomed-in or smaller screens */
+@media (max-width: 425px) and (min-device-width: 320px) {
+  .tabs-margin {
+    margin-bottom: 32px !important;
+  }
+}
