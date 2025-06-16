@@ -1,7 +1,11 @@
 import React from "react"
 import LoginForm from "@/forms/LoginForm"
+import { useEffect } from "react"
 
 const Login: React.FC = () => {
+    useEffect(() => {
+    document.title = "Log In";
+  }, []);
   return (
     <div className="min-h-screen flex flex-col overflow-x-hidden">
       {/* Main */}

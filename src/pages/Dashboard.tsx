@@ -5,8 +5,13 @@ import { Separator } from "@/components/ui/separator"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Phone, NotebookPen, ClipboardList, Calendar, Users, UserCheck, MessageSquare, Clock, MapPin, Video, Pin, FolderSearch, FolderSearch2, CircleUser, ClockAlert } from "lucide-react"
 import { Navbar } from "@/reusables/Navbar"
+import { useEffect } from "react"
 
 export default function Dashboard() {
+    useEffect(() => {
+    document.title = "Dashboard";
+  }, []);
+
   // Sample data
   const weekDays = [
     {
