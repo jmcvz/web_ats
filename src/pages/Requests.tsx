@@ -78,24 +78,26 @@ export default function Requests() {
           <h4 className="text-2xl font-bold mb-4">Requested Positions</h4>
 
           {/* Filters */}
-          <div className="flex flex-wrap items-center justify-between mb-4 gap-2">
+          <div className="flex flex-wrap justify-between gap-2">
             <Input
               placeholder="Search"
               className="w-full max-w-xs"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
-            <div className="flex gap-2">
-              <select className="border p-2 rounded text-sm">
+            <div className="flex gap-2 w-full sm:w-auto flex-col sm:flex-row">
+              <select className="border p-2 rounded text-sm w-full sm:w-auto">
                 <option>All Offices</option>
               </select>
-              <select className="border p-2 rounded text-sm">
+              <select className="border p-2 rounded text-sm w-full sm:w-auto">
                 <option>All Departments</option>
               </select>
-              <select className="border p-2 rounded text-sm">
+              <select className="border p-2 rounded text-sm w-full sm:w-auto">
                 <option>All Employment Type</option>
               </select>
-              <Button variant="outline">+ File Request</Button>
+              <Button variant="outline" className="w-full sm:w-auto">
+                + File Request
+              </Button>
             </div>
           </div>
 
