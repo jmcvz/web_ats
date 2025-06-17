@@ -7,6 +7,8 @@ import Applicants from '@/pages/Applicants'
 import Positions from '@/pages/Positions'
 import Library from '@/pages/Library'
 import Requests from '@/pages/Requests'
+import ApplicantInformationTab from '@/pages/ApplicantsInformationTab'
+import LeadDeveloperRS from '@/pages/LeadDeveloper_ResumeScreening'
 
 export default function App() {
   return (
@@ -19,6 +21,8 @@ export default function App() {
       <Route path="/positions/*" element={<Positions />} />
       <Route path="/library/*" element={<Library />} />
       <Route path="/requests/*" element={<Requests />} />
+      <Route path="/ApplicantInformation/*" element={<ApplicantInformationTab />} />
+      <Route path="/LeadDeveloperRS/*" element={<LeadDeveloperRS />} />
       </Routes>
     </BrowserRouter>
   );

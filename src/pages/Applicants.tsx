@@ -8,6 +8,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Search, ChevronDown } from "lucide-react"
 import { useEffect } from "react"
+import { Link } from "react-router-dom";
+
 
 // tab title
 export default function Applicants() {
@@ -157,12 +159,17 @@ export default function Applicants() {
                 ].map((applicant, index) => (
                   <tr key={index} className="hover:bg-gray-50">
                     <td className="px-6 py-4 flex items-center gap-3">
+                      <Link
+                        to="/applicantinformation"
+                        className="flex items-center gap-3 hover:underline text-blue-600"
+                      >
                       <img
                         src={applicant.avatar}
                         alt={applicant.name}
                         className="w-8 h-8 rounded-full"
                       />
                       <span>{applicant.name}</span>
+                      </Link>
                     </td>
                     <td className="px-6 py-4">
                       <span
