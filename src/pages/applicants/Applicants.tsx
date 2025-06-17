@@ -2,12 +2,16 @@ import { Navbar } from "@/reusables/Navbar"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import {
-    DropdownMenu,
-    DropdownMenuTrigger,
-    DropdownMenuContent,
-} from "@/components/ui/dropdown-menu"
-import { Search, ChevronDown } from "lucide-react"
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select"
+import { ChevronRight } from "lucide-react"
 import { useEffect } from "react"
+import { useNavigate } from "react-router-dom"
+
 
 // tab title
 export default function Applicants() {
@@ -15,57 +19,54 @@ export default function Applicants() {
     document.title = "Applicants";
   }, []);
 
+  const navigate = useNavigate();
+
   return (
     <>
       <Navbar />
 
       <div className="min-h-screen bg-gray-50 p-6 pt-[100px]">
-        <div className="mx-auto max-w-7xl space-y-6">
+        <div className="mx-auto max-w-7xl space-y-4">
           {/* Title */}
           <h1 className="text-3xl font-bold text-gray-800">Applicants</h1>
 
-          {/* Filter Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-4 border rounded-md p-4 bg-white shadow-sm">
-            {/* Search and Filters */}
-            <div className="flex flex-wrap items-center gap-2">
-              {/* Search Input */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search applicants..."
-                  className="pl-9 pr-3 py-2 w-[200px] md:w-[250px]"
-                />
-              </div>
-
-              {/* Dropdown Filters */}
-              {[
-                "All Internal",
-                "All Status",
-                "All Job Position",
-                "All Departments",
-                "Employment Type",
-              ].map((label) => (
-                <DropdownMenu key={label}>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="text-sm font-normal flex items-center gap-1"
-                    >
-                      {label}
-                      <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    {/* Empty for now */}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ))}
+          {/* Filters */}
+          <div className="w-full space-y-2">
+            {/* Clear filters */}
+            <div className="flex justify-end mb-2">
+              <a className="text-medium text-blue-500 hover:underline">
+                Clear filters
+              </a>
             </div>
 
-            {/* Clear filters */}
-            <button className="text-xs text-muted-foreground hover:underline">
-              Clear filters
-            </button>
+            {/* Search bar and filters */}
+            <div className="flex flex-wrap justify-between items-center gap-4">
+              {/* Search bar */}
+              <Input
+                placeholder="Search applicants..."
+                className="w-64"
+              />
+
+              {/* Filter dropdowns */}
+              <div className="flex flex-wrap gap-2 ml-auto">
+                {[
+                  "All Internal",
+                  "All Status",
+                  "All Job Position",
+                  "All Departments",
+                  "Employment Type",
+                ].map((label) => (
+                  <Select key={label}>
+                    <SelectTrigger className="min-w-[160px] bg-gray-100">
+                      <SelectValue placeholder={label} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{label}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Applicants Table */}
@@ -202,9 +203,15 @@ export default function Applicants() {
               >
                 Pool Applicant
               </Button>
-              <Button variant="ghost" size="sm" className="text-muted-foreground">
-                Next &rarr;
-              </Button>
+              <div className="mt-6">
+        <button
+          onClick={() => navigate("/applicants/jobdetails")}
+          className="flex items-center text-blue-500 text-sm hover:underline"
+        >
+          Next
+          <ChevronRight className="w-4 h-4 mr-1" />
+        </button>
+      </div>
             </div>
           </div>
         </div>

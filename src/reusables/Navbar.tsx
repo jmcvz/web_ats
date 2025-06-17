@@ -14,6 +14,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+
+function isActivePath(basePath: string) {
+  return location.pathname === basePath || location.pathname.startsWith(`${basePath}/`);
+}
+
 import { useState } from "react";
 
 export function Navbar() {
@@ -68,7 +73,7 @@ export function Navbar() {
                     variant="ghost"
                     className={cn(
                       "flex items-center gap-2 px-3 text-sm transition-colors",
-                      location.pathname === route.path
+                      isActivePath(route.path)
                         ? "bg-blue-100 text-blue-700 font-semibold"
                         : "text-muted-foreground hover:bg-accent/50 hover:text-primary"
                     )}
@@ -156,7 +161,7 @@ export function Navbar() {
                         variant="ghost"
                         className={cn(
                           "w-full justify-start gap-3 px-4 py-6 text-base transition-colors",
-                          location.pathname === route.path
+                          location.pathname.startsWith(route.path)
                             ? "bg-blue-100 text-blue-700 font-semibold"
                             : "text-muted-foreground hover:bg-accent/50 hover:text-primary"
                         )}
