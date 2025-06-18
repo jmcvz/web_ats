@@ -10,6 +10,10 @@ import Requests from '@/pages/Requests'
 import JobDetails from '@/pages/applicants/JobDetails'
 import LeadDeveloper from '@/pages/applicants/LeadDeveloper'
 import LeadDeveloperWeekly from '@/pages/applicants/LeadDeveloperWeekly'
+import ApplicantInformationTab from '@/pages/ApplicantsInformationTab'
+import LeadDeveloperRS from '@/pages/LeadDeveloper_ResumeScreening'
+import LeadDeveloperPI from '@/pages/LeadDeveloper_PhoneInterview'
+import InterviewEvaluationForm from '@/pages/InterviewEvaluationFormPage'
 
 export default function App() {
   return (
@@ -25,6 +29,10 @@ export default function App() {
       <Route path="/applicants/jobdetails" element={<JobDetails />} />
       <Route path="/applicants/jobdetails/leaddeveloper" element={<LeadDeveloper />} />
       <Route path="/applicants/jobdetails/leaddeveloper/leaddeveloperweekly" element={<LeadDeveloperWeekly />} />
+      <Route path="/ApplicantInformation/*" element={<ApplicantInformationTab />} />
+      <Route path="/LeadDeveloperRS/*" element={<LeadDeveloperRS />} />
+      <Route path="/LeadDeveloperPI/*" element={<LeadDeveloperPI/>} />
+      <Route path="/ieform/*" element={<InterviewEvaluationForm/>} />
       </Routes>
     </BrowserRouter>
   );

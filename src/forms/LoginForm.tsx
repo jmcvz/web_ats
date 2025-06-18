@@ -3,6 +3,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Mail, Lock, Eye, EyeOff } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
+
 
 const LoginForm: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false)
@@ -73,30 +75,25 @@ const LoginForm: React.FC = () => {
       </div>
 
       {/* Remember Me */}
-      <div className="mb-6">
-        <label className="inline-flex items-center cursor-pointer text-lg">
-          <input type="checkbox" className="peer hidden" />
-          <div className="w-6 h-6 mr-3 rounded-sm border border-gray-400 flex items-center justify-center peer-checked:bg-blue-600">
-            <svg
-              className="w-5 h-5 text-white hidden peer-checked:block"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="3"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-          Keep me logged in
-        </label>
-      </div>
+      <div className="mb-6 flex items-center space-x-3">
+  <Checkbox
+    id="keep-logged-in"
+    className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+  />
+  <label htmlFor="keep-logged-in" className="text-lg">
+    Keep me logged in
+  </label>
+</div>
+
+
+
 
       {/* Update the Button with the correct variant */}
      <Button
   type="submit"
-  variant="default" // This ensures bg-blue-800 will be applied
+   // This ensures bg-blue-800 will be applied
   size="lg"
-  className="w-full text-lg py-6"
+  className="w-full text-lg py-6 bg-[#0056d2]"
 >
   LOG IN
 </Button>
