@@ -112,7 +112,7 @@ export default function PositionsPendings() {
   const [search, setSearch] = useState("")
 
   useEffect(() => {
-    document.title = "Positions - Pendings"
+    document.title = "Positions | Pendings"
   }, [])
 
   const filteredPostings = pendingPostings.filter((posting) =>

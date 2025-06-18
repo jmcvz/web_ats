@@ -64,7 +64,7 @@ export default function PositionsOnHold() {
   const [search, setSearch] = useState("")
 
   useEffect(() => {
-    document.title = "Positions - On-hold"
+    document.title = "Positions | On-hold"
   }, [])
 
   const filteredPostings = postings.filter((posting) =>

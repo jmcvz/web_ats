@@ -71,7 +71,7 @@ export default function PositionsDrafts() {
   const [search, setSearch] = useState("")
 
   useEffect(() => {
-    document.title = "Positions - Drafts"
+    document.title = "Positions | Drafts"
   }, [])
 
   const filteredPostings = postings.filter((posting) =>

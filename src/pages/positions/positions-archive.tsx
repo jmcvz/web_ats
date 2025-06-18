@@ -82,7 +82,7 @@ export default function PositionsClosed() {
   const [showDialog, setShowDialog] = useState(false)
 
   useEffect(() => {
-    document.title = "Positions - Closed"
+    document.title = "Positions | Archive"
   }, [])
 
   const filteredPostings = postings.filter((posting) =>

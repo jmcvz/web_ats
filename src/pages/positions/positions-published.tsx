@@ -74,7 +74,7 @@ export default function PositionsPublished() {
   const [selectedLink, setSelectedLink] = useState("")
 
   useEffect(() => {
-    document.title = "Positions - Published"
+    document.title = "Positions | Published"
   }, [])
 
   const filteredPostings = postings.filter((posting) =>
