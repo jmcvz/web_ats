@@ -1,6 +1,7 @@
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
+
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
@@ -8,14 +9,21 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        // Updated default variant to use blue (bg-blue-800)
-        default: "bg-[#0056d2] text-white shadow-xs hover:bg-blue-700 focus-visible:ring-blue-600",
-        destructive: "bg-red-600 text-white shadow-xs hover:bg-red-500 focus-visible:ring-red-600",
-        outline: "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
-        secondary: "bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
-        link: "text-primary underline-offset-4 hover:underline",
-      },
+  default:
+    "text-primary-foreground shadow-xs hover:bg-primary/90",
+  destructive:
+    "bg-destructive text-white shadow-xs hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
+  outline:
+    "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
+  secondary:
+    "bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80",
+  ghost:
+    "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
+  link:
+    "text-primary underline-offset-4 hover:underline",
+  success: "border border-green-500 !border-green-500 text-green-600 bg-transparent hover:bg-green-50 hover:text-green-700",
+  danger: "border border-red-500 !border-red  -500 text-red-600 bg-transparent hover:bg-red-50 hover:text-red-700",
+    },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",
         sm: "h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5",
@@ -24,7 +32,7 @@ const buttonVariants = cva(
       },
     },
     defaultVariants: {
-      variant: "default", // Default is blue
+      variant: "default",
       size: "default",
     },
   }

@@ -7,14 +7,13 @@ import Applicants from '@/pages/applicants/Applicants'
 import Positions from '@/pages/positions/Positions'
 import Library from '@/pages/Library'
 import Requests from '@/pages/Requests'
-import JobDetails from '@/pages/applicants/job-details'
-import LeadDeveloper from '@/pages/applicants/lead-developer'
-import LeadDeveloperWeekly from '@/pages/applicants/lead-developer-weekly-monthly'
-import PositionsPendings from '@/pages/positions/positions-pendings'
-import PositionsOnhold from '@/pages/positions/positions-onhold'
-import PositionsPublished from '@/pages/positions/positions-published'
-import PositionsClosed from '@/pages/positions/positions-closed'
-import PositionsArchive from '@/pages/positions/positions-archive'
+import JobDetails from '@/pages/applicants/JobDetails'
+import LeadDeveloper from '@/pages/applicants/LeadDeveloper'
+import LeadDeveloperWeekly from '@/pages/applicants/LeadDeveloperWeekly'
+import ApplicantInformationTab from '@/pages/ApplicantsInformationTab'
+import LeadDeveloperRS from '@/pages/LeadDeveloper_ResumeScreening'
+import LeadDeveloperPI from '@/pages/LeadDeveloper_PhoneInterview'
+import InterviewEvaluationForm from '@/pages/InterviewEvaluationFormPage'
 
 export default function App() {
   return (
@@ -35,12 +34,10 @@ export default function App() {
       <Route path="/applicants/jobdetails/leaddeveloper" element={<LeadDeveloper />} />
       <Route path="/applicants/jobdetails/leaddeveloper/leaddeveloperweekly" element={<LeadDeveloperWeekly />} />
 
-      {/* Positions */}
-      <Route path="/positions/pendings" element={<PositionsPendings />} />
-      <Route path="/positions/on-hold" element={<PositionsOnhold />} />
-      <Route path="/positions/published" element={<PositionsPublished />} />
-      <Route path="/positions/closed" element={<PositionsClosed />} />
-      <Route path="/positions/archive" element={<PositionsArchive />} />
+      <Route path="/ApplicantInformation/*" element={<ApplicantInformationTab />} />
+      <Route path="/LeadDeveloperRS/*" element={<LeadDeveloperRS />} />
+      <Route path="/LeadDeveloperPI/*" element={<LeadDeveloperPI/>} />
+      <Route path="/ieform/*" element={<InterviewEvaluationForm/>} />
       </Routes>
     </BrowserRouter>
   );
