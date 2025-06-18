@@ -71,7 +71,7 @@ const statusConfig = {
 
 export default function JobManagement() {
   const [searchTerm, setSearchTerm] = useState("")
-  const [selectedFilter, setSelectedFilter] = useState("")
+  const [selectedFilter, setSelectedFilter] = useState("resume-screening")
 
   // Filter applicants based on search term
   const filteredApplicants = applicants.filter((applicant) =>
@@ -136,22 +136,30 @@ export default function JobManagement() {
 
           {/* Filter and Search */}
         <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-between sm:items-center">
-  <Select value={selectedFilter} onValueChange={setSelectedFilter}>
-    <SelectTrigger className="w-64 border-none shadow-none">
+  <Select
+  value={selectedFilter}
+  onValueChange={(value) => {
+    setSelectedFilter(value)
+    if (value === "phone-call") {
+      window.location.href = "/LeadDeveloperPI"
+    }
+  }}
+>
+    <SelectTrigger className="w-64 border-none shadow-none font-bold text-black">
       <SelectValue placeholder="Resume Screening" />
     </SelectTrigger>
     <SelectContent>
-      <SelectItem value="resume-screening">Resume Screening</SelectItem>
-      <SelectItem value="phone-call">Phone Call Interview</SelectItem>
-      <SelectItem value="shortlisted">Shortlisted</SelectItem>
-      <SelectItem value="initial-interview">Initial Interview</SelectItem>
-      <SelectItem value="assessments">Assessments</SelectItem>
-      <SelectItem value="final-interview">Final Interview</SelectItem>
-      <SelectItem value="job-offer">For Job Offer</SelectItem>
-      <SelectItem value="offer-finalization">For Offer and Finalization</SelectItem>
-      <SelectItem value="onboarding">Onboarding</SelectItem>
-      <SelectItem value="warm">Warm</SelectItem>
-      <SelectItem value="failed">Failed</SelectItem>
+      <SelectItem className="font-bold" value="resume-screening">Resume Screening</SelectItem>
+        <SelectItem value="phone-call" className="font-bold">Phone Call Interview</SelectItem>
+        <SelectItem value="shortlisted"className="font-bold">Shortlisted</SelectItem>
+        <SelectItem value="initial-interview"className="font-bold">Initial Interview</SelectItem>
+        <SelectItem value="assessments"className="font-bold">Assessments</SelectItem>
+        <SelectItem value="final-interview"className="font-bold">Final Interview</SelectItem>
+        <SelectItem value="job-offer"className="font-bold">For Job Offer</SelectItem>
+        <SelectItem value="offer-finalization"className="font-bold">For Offer and Finalization</SelectItem>
+        <SelectItem value="onboarding"className="font-bold">Onboarding</SelectItem>
+        <SelectItem value="warm"className="font-bold">Warm</SelectItem>
+        <SelectItem value="failed"className="font-bold">Failed</SelectItem>
     </SelectContent>
   </Select>
 
