@@ -140,7 +140,7 @@ export default function PositionsArchive() {
           </div>
 
           <div className="flex justify-between items-center border-b pb-2">
-            <Tabs value="closed" onValueChange={handleTabChange} className="flex-1">
+            <Tabs value="archive" onValueChange={handleTabChange} className="flex-1">
               <TabsList className="flex gap-6 border-b-0 bg-transparent">
                 {[
                   "Drafts",
