@@ -75,7 +75,7 @@ const getDepartmentColor = (department: string) => {
   }
 }
 
-export default function PositionsClosed() {
+export default function PositionsArchive() {
   const navigate = useNavigate()
   const [search, setSearch] = useState("")
   const [selected, setSelected] = useState<number[]>([])
