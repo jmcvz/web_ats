@@ -84,6 +84,21 @@ interface SidebarCandidate {
   timeAgo: string
 }
 
+interface DayObject {
+  day: number
+  isCurrentMonth: boolean
+  isToday: boolean
+}
+
+interface WeekDayObject {
+  day: number
+  month: number
+  year: number
+  isCurrentMonth: boolean
+  isToday: boolean
+  fullDate: Date
+}
+
 // ----------------------
 // ApplicantCard Component
 // ----------------------
@@ -214,7 +229,7 @@ function MiniCalendar() {
 
   const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
-  const getDaysInMonth = (date: Date) => {
+  const getDaysInMonth = (date: Date): DayObject[] => {
     const year = date.getFullYear()
     const month = date.getMonth()
     const firstDay = new Date(year, month, 1)
@@ -222,7 +237,7 @@ function MiniCalendar() {
     const daysInMonth = lastDay.getDate()
     const startingDayOfWeek = (firstDay.getDay() + 6) % 7 // Adjust for Monday start
 
-    const days = []
+    const days: DayObject[] = []
 
     // Previous month days
     const prevMonth = new Date(year, month - 1, 0)
@@ -258,19 +273,54 @@ function MiniCalendar() {
     return days
   }
 
+  const getCurrentWeek = (date: Date): WeekDayObject[] => {
+    // Use the passed date instead of always using today
+    const referenceDate = new Date(date)
+    const dayOfWeek = (referenceDate.getDay() + 6) % 7 // Adjust for Monday start
+    const currentWeekStart = new Date(referenceDate)
+    currentWeekStart.setDate(referenceDate.getDate() - dayOfWeek)
+
+    const today = new Date()
+    const weekDays: WeekDayObject[] = []
+
+    for (let i = 0; i < 7; i++) {
+      const day = new Date(currentWeekStart)
+      day.setDate(currentWeekStart.getDate() + i)
+
+      weekDays.push({
+        day: day.getDate(),
+        month: day.getMonth(),
+        year: day.getFullYear(),
+        isCurrentMonth: day.getMonth() === referenceDate.getMonth(),
+        isToday: day.toDateString() === today.toDateString(),
+        fullDate: new Date(day),
+      })
+    }
+
+    return weekDays
+  }
+
   const navigateMonth = (direction: "prev" | "next") => {
     setCurrentDate((prev) => {
       const newDate = new Date(prev)
-      if (direction === "prev") {
-        newDate.setMonth(prev.getMonth() - 1)
+      if (viewMode === "weekly") {
+        // Navigate by week
+        if (direction === "prev") {
+          newDate.setDate(prev.getDate() - 7)
+        } else {
+          newDate.setDate(prev.getDate() + 7)
+        }
       } else {
-        newDate.setMonth(prev.getMonth() + 1)
+        // Navigate by month
+        if (direction === "prev") {
+          newDate.setMonth(prev.getMonth() - 1)
+        } else {
+          newDate.setMonth(prev.getMonth() + 1)
+        }
       }
       return newDate
     })
   }
-
-  const days = getDaysInMonth(currentDate)
 
   return (
     <div className="bg-white rounded-lg border p-4">
@@ -310,25 +360,51 @@ function MiniCalendar() {
       </div>
 
       {/* Calendar Grid */}
-      <div className="grid grid-cols-7 gap-1 mb-4">
-        {daysOfWeek.map((day) => (
-          <div key={day} className="text-center text-xs font-medium text-gray-500 p-2">
-            {day}
+      {viewMode === "weekly" ? (
+        <div className="space-y-2">
+          <div className="grid grid-cols-7 gap-1 mb-2">
+            {daysOfWeek.map((day) => (
+              <div key={day} className="text-center text-xs font-medium text-gray-500 p-2">
+                {day}
+              </div>
+            ))}
           </div>
-        ))}
-        {days.map((day, index) => (
-          <div
-            key={index}
-            className={`
-              text-center text-sm p-2 cursor-pointer rounded hover:bg-gray-100
-              ${day.isCurrentMonth ? "text-gray-900" : "text-gray-400"}
-              ${day.isToday ? "bg-blue-500 text-white hover:bg-blue-600" : ""}
-            `}
-          >
-            {day.day}
+          <div className="grid grid-cols-7 gap-1">
+            {getCurrentWeek(currentDate).map((day, index) => (
+              <div
+                key={index}
+                className={`
+                  text-center text-sm p-2 cursor-pointer rounded hover:bg-gray-100
+                  ${day.isCurrentMonth ? "text-gray-900" : "text-gray-400"}
+                  ${day.isToday ? "bg-blue-500 text-white hover:bg-blue-600" : ""}
+                `}
+              >
+                {day.day}
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-7 gap-1 mb-4">
+          {daysOfWeek.map((day) => (
+            <div key={day} className="text-center text-xs font-medium text-gray-500 p-2">
+              {day}
+            </div>
+          ))}
+          {getDaysInMonth(currentDate).map((day, index) => (
+            <div
+              key={index}
+              className={`
+                text-center text-sm p-2 cursor-pointer rounded hover:bg-gray-100
+                ${day.isCurrentMonth ? "text-gray-900" : "text-gray-400"}
+                ${day.isToday ? "bg-blue-500 text-white hover:bg-blue-600" : ""}
+              `}
+            >
+              {day.day}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -416,12 +492,7 @@ function Sidebar() {
           <div key={candidate.id} className="flex items-start gap-3 p-3 rounded-lg border hover:bg-gray-50">
             <Avatar className="h-10 w-10">
               <AvatarImage src={candidate.avatar || "/placeholder.svg"} alt={candidate.name} />
-              <AvatarFallback>
-                {candidate.name
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")}
-              </AvatarFallback>
+              <AvatarFallback>{candidate.name.split(" ").map((n) => n[0])}</AvatarFallback>
             </Avatar>
 
             <div className="flex-1 min-w-0">
