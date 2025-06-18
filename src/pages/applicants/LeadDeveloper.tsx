@@ -75,17 +75,31 @@ export default function LeadDeveloper() {
               {stage.title}
             </h2>
             <div className="border rounded-md divide-y">
-              {stage.steps.map((step, index) => (
-                <div
-                  key={index}
-                  className="flex justify-between items-center px-4 py-3 hover:bg-gray-50"
-                >
-                  <span>{step}</span>
-                  <Link to={`/applicants`} className="text-blue-500 text-sm p-0 h-auto">
-                    View Applicants
-                  </Link>
-                </div>
-              ))}
+              {stage.steps.map((step, index) => {
+  // Determine the route based on the step name
+  const route =
+  step === "Resume Screening"
+    ? "/applicants/jobdetails/leaddeveloper/LeadDeveloperRS"
+    : step === "Phone Call Interview"
+    ? "/applicants/jobdetails/leaddeveloper/LeadDeveloperPI"
+    : step === "Shortlisted"
+    ? "/applicants/jobdetails/leaddeveloper/LeadDeveloperSL"
+    : "/applicants";
+
+
+  return (
+    <div
+      key={index}
+      className="flex justify-between items-center px-4 py-3 hover:bg-gray-50"
+    >
+      <span>{step}</span>
+      <Link to={route} className="text-blue-500 text-sm p-0 h-auto">
+        View Applicants
+      </Link>
+    </div>
+  );
+})}
+
             </div>
           </div>
         ))}

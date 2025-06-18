@@ -37,6 +37,8 @@ import {
   List,
   Maximize2,
   Star,
+  Check,
+  X,
 } from "lucide-react"
 
 import { Navbar } from "@/reusables/Navbar"
@@ -44,7 +46,6 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 // ----------------------
 // Interfaces
@@ -63,6 +64,9 @@ interface StageColumnProps {
   id: string
   applicants: Applicant[]
   count: number
+  isSelectionMode: boolean
+  hasSelectedApplicants: boolean
+  onColumnClick: (columnId: string) => void
 }
 
 interface ApplicantCardProps {
@@ -72,23 +76,54 @@ interface ApplicantCardProps {
   avatar?: string
   rating: number
   isDragging?: boolean
+  isSelected?: boolean
+  isSelectionMode?: boolean
+  onLongPress?: (id: string) => void
+  onToggleSelect?: (id: string) => void
 }
 
 interface SidebarCandidate {
   id: string
   name: string
   title: string
-  avatar: string
   stage: number
   stageColor: "orange" | "red" | "green"
   timeAgo: string
+}
+
+interface DayObject {
+  day: number
+  isCurrentMonth: boolean
+  isToday: boolean
+}
+
+interface WeekDayObject {
+  day: number
+  month: number
+  year: number
+  isCurrentMonth: boolean
+  isToday: boolean
+  fullDate: Date
 }
 
 // ----------------------
 // ApplicantCard Component
 // ----------------------
 
-function ApplicantCard({ id, name, time, avatar, rating, isDragging = false }: ApplicantCardProps) {
+function ApplicantCard({
+  id,
+  name,
+  time,
+  rating,
+  isDragging = false,
+  isSelected = false,
+  isSelectionMode = false,
+  onLongPress,
+  onToggleSelect,
+}: ApplicantCardProps) {
+  const [isMobile, setIsMobile] = useState(false)
+  const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null)
+
   const {
     attributes,
     listeners,
@@ -98,28 +133,84 @@ function ApplicantCard({ id, name, time, avatar, rating, isDragging = false }: A
     isDragging: sortableIsDragging,
   } = useSortable({ id })
 
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024) // lg breakpoint
+    }
+
+    checkMobile()
+    window.addEventListener("resize", checkMobile)
+    return () => window.removeEventListener("resize", checkMobile)
+  }, [])
+
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition: transition || "transform 150ms ease",
     opacity: sortableIsDragging ? 0.5 : 1,
   }
 
+  const handleTouchStart = () => {
+    if (!isMobile || !onLongPress) return
+
+    const timer = setTimeout(() => {
+      onLongPress(id)
+    }, 500) // 500ms long press
+
+    setLongPressTimer(timer)
+  }
+
+  const handleTouchEnd = () => {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer)
+      setLongPressTimer(null)
+    }
+  }
+
+  const handleClick = () => {
+    if (isMobile && isSelectionMode && onToggleSelect) {
+      onToggleSelect(id)
+    }
+  }
+
+  const cardProps = isMobile
+    ? {
+        onTouchStart: handleTouchStart,
+        onTouchEnd: handleTouchEnd,
+        onClick: handleClick,
+      }
+    : {
+        ...attributes,
+        ...listeners,
+      }
+
   return (
     <div
       ref={setNodeRef}
       style={style}
-      {...attributes}
-      {...listeners}
+      {...cardProps}
       className={`
-        bg-white p-3 rounded-lg border mb-2 cursor-move
-        hover:shadow-md transition-all duration-200
+        bg-white p-3 rounded-lg border mb-2 transition-all duration-200
+        ${!isMobile ? "cursor-move hover:shadow-md" : "cursor-pointer"}
         ${isDragging ? "rotate-1 shadow-lg" : ""}
         ${sortableIsDragging ? "z-50" : ""}
+        ${isSelected ? "ring-2 ring-blue-500 bg-blue-50" : ""}
+        ${isSelectionMode && !isSelected ? "opacity-70" : ""}
       `}
     >
       <div className="flex items-center gap-3">
+        {isMobile && isSelectionMode && (
+          <div
+            className={`
+            w-5 h-5 rounded-full border-2 flex items-center justify-center
+            ${isSelected ? "bg-blue-500 border-blue-500" : "border-gray-300"}
+          `}
+          >
+            {isSelected && <Check className="h-3 w-3 text-white" />}
+          </div>
+        )}
+
         <Avatar className="h-8 w-8">
-          <AvatarImage src={avatar || "/placeholder.svg?height=32&width=32"} alt={name} />
+          <AvatarImage src={`https://i.pravatar.cc/150?u=${id}`} alt={name} />
           <AvatarFallback className="text-xs">
             {name
               .split(" ")
@@ -150,13 +241,49 @@ function ApplicantCard({ id, name, time, avatar, rating, isDragging = false }: A
 // DroppableColumn Component
 // ----------------------
 
-function DroppableColumn({ title, id, applicants, count }: StageColumnProps) {
+function DroppableColumn({
+  title,
+  id,
+  applicants,
+  count,
+  isSelectionMode,
+  hasSelectedApplicants,
+  onColumnClick,
+  navigate, // Add this prop
+}: StageColumnProps & { navigate: any }) {
+  const [isMobile, setIsMobile] = useState(false)
   const { setNodeRef, isOver } = useDroppable({
     id,
   })
 
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024)
+    }
+
+    checkMobile()
+    window.addEventListener("resize", checkMobile)
+    return () => window.removeEventListener("resize", checkMobile)
+  }, [])
+
+  const handleColumnClick = () => {
+    if (isMobile && isSelectionMode && hasSelectedApplicants) {
+      onColumnClick(id)
+    }
+  }
+
+  const handleMaximizeClick = () => {
+    if (title === "Resume Screening") {
+      navigate("/applicants/jobdetails/leaddeveloper/LeadDeveloperRS")
+    } else if (title === "Phone-Call Interview") {
+      navigate("/applicants/jobdetails/leaddeveloper/LeadDeveloperPI")
+    } else if (title === "Shortlisted") {
+      navigate("/applicants/jobdetails/leaddeveloper/LeadDeveloperSL")
+    }
+  }
+
   return (
-    <div className="w-full sm:w-[320px]">
+    <div className="w-full lg:w-[280px] lg:flex-shrink-0">
       <div className="flex items-center justify-between mb-3 px-1">
         <div className="flex items-center gap-2">
           <h3 className="font-semibold text-sm text-gray-700 uppercase tracking-wide">{title}</h3>
@@ -164,25 +291,36 @@ function DroppableColumn({ title, id, applicants, count }: StageColumnProps) {
             {count}
           </Badge>
         </div>
-        <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+        <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={handleMaximizeClick}>
           <Maximize2 className="h-3 w-3" />
         </Button>
       </div>
 
       <div
         ref={setNodeRef}
+        onClick={handleColumnClick}
         className={`
-          border rounded-lg min-h-[400px] p-3 transition-colors duration-200
+          border rounded-lg min-h-[300px] p-3 transition-colors duration-200
           ${isOver ? "bg-blue-50 border-blue-300" : "bg-gray-50"}
+          ${isMobile && isSelectionMode && hasSelectedApplicants ? "cursor-pointer hover:bg-green-50 hover:border-green-300" : ""}
+          ${isMobile && isSelectionMode && hasSelectedApplicants ? "ring-2 ring-green-200" : ""}
         `}
       >
+        {isMobile && isSelectionMode && hasSelectedApplicants && (
+          <div className="mb-3 p-2 bg-green-100 rounded-lg text-center">
+            <p className="text-xs text-green-800 font-medium">Tap to move selected applicants here</p>
+          </div>
+        )}
+
         <SortableContext items={applicants.map((a) => a.id)} strategy={verticalListSortingStrategy}>
           {applicants.map((applicant) => (
             <ApplicantCard key={applicant.id} {...applicant} />
           ))}
         </SortableContext>
         {applicants.length === 0 && (
-          <div className="flex items-center justify-center h-32 text-gray-400 text-sm">Drop applicants here</div>
+          <div className="flex items-center justify-center h-32 text-gray-400 text-sm">
+            {isMobile && isSelectionMode && hasSelectedApplicants ? "Tap to move here" : "Drop applicants here"}
+          </div>
         )}
       </div>
     </div>
@@ -214,7 +352,7 @@ function MiniCalendar() {
 
   const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
-  const getDaysInMonth = (date: Date) => {
+  const getDaysInMonth = (date: Date): DayObject[] => {
     const year = date.getFullYear()
     const month = date.getMonth()
     const firstDay = new Date(year, month, 1)
@@ -222,7 +360,7 @@ function MiniCalendar() {
     const daysInMonth = lastDay.getDate()
     const startingDayOfWeek = (firstDay.getDay() + 6) % 7 // Adjust for Monday start
 
-    const days = []
+    const days: DayObject[] = []
 
     // Previous month days
     const prevMonth = new Date(year, month - 1, 0)
@@ -258,40 +396,81 @@ function MiniCalendar() {
     return days
   }
 
+  const getCurrentWeek = (date: Date): WeekDayObject[] => {
+    // Use the passed date instead of always using today
+    const referenceDate = new Date(date)
+    const dayOfWeek = (referenceDate.getDay() + 6) % 7 // Adjust for Monday start
+    const currentWeekStart = new Date(referenceDate)
+    currentWeekStart.setDate(referenceDate.getDate() - dayOfWeek)
+
+    const today = new Date()
+    const weekDays: WeekDayObject[] = []
+
+    for (let i = 0; i < 7; i++) {
+      const day = new Date(currentWeekStart)
+      day.setDate(currentWeekStart.getDate() + i)
+
+      weekDays.push({
+        day: day.getDate(),
+        month: day.getMonth(),
+        year: day.getFullYear(),
+        isCurrentMonth: day.getMonth() === referenceDate.getMonth(),
+        isToday: day.toDateString() === today.toDateString(),
+        fullDate: new Date(day),
+      })
+    }
+
+    return weekDays
+  }
+
   const navigateMonth = (direction: "prev" | "next") => {
     setCurrentDate((prev) => {
       const newDate = new Date(prev)
-      if (direction === "prev") {
-        newDate.setMonth(prev.getMonth() - 1)
+      if (viewMode === "weekly") {
+        // Navigate by week
+        if (direction === "prev") {
+          newDate.setDate(prev.getDate() - 7)
+        } else {
+          newDate.setDate(prev.getDate() + 7)
+        }
       } else {
-        newDate.setMonth(prev.getMonth() + 1)
+        // Navigate by month
+        if (direction === "prev") {
+          newDate.setMonth(prev.getMonth() - 1)
+        } else {
+          newDate.setMonth(prev.getMonth() + 1)
+        }
       }
       return newDate
     })
   }
 
-  const days = getDaysInMonth(currentDate)
-
   return (
     <div className="bg-white rounded-lg border p-4">
       {/* View Toggle */}
       <div className="flex gap-1 mb-4">
-        <Button
-          variant={viewMode === "weekly" ? "default" : "outline"}
-          size="sm"
+        <button
           onClick={() => setViewMode("weekly")}
-          className="text-xs"
+          className={`px-3 py-1 text-xs rounded border 
+            ${
+              viewMode === "weekly"
+                ? "bg-white text-[#0056d2] border-[#0056d2]"
+                : "bg-[#0056d2] text-white border-[#0056d2]"
+            }`}
         >
           Weekly
-        </Button>
-        <Button
-          variant={viewMode === "monthly" ? "default" : "outline"}
-          size="sm"
+        </button>
+        <button
           onClick={() => setViewMode("monthly")}
-          className="text-xs"
+          className={`px-3 py-1 text-xs rounded border 
+            ${
+              viewMode === "monthly"
+                ? "bg-white text-[#0056d2] border-[#0056d2]"
+                : "bg-[#0056d2] text-white border-[#0056d2]"
+            }`}
         >
           Monthly
-        </Button>
+        </button>
       </div>
 
       {/* Calendar Header */}
@@ -310,25 +489,51 @@ function MiniCalendar() {
       </div>
 
       {/* Calendar Grid */}
-      <div className="grid grid-cols-7 gap-1 mb-4">
-        {daysOfWeek.map((day) => (
-          <div key={day} className="text-center text-xs font-medium text-gray-500 p-2">
-            {day}
+      {viewMode === "weekly" ? (
+        <div className="space-y-2">
+          <div className="grid grid-cols-7 gap-1 mb-2">
+            {daysOfWeek.map((day) => (
+              <div key={day} className="text-center text-xs font-medium text-gray-500 p-2">
+                {day}
+              </div>
+            ))}
           </div>
-        ))}
-        {days.map((day, index) => (
-          <div
-            key={index}
-            className={`
-              text-center text-sm p-2 cursor-pointer rounded hover:bg-gray-100
-              ${day.isCurrentMonth ? "text-gray-900" : "text-gray-400"}
-              ${day.isToday ? "bg-blue-500 text-white hover:bg-blue-600" : ""}
-            `}
-          >
-            {day.day}
+          <div className="grid grid-cols-7 gap-1">
+            {getCurrentWeek(currentDate).map((day, index) => (
+              <div
+                key={index}
+                className={`
+                  text-center text-sm p-2 cursor-pointer rounded hover:bg-gray-100
+                  ${day.isCurrentMonth ? "text-gray-900" : "text-gray-400"}
+                  ${day.isToday ? "bg-blue-500 text-white hover:bg-blue-600" : ""}
+                `}
+              >
+                {day.day}
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-7 gap-1 mb-4">
+          {daysOfWeek.map((day) => (
+            <div key={day} className="text-center text-xs font-medium text-gray-500 p-2">
+              {day}
+            </div>
+          ))}
+          {getDaysInMonth(currentDate).map((day, index) => (
+            <div
+              key={index}
+              className={`
+                text-center text-sm p-2 cursor-pointer rounded hover:bg-gray-100
+                ${day.isCurrentMonth ? "text-gray-900" : "text-gray-400"}
+                ${day.isToday ? "bg-blue-500 text-white hover:bg-blue-600" : ""}
+              `}
+            >
+              {day.day}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -343,7 +548,6 @@ function Sidebar() {
       id: "c1",
       name: "Jane Cruise",
       title: "Senior frontend developer",
-      avatar: "/placeholder.svg?height=40&width=40",
       stage: 3,
       stageColor: "orange",
       timeAgo: "5d ago",
@@ -352,7 +556,6 @@ function Sidebar() {
       id: "c2",
       name: "Green William",
       title: "UI/UX designer & developer",
-      avatar: "/placeholder.svg?height=40&width=40",
       stage: 3,
       stageColor: "red",
       timeAgo: "4h ago",
@@ -361,7 +564,6 @@ function Sidebar() {
       id: "c3",
       name: "Daniel Goldberg",
       title: "Magna lorem consectetur",
-      avatar: "/placeholder.svg?height=40&width=40",
       stage: 1,
       stageColor: "green",
       timeAgo: "1 day ago",
@@ -382,7 +584,7 @@ function Sidebar() {
   }
 
   return (
-    <div className="w-80 bg-white border-l border-gray-200 p-4 pt-[100px] space-y-4">
+    <div className="w-full lg:w-80 bg-white lg:border-l border-gray-200 p-4 lg:pt-[100px] pt-6 space-y-4 lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto">
       <MiniCalendar />
 
       {/* Filters */}
@@ -415,13 +617,8 @@ function Sidebar() {
         {candidates.map((candidate) => (
           <div key={candidate.id} className="flex items-start gap-3 p-3 rounded-lg border hover:bg-gray-50">
             <Avatar className="h-10 w-10">
-              <AvatarImage src={candidate.avatar || "/placeholder.svg"} alt={candidate.name} />
-              <AvatarFallback>
-                {candidate.name
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")}
-              </AvatarFallback>
+              <AvatarImage src={`https://i.pravatar.cc/150?u=${candidate.id}`} alt={candidate.name} />
+              <AvatarFallback>{candidate.name.split(" ").map((n) => n[0])}</AvatarFallback>
             </Avatar>
 
             <div className="flex-1 min-w-0">
@@ -447,6 +644,137 @@ function Sidebar() {
 }
 
 // ----------------------
+// Stage Section Component
+// ----------------------
+
+interface StageSectionProps {
+  title: string
+  columns: { title: string; id: string }[]
+  applicantColumns: { [key: string]: Applicant[] }
+  isMultiRow?: boolean
+  selectedApplicants: Set<string>
+  isSelectionMode: boolean
+  onLongPress: (id: string) => void
+  onToggleSelect: (id: string) => void
+  onColumnClick: (columnId: string) => void
+  navigate: any // Add this line
+}
+
+function StageSection({
+  title,
+  columns,
+  applicantColumns,
+  isMultiRow = false,
+  selectedApplicants,
+  isSelectionMode,
+  onLongPress,
+  onToggleSelect,
+  onColumnClick,
+  navigate,
+}: StageSectionProps) {
+  if (isMultiRow && columns.length === 5) {
+    // Special layout for Stage 3 with 5 columns
+    const firstRow = columns.slice(0, 3) // First 3 columns
+    const secondRow = [
+      { title: "Warm", id: "warm" },
+      { title: "Failed", id: "failed" },
+    ] // Last 2 columns
+
+    return (
+      <div className="mb-12">
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">{title}</h2>
+          <div className="h-1 w-16 bg-blue-500 rounded"></div>
+        </div>
+
+        {/* First row - 3 columns */}
+        <div className="flex flex-col lg:flex-row gap-6 lg:overflow-x-auto pb-4 mb-6">
+          {firstRow.map((column) => (
+            <DroppableColumn
+              key={column.id}
+              title={column.title}
+              id={column.id}
+              applicants={
+                applicantColumns[column.id]?.map((applicant) => ({
+                  ...applicant,
+                  isSelected: selectedApplicants.has(applicant.id),
+                  isSelectionMode,
+                  onLongPress,
+                  onToggleSelect,
+                })) || []
+              }
+              count={(applicantColumns[column.id] || []).length}
+              isSelectionMode={isSelectionMode}
+              hasSelectedApplicants={selectedApplicants.size > 0}
+              onColumnClick={onColumnClick}
+              navigate={navigate} // Add this line
+            />
+          ))}
+        </div>
+
+        {/* Second row - 2 columns */}
+        <div className="flex flex-col lg:flex-row gap-6 lg:overflow-x-auto pb-4">
+          {secondRow.map((column) => (
+            <DroppableColumn
+              key={column.id}
+              title={column.title}
+              id={column.id}
+              applicants={
+                applicantColumns[column.id]?.map((applicant) => ({
+                  ...applicant,
+                  isSelected: selectedApplicants.has(applicant.id),
+                  isSelectionMode,
+                  onLongPress,
+                  onToggleSelect,
+                })) || []
+              }
+              count={(applicantColumns[column.id] || []).length}
+              isSelectionMode={isSelectionMode}
+              hasSelectedApplicants={selectedApplicants.size > 0}
+              onColumnClick={onColumnClick}
+              navigate={navigate} // Add this line
+            />
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="mb-12">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">{title}</h2>
+        <div className="h-1 w-16 bg-blue-500 rounded"></div>
+      </div>
+
+      <div className="flex flex-col lg:flex-row gap-6 lg:overflow-x-auto pb-4">
+        {columns.map((column) => (
+          <DroppableColumn
+            key={column.id}
+            title={column.title}
+            id={column.id}
+            applicants={
+              applicantColumns[column.id]?.map((applicant) => ({
+                ...applicant,
+                isSelected: selectedApplicants.has(applicant.id),
+                isSelectionMode,
+                onLongPress,
+                onToggleSelect,
+              })) || []
+            }
+            count={(applicantColumns[column.id] || []).length}
+            isSelectionMode={isSelectionMode}
+            hasSelectedApplicants={selectedApplicants.size > 0}
+            onColumnClick={onColumnClick}
+            navigate={navigate} // Add this line
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ----------------------
 // Main Component
 // ----------------------
 
@@ -454,7 +782,8 @@ export default function LeadDeveloperWeekly() {
   const navigate = useNavigate()
   const [activeId, setActiveId] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
-  const [currentStage, setCurrentStage] = useState("stage1")
+  const [selectedApplicants, setSelectedApplicants] = useState<Set<string>>(new Set())
+  const [isSelectionMode, setIsSelectionMode] = useState(false)
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -467,10 +796,11 @@ export default function LeadDeveloperWeekly() {
     }),
   )
 
-  // Stage 1 Data
-  const [stage1Columns, setStage1Columns] = useState<{
+  // All stage data combined
+  const [allColumns, setAllColumns] = useState<{
     [key: string]: Applicant[]
   }>({
+    // Stage 1 columns
     "resume-screening": [
       { id: "1", name: "Rosa Bumbay", time: "1h ago", rating: 0 },
       { id: "2", name: "Maria Batumbakal", time: "1h ago", rating: 0 },
@@ -490,12 +820,7 @@ export default function LeadDeveloperWeekly() {
       { id: "12", name: "Sarah Johnson", time: "Nov 30", rating: 0 },
       { id: "13", name: "Sarah Davis", time: "Nov 28", rating: 0 },
     ],
-  })
-
-  // Stage 2 Data
-  const [stage2Columns, setStage2Columns] = useState<{
-    [key: string]: Applicant[]
-  }>({
+    // Stage 2 columns
     "initial-interview": [
       { id: "s2-1", name: "Joseph Santos", time: "1h ago", rating: 0 },
       { id: "s2-2", name: "Virla Getalado", time: "1h ago", rating: 0 },
@@ -507,12 +832,7 @@ export default function LeadDeveloperWeekly() {
       { id: "s2-6", name: "Sarah Johnson", time: "Nov 30", rating: 0 },
       { id: "s2-7", name: "Sarah Davis", time: "Nov 28", rating: 0 },
     ],
-  })
-
-  // Stage 3 Data
-  const [stage3Columns, setStage3Columns] = useState<{
-    [key: string]: Applicant[]
-  }>({
+    // Stage 3 columns
     "job-offer": [
       { id: "s3-1", name: "Kyle Maybury", time: "1h ago", rating: 0 },
       { id: "s3-2", name: "Clara Lopez", time: "1h ago", rating: 0 },
@@ -547,51 +867,71 @@ export default function LeadDeveloperWeekly() {
     document.title = "Applicants"
   }, [])
 
-  const getCurrentColumns = () => {
-    switch (currentStage) {
-      case "stage1":
-        return stage1Columns
-      case "stage2":
-        return stage2Columns
-      case "stage3":
-        return stage3Columns
-      default:
-        return stage1Columns
-    }
-  }
-
-  const setCurrentColumns = (columns: { [key: string]: Applicant[] }) => {
-    switch (currentStage) {
-      case "stage1":
-        setStage1Columns(columns)
-        break
-      case "stage2":
-        setStage2Columns(columns)
-        break
-      case "stage3":
-        setStage3Columns(columns)
-        break
-    }
-  }
-
   const findContainer = (id: string) => {
-    const columns = getCurrentColumns()
-    if (id in columns) {
+    if (id in allColumns) {
       return id
     }
 
-    return Object.keys(columns).find((key) => columns[key].find((item) => item.id === id))
+    return Object.keys(allColumns).find((key) => allColumns[key].find((item) => item.id === id))
   }
 
   const getActiveApplicant = () => {
     if (!activeId) return null
 
-    const columns = getCurrentColumns()
-    for (const items of Object.values(columns)) {
+    for (const items of Object.values(allColumns)) {
       const applicant = items.find((item) => item.id === activeId)
       if (applicant) return applicant
     }
     return null
+  }
+
+  const handleLongPress = (applicantId: string) => {
+    setIsSelectionMode(true)
+    setSelectedApplicants(new Set([applicantId]))
+  }
+
+  const handleToggleSelect = (applicantId: string) => {
+    const newSelected = new Set(selectedApplicants)
+    if (newSelected.has(applicantId)) {
+      newSelected.delete(applicantId)
+    } else {
+      newSelected.add(applicantId)
+    }
+    setSelectedApplicants(newSelected)
+
+    if (newSelected.size === 0) {
+      setIsSelectionMode(false)
+    }
+  }
+
+  const handleColumnClick = (targetColumnId: string) => {
+    if (selectedApplicants.size === 0) return
+
+    const newColumns = { ...allColumns }
+    const selectedApplicantsList: Applicant[] = []
+
+    // Remove selected applicants from their current columns
+    Object.keys(newColumns).forEach((columnId) => {
+      newColumns[columnId] = newColumns[columnId].filter((applicant) => {
+        if (selectedApplicants.has(applicant.id)) {
+          selectedApplicantsList.push(applicant)
+          return false
+        }
+        return true
+      })
+    })
+
+    // Add selected applicants to target column
+    newColumns[targetColumnId] = [...newColumns[targetColumnId], ...selectedApplicantsList]
+
+    setAllColumns(newColumns)
+    setSelectedApplicants(new Set())
+    setIsSelectionMode(false)
+  }
+
+  const handleClearSelection = () => {
+    setSelectedApplicants(new Set())
+    setIsSelectionMode(false)
   }
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -613,17 +953,16 @@ export default function LeadDeveloperWeekly() {
 
     if (activeContainer === overContainer) return
 
-    const columns = getCurrentColumns()
-    const activeItems = columns[activeContainer]
-    const overItems = columns[overContainer]
+    const activeItems = allColumns[activeContainer]
+    const overItems = allColumns[overContainer]
 
     const activeIndex = activeItems.findIndex((item) => item.id === activeId)
     const activeItem = activeItems[activeIndex]
 
     if (!activeItem) return
 
-    setCurrentColumns({
-      ...columns,
+    setAllColumns({
+      ...allColumns,
       [activeContainer]: activeItems.filter((item) => item.id !== activeId),
       [overContainer]: [...overItems, activeItem],
     })
@@ -645,8 +984,7 @@ export default function LeadDeveloperWeekly() {
     if (!activeContainer || !overContainer) return
 
     if (activeContainer === overContainer) {
-      const columns = getCurrentColumns()
-      const items = columns[activeContainer]
+      const items = allColumns[activeContainer]
       const oldIndex = items.findIndex((item) => item.id === activeId)
       const newIndex = items.findIndex((item) => item.id === overId)
 
@@ -655,8 +993,8 @@ export default function LeadDeveloperWeekly() {
         const [removed] = newItems.splice(oldIndex, 1)
         newItems.splice(newIndex, 0, removed)
 
-        setCurrentColumns({
-          ...columns,
+        setAllColumns({
+          ...allColumns,
           [activeContainer]: newItems,
         })
       }
@@ -664,56 +1002,57 @@ export default function LeadDeveloperWeekly() {
   }
 
   const activeApplicant = getActiveApplicant()
-  const columns = getCurrentColumns()
-  const totalApplicants = Object.values(columns).reduce((sum, col) => sum + col.length, 0)
+  const totalApplicants = Object.values(allColumns).reduce((sum, col) => sum + col.length, 0)
 
-  const getStageTitle = () => {
-    switch (currentStage) {
-      case "stage1":
-        return "STAGE 01 - HR Interview"
-      case "stage2":
-        return "STAGE 02 - Hiring Manager/Client"
-      case "stage3":
-        return "STAGE 03"
-      default:
-        return "STAGE 01 - HR Interview"
-    }
-  }
-
-  const getStageColumns = () => {
-    switch (currentStage) {
-      case "stage1":
-        return [
-          { title: "Resume Screening", id: "resume-screening" },
-          { title: "Phone-Call Interview", id: "phone-call" },
-          { title: "Shortlisted", id: "shortlisted" },
-        ]
-      case "stage2":
-        return [
-          { title: "Initial Interview", id: "initial-interview" },
-          { title: "Assessment", id: "assessment" },
-          { title: "Final Interview", id: "final-interview" },
-        ]
-      case "stage3":
-        return [
-          { title: "For Job Offer", id: "job-offer" },
-          { title: "Job Offer & Finalization", id: "job-offer-finalization" },
-          { title: "Onboarding", id: "onboarding" },
-          { title: "Warm", id: "warm" },
-          { title: "Failed", id: "failed" },
-        ]
-      default:
-        return []
-    }
-  }
+  const stageConfigs = [
+    {
+      title: "STAGE 01 - HR Interview",
+      columns: [
+        { title: "Resume Screening", id: "resume-screening" },
+        { title: "Phone-Call Interview", id: "phone-call" },
+        { title: "Shortlisted", id: "shortlisted" },
+      ],
+      isMultiRow: false,
+    },
+    {
+      title: "STAGE 02 - Hiring Manager/Client",
+      columns: [
+        { title: "Initial Interview", id: "initial-interview" },
+        { title: "Assessment", id: "assessment" },
+        { title: "Final Interview", id: "final-interview" },
+      ],
+      isMultiRow: false,
+    },
+    {
+      title: "STAGE 03",
+      columns: [
+        { title: "For Job Offer", id: "job-offer" },
+        { title: "Job Offer & Finalization", id: "job-offer-finalization" },
+        { title: "Onboarding", id: "onboarding" },
+        { title: "Warm", id: "warm" },
+        { title: "Failed", id: "failed" },
+      ],
+      isMultiRow: true,
+    },
+  ]
 
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gray-50 flex">
+      <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row">
+        {/* Mobile Selection Bar */}
+        {isSelectionMode && (
+          <div className="lg:hidden fixed top-16 left-0 right-0 bg-blue-600 text-white p-3 z-50 flex items-center justify-between">
+            <span className="text-sm font-medium">{selectedApplicants.size} selected</span>
+            <Button variant="ghost" size="sm" onClick={handleClearSelection} className="text-white hover:bg-blue-700">
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+
         {/* Main Content */}
-        <div className="flex-1 p-6 pt-[100px]">
-          <div className="mx-auto max-w-7xl space-y-6">
+        <div className={`flex-1 p-6 lg:pr-0 ${isSelectionMode ? "pt-[140px] lg:pt-[100px]" : "pt-[100px]"}`}>
+          <div className="mx-auto max-w-none space-y-6 lg:mr-6">
             {/* Header */}
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
@@ -754,64 +1093,73 @@ export default function LeadDeveloperWeekly() {
               </div>
             </div>
 
-            {/* Stage Tabs */}
-            <Tabs value={currentStage} onValueChange={setCurrentStage} className="w-full">
-              <div className="flex items-center justify-between">
-                <TabsList className="grid w-auto grid-cols-3">
-                  <TabsTrigger value="stage1">Stage 01</TabsTrigger>
-                  <TabsTrigger value="stage2">Stage 02</TabsTrigger>
-                  <TabsTrigger value="stage3">Stage 03</TabsTrigger>
-                </TabsList>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant={viewMode === "grid" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setViewMode("grid")}
-                  >
-                    <Grid3X3 className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant={viewMode === "list" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setViewMode("list")}
-                  >
-                    <List className="h-4 w-4" />
-                  </Button>
-                </div>
+            {/* View Mode Toggle */}
+            <div className="flex items-center justify-end gap-2">
+              <button
+                onClick={() => setViewMode("grid")}
+                className={`p-2 rounded border 
+                  ${
+                    viewMode === "grid"
+                      ? "bg-white text-[#0056d2] border-[#0056d2]"
+                      : "bg-[#0056d2] text-white border-[#0056d2]"
+                  }`}
+              >
+                <Grid3X3 className="h-4 w-4" />
+              </button>
+
+              <button
+                onClick={() => {
+                  setViewMode("list")
+                  navigate("/applicants/jobdetails/leaddeveloper/")
+                }}
+                className={`p-2 rounded border 
+    ${viewMode === "list" ? "bg-white text-[#0056d2] border-[#0056d2]" : "bg-[#0056d2] text-white border-[#0056d2]"}`}
+              >
+                <List className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Mobile Instructions */}
+            {!isSelectionMode && (
+              <div className="lg:hidden bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                <p className="text-sm text-blue-800">
+                  <strong>Mobile tip:</strong> Long press on any applicant to select, then tap a column to move them
+                  there.
+                </p>
+              </div>
+            )}
+
+            {/* Drag and Drop Context for all stages */}
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
+              onDragEnd={handleDragEnd}
+            >
+              {/* All Stages Stacked Vertically */}
+              <div className="space-y-8">
+                {stageConfigs.map((stage, index) => (
+                  <StageSection
+                    key={index}
+                    title={stage.title}
+                    columns={stage.columns}
+                    applicantColumns={allColumns}
+                    isMultiRow={stage.isMultiRow}
+                    selectedApplicants={selectedApplicants}
+                    isSelectionMode={isSelectionMode}
+                    onLongPress={handleLongPress}
+                    onToggleSelect={handleToggleSelect}
+                    onColumnClick={handleColumnClick}
+                    navigate={navigate}
+                  />
+                ))}
               </div>
 
-              {/* Stage Header */}
-              <div className="mt-4">
-                <h2 className="text-3xl font-bold text-gray-900">{getStageTitle()}</h2>
-              </div>
-
-              <TabsContent value={currentStage} className="mt-6">
-                {/* Drag and Drop Columns */}
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragStart={handleDragStart}
-                  onDragOver={handleDragOver}
-                  onDragEnd={handleDragEnd}
-                >
-                  <div className="flex gap-6 overflow-x-auto pb-4">
-                    {getStageColumns().map((column) => (
-                      <DroppableColumn
-                        key={column.id}
-                        title={column.title}
-                        id={column.id}
-                        applicants={columns[column.id] || []}
-                        count={(columns[column.id] || []).length}
-                      />
-                    ))}
-                  </div>
-
-                  <DragOverlay>
-                    {activeApplicant ? <ApplicantCard {...activeApplicant} isDragging={true} /> : null}
-                  </DragOverlay>
-                </DndContext>
-              </TabsContent>
-            </Tabs>
+              <DragOverlay>
+                {activeApplicant ? <ApplicantCard {...activeApplicant} isDragging={true} /> : null}
+              </DragOverlay>
+            </DndContext>
           </div>
         </div>
 
