@@ -4,15 +4,16 @@ import { useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Calendar } from "@/components/ui/calendar"
 import { ArrowLeft, Search, MoreHorizontal } from "lucide-react"
 import { Navbar } from "@/reusables/Navbar"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Card, CardContent } from "@/components/ui/card"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 
 // Sample applicant data
 const applicants = [
@@ -87,118 +88,6 @@ interface SidebarCandidate {
   stage: number
   stageColor: "orange" | "red" | "green"
   timeAgo: string
-}
-
-// Interview Scheduler Modal Component
-function InterviewSchedulerModal({
-  isOpen,
-  onClose,
-  applicantName,
-}: { isOpen: boolean; onClose: () => void; applicantName: string }) {
-  if (!isOpen) return null
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Transparent gray overlay */}
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-
-      {/* Form modal */}
-      <div className="relative z-10 w-full max-w-2xl mx-4">
-        <div className="bg-white rounded-lg shadow-xl p-6 max-h-[90vh] overflow-y-auto">
-          {/* Header */}
-          <div className="mb-6">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-2">Schedule Interview</h2>
-            <p className="text-gray-600">Plan, organize, and schedule interview</p>
-            <p className="text-sm text-blue-600 mt-1">Candidate: {applicantName}</p>
-          </div>
-
-          {/* Interview Date */}
-          <div className="mb-6">
-            <Label htmlFor="interview-date" className="text-sm font-medium text-gray-700 mb-2 block">
-              Interview Date
-            </Label>
-            <Input id="interview-date" type="date" className="w-full" />
-          </div>
-
-          {/* Additional Information Card */}
-          <Card className="mb-6">
-            <CardContent className="p-4 space-y-4">
-              {/* First Row: Time, Duration, Interviewer Names */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="time" className="text-sm font-medium text-gray-700 mb-1 block">
-                    Time
-                  </Label>
-                  <Input id="time" type="time" placeholder="09:00" />
-                </div>
-                <div>
-                  <Label htmlFor="duration" className="text-sm font-medium text-gray-700 mb-1 block">
-                    Duration
-                  </Label>
-                  <Input id="duration" placeholder="1 hour" />
-                </div>
-                <div>
-                  <Label htmlFor="interviewers" className="text-sm font-medium text-gray-700 mb-1 block">
-                    Interviewer Names
-                  </Label>
-                  <Input id="interviewers" placeholder="John Doe, Jane Smith" />
-                </div>
-              </div>
-
-              {/* Second Row: Subject and Location */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="subject" className="text-sm font-medium text-gray-700 mb-1 block">
-                    Subject
-                  </Label>
-                  <Input id="subject" placeholder="Frontend Developer Interview" />
-                </div>
-                <div>
-                  <Label htmlFor="location" className="text-sm font-medium text-gray-700 mb-1 block">
-                    Schedule Interview Onsite
-                  </Label>
-                  <Input id="location" placeholder="Conference Room A, 2nd Floor" />
-                </div>
-              </div>
-
-              {/* Additional Notes */}
-              <div>
-                <Label htmlFor="notes" className="text-sm font-medium text-gray-700 mb-1 block">
-                  Additional Notes
-                </Label>
-                <Textarea
-                  id="notes"
-                  placeholder="Any additional information or special requirements..."
-                  className="min-h-[100px] resize-none"
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Action Buttons */}
-          <div className="flex justify-end gap-3">
-            <Button
-              variant="outline"
-              onClick={onClose}
-              className="bg-white text-blue-600 border-blue-600 hover:bg-blue-50"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={() => {
-                // Handle form submission here
-                console.log(`Interview scheduled for ${applicantName}!`)
-                onClose()
-              }}
-              className="bg-blue-600 text-white hover:bg-blue-700"
-            >
-              Confirm
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
 }
 
 // Sidebar Component
@@ -313,23 +202,222 @@ function Sidebar() {
   )
 }
 
+// Reschedule Interview Modal Component
+function RescheduleInterviewModal({
+  isOpen,
+  onClose,
+  applicantName,
+}: { isOpen: boolean; onClose: () => void; applicantName: string }) {
+  const [interviewType, setInterviewType] = useState("onsite")
+
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Transparent gray overlay */}
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+
+      {/* Form modal */}
+      <div className="relative z-10 w-full max-w-2xl mx-4">
+        <div className="bg-white rounded-lg shadow-xl p-6 max-h-[90vh] overflow-y-auto">
+          {/* Header */}
+          <div className="mb-6">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-2">Reschedule Interview</h2>
+            <p className="text-gray-600">Plan, organize, and reschedule interview</p>
+            <p className="text-sm text-blue-600 mt-1">Candidate: {applicantName}</p>
+          </div>
+
+          {/* Interview Date */}
+          <div className="mb-6">
+            <Label htmlFor="interview-date" className="text-sm font-medium text-gray-700 mb-2 block">
+              Interview Date
+            </Label>
+            <Input id="interview-date" type="date" className="w-full" />
+          </div>
+
+          {/* Additional Information Card */}
+          <Card className="mb-6">
+            <CardContent className="p-4 space-y-4">
+              {/* First Row: Time, Duration, Interviewer Names */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="time" className="text-sm font-medium text-gray-700 mb-1 block">
+                    Time
+                  </Label>
+                  <Input id="time" type="time" placeholder="09:00" />
+                </div>
+                <div>
+                  <Label htmlFor="duration" className="text-sm font-medium text-gray-700 mb-1 block">
+                    Duration
+                  </Label>
+                  <Input id="duration" placeholder="1 hour" />
+                </div>
+                <div>
+                  <Label htmlFor="interviewers" className="text-sm font-medium text-gray-700 mb-1 block">
+                    Interviewer Names
+                  </Label>
+                  <Input id="interviewers" placeholder="John Doe, Jane Smith" />
+                </div>
+              </div>
+
+              {/* Second Row: Subject and Interview Setup */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="subject" className="text-sm font-medium text-gray-700 mb-1 block">
+                    Subject
+                  </Label>
+                  <Input id="subject" placeholder="Frontend Developer Interview" />
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-700 mb-2 block">Interview Set-up</Label>
+                  <RadioGroup value={interviewType} onValueChange={setInterviewType} className="flex gap-4">
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="onsite" id="onsite" />
+                      <Label htmlFor="onsite" className="text-sm">
+                        Onsite
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="offsite" id="offsite" />
+                      <Label htmlFor="offsite" className="text-sm">
+                        Offsite
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="phone" id="phone" />
+                      <Label htmlFor="phone" className="text-sm">
+                        Phone
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+              </div>
+
+              {/* Meeting App Dropdown */}
+              {(interviewType === "offsite" || interviewType === "phone") && (
+                <div>
+                  <Label htmlFor="meeting-app" className="text-sm font-medium text-gray-700 mb-1 block">
+                    Meeting App
+                  </Label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select meeting app" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="zoom">Zoom</SelectItem>
+                      <SelectItem value="teams">Microsoft Teams</SelectItem>
+                      <SelectItem value="meet">Google Meet</SelectItem>
+                      <SelectItem value="webex">Cisco Webex</SelectItem>
+                      <SelectItem value="skype">Skype</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Meeting Link */}
+              {(interviewType === "offsite" || interviewType === "phone") && (
+                <div>
+                  <Label htmlFor="meeting-link" className="text-sm font-medium text-gray-700 mb-1 block">
+                    Meeting Link
+                  </Label>
+                  <Textarea
+                    id="meeting-link"
+                    placeholder="Paste the meeting link here..."
+                    className="min-h-[80px] resize-none"
+                  />
+                </div>
+              )}
+
+              {/* Meeting Title/Link Name */}
+              {(interviewType === "offsite" || interviewType === "phone") && (
+                <div>
+                  <Label htmlFor="meeting-title" className="text-sm font-medium text-gray-700 mb-1 block">
+                    Meeting Title/Link Name
+                  </Label>
+                  <Input id="meeting-title" placeholder="Interview with [Candidate Name]" />
+                </div>
+              )}
+
+              {/* Location for Onsite */}
+              {interviewType === "onsite" && (
+                <div>
+                  <Label htmlFor="location" className="text-sm font-medium text-gray-700 mb-1 block">
+                    Location
+                  </Label>
+                  <Input id="location" placeholder="Conference Room A, 2nd Floor" />
+                </div>
+              )}
+
+              {/* Additional Notes */}
+              <div>
+                <Label htmlFor="notes" className="text-sm font-medium text-gray-700 mb-1 block">
+                  Additional Notes
+                </Label>
+                <Textarea
+                  id="notes"
+                  placeholder="Any additional information or special requirements..."
+                  className="min-h-[100px] resize-none"
+                />
+              </div>
+
+              {/* Reason for Rescheduling */}
+              <div>
+                <Label htmlFor="reschedule-reason" className="text-sm font-medium text-gray-700 mb-1 block">
+                  Reason for Rescheduling
+                </Label>
+                <Textarea
+                  id="reschedule-reason"
+                  placeholder="Please provide the reason for rescheduling this interview..."
+                  className="min-h-[100px] resize-none"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Action Buttons */}
+          <div className="flex justify-end gap-3">
+            <Button
+              variant="outline"
+              onClick={onClose}
+              className="bg-white text-blue-600 border-blue-600 hover:bg-blue-50"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                // Handle form submission here
+                console.log(`Interview rescheduled for ${applicantName}!`)
+                onClose()
+              }}
+              className="bg-blue-600 text-white hover:bg-blue-700"
+            >
+              Confirm Reschedule
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function JobManagement() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedFilter, setSelectedFilter] = useState("")
   const [jobStatus, setJobStatus] = useState("active")
-  const [isSchedulerOpen, setIsSchedulerOpen] = useState(false)
-  const [selectedApplicant, setSelectedApplicant] = useState("")
   const navigate = useNavigate()
+
+  const [isRescheduleOpen, setIsRescheduleOpen] = useState(false)
+  const [selectedApplicantForReschedule, setSelectedApplicantForReschedule] = useState("")
+
+  const handleRescheduleInterview = (applicantName: string) => {
+    setSelectedApplicantForReschedule(applicantName)
+    setIsRescheduleOpen(true)
+  }
 
   // Filter applicants based on search term
   const filteredApplicants = applicants.filter((applicant) =>
     applicant.name.toLowerCase().includes(searchTerm.toLowerCase()),
   )
-
-  const handleScheduleInterview = (applicantName: string) => {
-    setSelectedApplicant(applicantName)
-    setIsSchedulerOpen(true)
-  }
 
   return (
     <>
@@ -391,26 +479,26 @@ export default function JobManagement() {
                 {/* Filter and Search */}
                 <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-between sm:items-center">
                   <Select
-                    value={selectedFilter || "shortlisted"}
+                    value={selectedFilter || "initial-interview"}
                     onValueChange={(value) => {
                       setSelectedFilter(value)
                       if (value === "resume-screening") {
                         window.location.href = "/applicants/jobdetails/leaddeveloper/LeadDeveloperRS/"
                       } else if (value === "phone-call") {
                         window.location.href = "/applicants/jobdetails/leaddeveloper/LeadDeveloperPI"
-                      } else if (value === "initial-interview") {
-                        window.location.href = "/applicants/jobdetails/leaddeveloper/LeadDeveloperII"
+                      } else if (value === "shortlisted") {
+                        window.location.href = "/applicants/jobdetails/leaddeveloper/LeadDeveloperSL"
                       } else if (value === "assessments") {
                         window.location.href = "/applicants/jobdetails/leaddeveloper/LeadDeveloperAS"
-                      } else if (value === "final-interview") {
-                        window.location.href = "/applicants/jobdetails/leaddeveloper/LeadDeveloperFI"
-                      } else if (value === "job-offer"){
+                      } else if (value === "initial-interview") {
+                        window.location.href = "/applicants/jobdetails/leaddeveloper/LeadDeveloperII"
+                      } else if (value === "job-offer") {
                         window.location.href = "/applicants/jobdetails/leaddeveloper/LeadDeveloperFJO"
-                      }
+                        }
                     }}
                   >
                     <SelectTrigger className="w-40 border-none shadow-none font-bold text-black text-sm">
-                      <SelectValue placeholder="Shortlisted" />
+                      <SelectValue placeholder="Final Interview" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem className="font-bold" value="resume-screening">
@@ -476,8 +564,12 @@ export default function JobManagement() {
                         <br />
                         Interview
                       </TableHead>
-                      <TableHead className="border border-gray-200 py-2 px-3 w-12 lg:min-w-[80px] text-center text-xs lg:text-sm lg:py-3 lg:px-4"></TableHead>
-                      <TableHead className="border border-gray-200 py-2 px-3 w-20 lg:min-w-[150px] text-center text-xs lg:text-sm lg:py-3 lg:px-4">
+                      <TableHead className="border border-gray-200 py-2 px-3 w-20 lg:min-w-[120px] text-center text-xs lg:text-sm lg:py-3 lg:px-4">
+                        Set
+                        <br />
+                        Schedule
+                      </TableHead>
+                      <TableHead className="border border-gray-200 py-2 px-3 w-12 lg:min-w-[80px] text-center text-xs lg:text-sm lg:py-3 lg:px-4">
                         Status
                       </TableHead>
                       <TableHead className="border border-gray-200 py-2 px-3 w-20 lg:min-w-[120px] text-xs lg:text-sm lg:py-3 lg:px-4">
@@ -521,11 +613,21 @@ export default function JobManagement() {
                               variant="default"
                               size="sm"
                               className="w-full px-2 lg:px-3 bg-[#0056d2] text-xs lg:text-sm h-9 lg:h-10 leading-tight lg:whitespace-nowrap"
-                              onClick={() => handleScheduleInterview(applicant.name)}
+                              onClick={() => navigate("/ieform/")}
                             >
-                              Schedule
+                              Start
                               <br />
                               Interview
+                            </Button>
+                          </TableCell>
+                          <TableCell className="border border-gray-200 py-3 px-3 lg:py-4 lg:px-4 text-center w-20 align-middle">
+                            <Button
+                              variant="default"
+                              size="sm"
+                              className="w-full px-2 lg:px-3 bg-yellow-500 hover:bg-yellow-600 text-white text-xs lg:text-sm h-9 lg:h-10 leading-tight lg:whitespace-nowrap"
+                              onClick={() => handleRescheduleInterview(applicant.name)}
+                            >
+                              Reschedule
                             </Button>
                           </TableCell>
                           <TableCell className="border border-gray-200 py-3 px-3 lg:py-4 lg:px-4 text-center w-12 align-middle">
@@ -536,26 +638,6 @@ export default function JobManagement() {
                             >
                               Fail
                             </Button>
-                          </TableCell>
-                          <TableCell className="border border-gray-200 py-3 px-3 lg:py-4 lg:px-4 text-center w-20 align-middle">
-                            <Badge
-                              variant="outline"
-                              className="text-xs lg:text-sm px-1 lg:px-2 leading-tight text-center"
-                            >
-                              {applicant.status === "For Initial Interview" ? (
-                                <>
-                                  For Initial
-                                  <br />
-                                  Interview
-                                </>
-                              ) : (
-                                <>
-                                  For Final
-                                  <br />
-                                  Interview
-                                </>
-                              )}
-                            </Badge>
                           </TableCell>
                           <TableCell className="border border-gray-200 py-3 px-3 lg:py-4 lg:px-4 w-20 text-xs lg:text-sm align-middle">
                             <span className="break-words leading-tight lg:whitespace-nowrap">
@@ -600,12 +682,11 @@ export default function JobManagement() {
           {/* Right Sidebar - Stacks below on mobile/tablet, side by side on xl screens */}
           <Sidebar />
         </div>
-
-        {/* Interview Scheduler Modal */}
-        <InterviewSchedulerModal
-          isOpen={isSchedulerOpen}
-          onClose={() => setIsSchedulerOpen(false)}
-          applicantName={selectedApplicant}
+        {/* Reschedule Interview Modal */}
+        <RescheduleInterviewModal
+          isOpen={isRescheduleOpen}
+          onClose={() => setIsRescheduleOpen(false)}
+          applicantName={selectedApplicantForReschedule}
         />
       </div>
     </>

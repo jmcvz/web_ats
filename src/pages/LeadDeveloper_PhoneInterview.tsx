@@ -142,6 +142,16 @@ const navigate = useNavigate();
     setSelectedFilter(value)
     if (value === "resume-screening") {
       window.location.href = "/applicants/jobdetails/leaddeveloper/LeadDeveloperRS/"
+    } else if (value === "shortlisted"){
+      window.location.href = "/applicants/jobdetails/leaddeveloper/LeadDeveloperSL"
+    } else if (value === "initial-interview") {
+      window.location.href = "/applicants/jobdetails/leaddeveloper/LeadDeveloperII"
+    } else if (value === "assessments") {
+      window.location.href = "/applicants/jobdetails/leaddeveloper/LeadDeveloperAS"
+    } else if (value === "final-interview") {
+      window.location.href = "/applicants/jobdetails/leaddeveloper/LeadDeveloperFI"
+    } else if (value === "job-offer"){
+      window.location.href = "/applicants/jobdetails/leaddeveloper/LeadDeveloperFJO"
     }
   }}
 >

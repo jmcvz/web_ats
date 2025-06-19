@@ -15,6 +15,11 @@ import LeadDeveloperRS from '@/pages/LeadDeveloper_ResumeScreening'
 import LeadDeveloperPI from '@/pages/LeadDeveloper_PhoneInterview'
 import InterviewEvaluationForm from '@/pages/InterviewEvaluationFormPage'
 import LeadDeveloperSL from '@/pages/LeadDeveloper_Shortlisted'
+import LeadDeveloperII from '@/pages/LeadDeveloper_InitialInterview'
+import LeadDeveloperAS from '@/pages/LeadDeveloper_Assessment'
+import LeadDeveloperFI from '@/pages/LeadDeveloper_FinalInterview'
+import LeadDeveloperFJO from '@/pages/LeadDeveloper_ForJobOffer'
+import OfferAndFinalization from '@/pages/OfferAndFinalization'
 
 
 export default function App() {
@@ -36,6 +41,11 @@ export default function App() {
       <Route path="/applicants/jobdetails/leaddeveloper/LeadDeveloperPI" element={<LeadDeveloperPI/>} />
       <Route path="/ieform/*" element={<InterviewEvaluationForm/>} />
       <Route path="/applicants/jobdetails/leaddeveloper/LeadDeveloperSL" element={<LeadDeveloperSL/>} />
+      <Route path="/applicants/jobdetails/leaddeveloper/LeadDeveloperII" element={<LeadDeveloperII/>} />
+      <Route path="/applicants/jobdetails/leaddeveloper/LeadDeveloperAS" element={<LeadDeveloperAS/>} />
+      <Route path="/applicants/jobdetails/leaddeveloper/LeadDeveloperFI" element={<LeadDeveloperFI/>} />
+      <Route path="/applicants/jobdetails/leaddeveloper/LeadDeveloperFJO" element={<LeadDeveloperFJO/>} />  
+      <Route  path="/applicants/OfferAndFinalization" element={<OfferAndFinalization />} />
       </Routes>
     </BrowserRouter>
   );
