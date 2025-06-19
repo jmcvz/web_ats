@@ -1,5 +1,6 @@
 "use client"
 
+import { useNavigate } from "react-router-dom"
 import { useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -61,12 +62,10 @@ const applicants = [
   },
 ]
 
-
-const statusConfig = {
-  Published: { bg: "bg-green-100", text: "text-green-800" },
-  Pending: { bg: "bg-yellow-100", text: "text-yellow-800" },
-  Closed: { bg: "bg-red-100", text: "text-red-800" },
-  Draft: { bg: "bg-blue-100", text: "text-blue-800" },
+const statusStyles = {
+  active: "bg-green-100 text-green-800 border-green-300 hover:bg-green-200",
+  inactive: "bg-red-100 text-red-800 border-red-300 hover:bg-red-200",
+  pending: "bg-yellow-100 text-yellow-800 border-yellow-300 hover:bg-yellow-200",
 }
 
 export default function JobManagement() {
@@ -78,8 +77,10 @@ export default function JobManagement() {
     applicant.name.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
-  const jobStatus = "Published"
-  const statusStyle = statusConfig[jobStatus as keyof typeof statusConfig]
+  const [jobStatus, setJobStatus] = useState("active")
+
+ const navigate = useNavigate()
+
 
   
 
@@ -106,11 +107,17 @@ export default function JobManagement() {
     <h1 className="text-2xl font-bold text-gray-900 text-center sm:text-left">
       Senior Software Engineer
     </h1>
-    <span
-      className={`mt-10 sm:mt-0 px-2 py-0.5 rounded text-sm font-medium inline-block ${statusStyle.bg} ${statusStyle.text}`}
-    >
-      {jobStatus}
-    </span>
+    <Select value={jobStatus} onValueChange={setJobStatus}>
+  <SelectTrigger className={`w-auto min-w-[80px] px-3 py-1 rounded text-sm font-medium border ${statusStyles[jobStatus as keyof typeof statusStyles]}`}>
+    <SelectValue />
+  </SelectTrigger>
+  <SelectContent>
+    <SelectItem value="active">Active</SelectItem>
+    <SelectItem value="inactive">Inactive</SelectItem>
+    <SelectItem value="pending">Pending</SelectItem>
+  </SelectContent>
+</Select>
+
   </div>
 </div>
 
@@ -141,7 +148,7 @@ export default function JobManagement() {
   onValueChange={(value) => {
     setSelectedFilter(value)
     if (value === "phone-call") {
-      window.location.href = "/LeadDeveloperPI"
+      window.location.href = "/applicants/jobdetails/leaddeveloper/LeadDeveloperPI"
     }
   }}
 >
@@ -210,10 +217,16 @@ export default function JobManagement() {
               </div>
             </TableCell>
             <TableCell className="border border-gray-200 py-4 px-6 text-center w-20">
-              <Button variant="success" size="sm" className="w-full px-2">
-                Pass
-              </Button>
-            </TableCell>
+  <Button
+    variant="success"
+    size="sm"
+    className="w-full px-2"
+    onClick={() => navigate("/applicants/jobdetails/leaddeveloper/LeadDeveloperPI/")}
+  >
+    Pass
+  </Button>
+</TableCell>
+
             <TableCell className="border border-gray-200 py-4 px-6 text-center w-20">
               <Button variant="danger" size="sm" className="w-full px-2">
                 Fail
