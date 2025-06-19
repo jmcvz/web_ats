@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Pencil, Archive } from "lucide-react"
+import { Pencil, Archive, Info } from "lucide-react"
 import {
   Dialog,
   DialogTrigger,
@@ -82,7 +82,7 @@ export default function PositionsClosed() {
   const [showDialog, setShowDialog] = useState(false)
 
   useEffect(() => {
-    document.title = "Positions | Closed"
+    document.title = "Positions - Closed"
   }, [])
 
   const filteredPostings = postings.filter((posting) =>
@@ -93,20 +93,12 @@ export default function PositionsClosed() {
     navigate(`/positions/${value}`)
   }
 
-  const handleSelectToggle = () => {
+  const handleSelectAllToggle = () => {
     if (selected.length === filteredPostings.length) {
       setSelected([])
     } else {
-      setSelected(filteredPostings.map((_, i) => i))
+      setSelected(filteredPostings.map((_, idx) => idx))
     }
-  }
-
-  const handleCheckboxChange = (index: number) => {
-    setSelected((prev) =>
-      prev.includes(index)
-        ? prev.filter((i) => i !== index)
-        : [...prev, index]
-    )
   }
 
   return (
@@ -140,36 +132,31 @@ export default function PositionsClosed() {
           </div>
 
           <div className="flex justify-between items-center border-b pb-2">
-            <Tabs
-              value="closed"
-              onValueChange={handleTabChange}
-              className="flex-1"
-            >
+            <Tabs value="closed" onValueChange={handleTabChange} className="flex-1">
               <TabsList className="flex gap-6 border-b-0 bg-transparent">
-                {["Drafts", "Pendings", "On-hold", "Published", "Closed", "Archive"].map(
-                  (tab) => (
-                    <TabsTrigger
-                      key={tab.toLowerCase()}
-                      value={tab.toLowerCase()}
-                      className="relative px-2 pb-2 text-sm font-medium text-gray-500 data-[state=active]:text-blue-600"
-                    >
-                      {tab}
-                      <span className="absolute left-0 -bottom-0.5 w-full h-0.5 bg-blue-600 scale-x-0 data-[state=active]:scale-x-100 transition-transform origin-left" />
-                    </TabsTrigger>
-                  )
-                )}
+                {["Drafts", "Pendings", "On-hold", "Published", "Closed", "Archive"].map((tab) => (
+                  <TabsTrigger
+                    key={tab.toLowerCase()}
+                    value={tab.toLowerCase()}
+                    className="relative px-2 pb-2 text-sm font-medium text-gray-500 data-[state=active]:text-blue-600"
+                  >
+                    {tab}
+                    <span className="absolute left-0 -bottom-0.5 w-full h-0.5 bg-blue-600 scale-x-0 data-[state=active]:scale-x-100 transition-transform origin-left" />
+                  </TabsTrigger>
+                ))}
               </TabsList>
             </Tabs>
 
-            <div className="flex items-center gap-2 ml-4 text-sm text-gray-600">
-              <input
-                type="checkbox"
-                id="select"
-                className="w-4 h-4 accent-blue-600"
-                checked={selected.length === filteredPostings.length}
-                onChange={handleSelectToggle}
-              />
-              <label htmlFor="select">Select</label>
+            <div className="flex items-center gap-3 ml-4">
+              <label className="flex items-center gap-1 text-sm text-gray-700 font-medium cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={selected.length === filteredPostings.length}
+                  onChange={handleSelectAllToggle}
+                  className="w-4 h-4 accent-blue-600"
+                />
+                <span>Select</span>
+              </label>
 
               {selected.length > 0 && (
                 <Dialog open={showDialog} onOpenChange={setShowDialog}>
@@ -183,14 +170,14 @@ export default function PositionsClosed() {
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-md">
                     <DialogHeader>
-                      <DialogTitle className="flex items-center gap-2 text-sm text-gray-800">
-                        <span className="text-blue-600">ⓘ</span> Archive Item
+                      <DialogTitle className="text-sm font-medium flex items-center gap-2 text-gray-800">
+                        <Info className="text-blue-600 w-4 h-4" /> Archive Item
                       </DialogTitle>
                       <DialogDescription className="text-sm text-gray-600">
                         This will be moved to your archives. You can restore it later if needed.
                       </DialogDescription>
                     </DialogHeader>
-                    <div className="text-sm text-gray-800 mt-2">Archive now?</div>
+                    <div className="text-sm text-gray-800 mt-4">Archive now?</div>
                     <DialogFooter className="mt-4 flex justify-end gap-2">
                       <button
                         onClick={() => setShowDialog(false)}
@@ -226,7 +213,13 @@ export default function PositionsClosed() {
                       type="checkbox"
                       className="mt-1 w-4 h-4 accent-blue-600"
                       checked={selected.includes(idx)}
-                      onChange={() => handleCheckboxChange(idx)}
+                      onChange={() =>
+                        setSelected((prev) =>
+                          prev.includes(idx)
+                            ? prev.filter((i) => i !== idx)
+                            : [...prev, idx]
+                        )
+                      }
                     />
                     <div>
                       <div className="flex items-center gap-2 flex-wrap">
