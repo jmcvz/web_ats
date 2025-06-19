@@ -112,7 +112,7 @@ const statusColor = {
   Pending: "bg-yellow-100 text-yellow-700",
 };
 
-export default function JobList() {
+export default function JobDetails() {
   const navigate = useNavigate();
 
   const formatJobSlug = (title: string) =>
