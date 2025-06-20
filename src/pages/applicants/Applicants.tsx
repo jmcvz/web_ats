@@ -72,7 +72,7 @@
 
             {/* Applicants Table */}
             <div className="mt-6 overflow-x-auto">
-  <div className="min-w-[800px] rounded-md border bg-white">
+  <div className="min-w-[800px] rounded-md border bg-white mb-20">
     <table className="min-w-full text-sm text-left">
                 <thead className="bg-gray-100">
                   <tr className="text-xs text-muted-foreground uppercase">
@@ -213,7 +213,7 @@
   </Button>
 
   <button
-    onClick={() => navigate("/applicants/jobdetails")}
+    onClick={() => navigate("/applicants/job")}
     className="flex items-center text-blue-500 text-sm hover:underline"
   >
     Next

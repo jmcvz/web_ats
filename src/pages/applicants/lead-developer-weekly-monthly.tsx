@@ -1,4 +1,5 @@
 "use client"
+import { useParams } from "react-router-dom"
 
 import type React from "react"
 
@@ -1046,6 +1047,26 @@ export default function LeadDeveloperWeekly() {
     },
   ]
 
+  const formatJobTitle = (slug?: string) => {
+  const titleMap: Record<string, string> = {
+    leaddeveloper: "Lead Developer",
+    projectmanager: "Project Manager",
+    socialcontentmanager: "Social Content Manager",
+    senioruiuxdesigner: "Senior UI/UX Designer",
+    customersupport: "Customer Support",
+    qaengineer: "QA Engineer",
+    humanresourcescoordinator: "Human Resources Coordinator",
+    operationsmanager: "Operations Manager",
+    socialmediamanager: "Social Media Manager",
+    marketingspecialist: "Marketing Specialist",
+    seniorsoftwareengineer: "Senior Software Engineer",
+  }
+  return slug ? titleMap[slug.toLowerCase()] || slug.replace(/([a-z])([A-Z])/g, "$1 $2") : "Unknown Job"
+}
+const { jobtitle } = useParams<{ jobtitle: string }>()
+const resolvedJobTitle = formatJobTitle(jobtitle)
+
+
   return (
     <>
       <Navbar />
@@ -1074,7 +1095,8 @@ export default function LeadDeveloperWeekly() {
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <div className="flex items-center gap-3">
-                <h2 className="text-2xl font-bold text-gray-900">Lead Developer</h2>
+                <h2 className="text-2xl font-bold text-gray-900 text-center sm:text-left">{resolvedJobTitle}</h2>
+
                 <Select defaultValue="active">
                   <SelectTrigger className="w-auto min-w-[80px] bg-green-100 text-green-800 border-green-300 hover:bg-green-200">
                     <SelectValue />
