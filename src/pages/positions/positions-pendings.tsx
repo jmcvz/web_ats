@@ -182,30 +182,40 @@ export default function PositionsPendings() {
           <div className="space-y-2">
             {filteredPostings.map((posting, idx) => (
               <Card
-                key={idx}
-                className="p-4 shadow-sm hover:shadow-md transition border"
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-base font-semibold text-gray-800">
-                        {posting.title}
-                      </h3>
-                      <Badge
-                        variant="secondary"
-                        className={getDepartmentColor(posting.department)}
-                      >
-                        {posting.department}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-gray-600 mt-1">{posting.description}</p>
-                  </div>
-                  <div className="flex flex-col items-end min-w-[150px] text-sm text-gray-500">
-                    <span>{posting.assignee}</span>
-                    <ProgressSteps progress={posting.progress} />
-                  </div>
-                </div>
-              </Card>
+  key={idx}
+  className="p-4 shadow-sm hover:shadow-md transition border"
+>
+  <div className="flex flex-col sm:flex-row justify-between gap-4 sm:items-start">
+    {/* Job info and description */}
+    <div className="flex-1">
+      <div className="flex items-center gap-2 flex-wrap">
+        <h3 className="text-base font-semibold text-gray-800">
+          {posting.title}
+        </h3>
+        <Badge
+          variant="secondary"
+          className={getDepartmentColor(posting.department)}
+        >
+          {posting.department}
+        </Badge>
+      </div>
+      <p className="text-sm text-gray-600 mt-1">{posting.description}</p>
+
+      {/* Mobile view: Assignee + Progress below description */}
+      <div className="mt-2 flex flex-col sm:hidden text-sm font-bold text-black">
+        <span className="mb-1">{posting.assignee}</span>
+        <ProgressSteps progress={posting.progress} />
+      </div>
+    </div>
+
+    {/* Desktop view: Assignee + Progress on the right */}
+    <div className="hidden sm:flex flex-col items-end min-w-[150px] text-sm font-bold text-black">
+      <span className="mb-1 ">{posting.assignee}</span>
+      <ProgressSteps progress={posting.progress} />
+    </div>
+  </div>
+</Card>
+
             ))}
           </div>
         </div>

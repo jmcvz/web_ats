@@ -133,18 +133,19 @@ export default function PositionsClosed() {
 
           <div className="flex justify-between items-center border-b pb-2">
             <Tabs value="closed" onValueChange={handleTabChange} className="flex-1">
-              <TabsList className="flex gap-6 border-b-0 bg-transparent">
-                {["Drafts", "Pendings", "On-hold", "Published", "Closed", "Archive"].map((tab) => (
-                  <TabsTrigger
-                    key={tab.toLowerCase()}
-                    value={tab.toLowerCase()}
-                    className="relative px-2 pb-2 text-sm font-medium text-gray-500 data-[state=active]:text-blue-600"
-                  >
-                    {tab}
-                    <span className="absolute left-0 -bottom-0.5 w-full h-0.5 bg-blue-600 scale-x-0 data-[state=active]:scale-x-100 transition-transform origin-left" />
-                  </TabsTrigger>
-                ))}
-              </TabsList>
+              <TabsList className="flex flex-wrap gap-2 sm:gap-4 mb-2">
+  {["Drafts", "Pendings", "On-hold", "Published", "Closed", "Archive"].map((tab) => (
+    <TabsTrigger
+      key={tab.toLowerCase()}
+      value={tab.toLowerCase()}
+      className="relative w-[48%] sm:w-auto px-3 py-2 text-sm font-medium text-gray-500 data-[state=active]:text-blue-600 border border-gray-200 rounded"
+    >
+      {tab}
+      <span className="absolute left-0 -bottom-0.5 w-full h-0.5 bg-blue-600 scale-x-0 data-[state=active]:scale-x-100 transition-transform origin-left" />
+    </TabsTrigger>
+  ))}
+</TabsList>
+
             </Tabs>
 
             <div className="flex items-center gap-3 ml-4">

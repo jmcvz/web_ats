@@ -1,3 +1,5 @@
+"use client"
+
 import type React from "react"
 
 import { useState, useEffect } from "react"
@@ -167,6 +169,10 @@ function ApplicantCard({
   const handleClick = () => {
     if (isMobile && isSelectionMode && onToggleSelect) {
       onToggleSelect(id)
+    } else if (isMobile && !isSelectionMode && onLongPress) {
+      // Allow single tap to start selection if not in selection mode
+      // This provides an alternative to long press
+      onLongPress(id)
     }
   }
 
@@ -884,8 +890,14 @@ export default function LeadDeveloperWeekly() {
   }
 
   const handleLongPress = (applicantId: string) => {
-    setIsSelectionMode(true)
-    setSelectedApplicants(new Set([applicantId]))
+    if (!isSelectionMode) {
+      // Start selection mode with this applicant
+      setIsSelectionMode(true)
+      setSelectedApplicants(new Set([applicantId]))
+    } else {
+      // Already in selection mode, toggle this applicant
+      handleToggleSelect(applicantId)
+    }
   }
 
   const handleToggleSelect = (applicantId: string) => {
@@ -1041,10 +1053,15 @@ export default function LeadDeveloperWeekly() {
         {/* Mobile Selection Bar */}
         {isSelectionMode && (
           <div className="lg:hidden fixed top-16 left-0 right-0 bg-blue-600 text-white p-3 z-50 flex items-center justify-between">
-            <span className="text-sm font-medium">{selectedApplicants.size} selected</span>
-            <Button variant="ghost" size="sm" onClick={handleClearSelection} className="text-white hover:bg-blue-700">
-              <X className="h-4 w-4" />
-            </Button>
+            <span className="text-sm font-medium">
+              {selectedApplicants.size} applicant{selectedApplicants.size !== 1 ? "s" : ""} selected
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs opacity-75">Tap column to move</span>
+              <Button variant="ghost" size="sm" onClick={handleClearSelection} className="text-white hover:bg-blue-700">
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         )}
 
@@ -1121,8 +1138,8 @@ export default function LeadDeveloperWeekly() {
             {!isSelectionMode && (
               <div className="lg:hidden bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
                 <p className="text-sm text-blue-800">
-                  <strong>Mobile tip:</strong> Long press on any applicant to select, then tap a column to move them
-                  there.
+                  <strong>Mobile tip:</strong> Long press on any applicant to start selection mode. Then long press additional
+                  applicants to select multiple, and tap a column to move them all there.
                 </p>
               </div>
             )}

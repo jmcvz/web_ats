@@ -35,7 +35,7 @@ export function ShareModal({ open, onOpenChange, link }: ShareModalProps) {
         </DialogHeader>
 
         <Input readOnly value={link} className="bg-gray-100" />
-        <Button onClick={handleCopy} className="mt-2">
+        <Button onClick={handleCopy} className="mt-2 bg-[#0056d2]">
           {copied ? "Copied!" : "Copy Link"}
         </Button>
         <p className="text-xs text-gray-500 text-center mt-1">
