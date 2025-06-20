@@ -1,5 +1,6 @@
 "use client"
 import { useState, useMemo } from "react"
+import { useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -365,13 +366,34 @@ export default function JobOfferManagement() {
   })
 
   // Modal states
-  const [isRequirementsModalOpen, setIsRequirementsModalOpen] = useState(false)
+    const [isRequirementsModalOpen, setIsRequirementsModalOpen] = useState(false)
   const [isReconsiderModalOpen, setIsReconsiderModalOpen] = useState(false)
   const [isRescindModalOpen, setIsRescindModalOpen] = useState(false)
   const [selectedApplicant, setSelectedApplicant] = useState<any>(null)
 
+  const navigate = useNavigate()
+
+  const handleStageChange = (value: string) => {
+    const routeMap: Record<string, string> = {
+      "resume-screening": "/applicants/jobdetails/leaddeveloper/LeadDeveloperRS/",
+      "phone-call": "/applicants/jobdetails/leaddeveloper/LeadDeveloperPI",
+      "shortlisted": "/applicants/jobdetails/leaddeveloper/LeadDeveloperSL",
+      "initial-interview": "/applicants/jobdetails/leaddeveloper/LeadDeveloperII",
+      "assessments": "/applicants/jobdetails/leaddeveloper/LeadDeveloperAS",
+      "final-interview": "/applicants/jobdetails/leaddeveloper/LeadDeveloperFI",
+      "job-offer": "/applicants/jobdetails/leaddeveloper/LeadDeveloperFJO",
+      "offer-finalization": "/applicants/jobdetails/leaddeveloper/OfferAndFinalization",
+      "onboarding": "/applicants/jobdetails/leaddeveloper/LeadDeveloperONB",
+    }
+
+    const target = routeMap[value]
+    if (target) {
+      navigate(target)
+    }
+  }
+
   // Filter functions
-  const filterApplicants = (applicants: any[], tab: string) => {
+   const filterApplicants = (applicants: any[], tab: string) => {
     return applicants.filter((applicant) => {
       const matchesSearch = applicant.name
         .toLowerCase()
@@ -390,15 +412,15 @@ export default function JobOfferManagement() {
 
   const filteredAccepted = useMemo(
     () => filterApplicants(acceptedApplicants, "accepted"),
-    [searchTerms.accepted, positionFilters.accepted, departmentFilters.accepted],
+    [searchTerms.accepted, positionFilters.accepted, departmentFilters.accepted]
   )
   const filteredRejected = useMemo(
     () => filterApplicants(rejectedApplicants, "rejected"),
-    [searchTerms.rejected, positionFilters.rejected, departmentFilters.rejected],
+    [searchTerms.rejected, positionFilters.rejected, departmentFilters.rejected]
   )
   const filteredRescinded = useMemo(
     () => filterApplicants(rescindedApplicants, "rescinded"),
-    [searchTerms.rescinded, positionFilters.rescinded, departmentFilters.rescinded],
+    [searchTerms.rescinded, positionFilters.rescinded, departmentFilters.rescinded]
   )
 
   const handleSendRequirements = (applicant: any) => {
@@ -476,23 +498,23 @@ export default function JobOfferManagement() {
             Back
           </Button>
 
-          <Select defaultValue="offer-finalization">
-            <SelectTrigger className="w-64">
-              <SelectValue placeholder="For Offer And Finalization" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="resume-screening">Resume Screening</SelectItem>
-              <SelectItem value="phone-call">Phone Call Interview</SelectItem>
-              <SelectItem value="shortlisted">Shortlisted</SelectItem>
-              <SelectItem value="initial-interview">Initial Interview</SelectItem>
-              <SelectItem value="assessments">Assessments</SelectItem>
-              <SelectItem value="final-interview">Final Interview</SelectItem>
-              <SelectItem value="job-offer">For Job Offer</SelectItem>
-              <SelectItem value="offer-finalization">For Offer And Finalization</SelectItem>
-              <SelectItem value="onboarding">Onboarding</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+          <Select defaultValue="offer-finalization" onValueChange={handleStageChange}>
+              <SelectTrigger className="w-64">
+                <SelectValue className="font-bold" placeholder="For Offer And Finalization" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem className="font-bold" value="resume-screening">Resume Screening</SelectItem>
+  <SelectItem className="font-bold" value="phone-call">Phone Call Interview</SelectItem>
+  <SelectItem className="font-bold" value="shortlisted">Shortlisted</SelectItem>
+  <SelectItem className="font-bold" value="initial-interview">Initial Interview</SelectItem>
+  <SelectItem className="font-bold" value="assessments">Assessments</SelectItem>
+  <SelectItem className="font-bold" value="final-interview">Final Interview</SelectItem>
+  <SelectItem className="font-bold" value="job-offer">For Job Offer</SelectItem>
+  <SelectItem className="font-bold" value="offer-finalization">For Offer And Finalization</SelectItem>
+  <SelectItem className="font-bold" value="onboarding">Onboarding</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -643,25 +665,26 @@ export default function JobOfferManagement() {
         </Tabs>
 
         {/* Modals */}
-        <SendRequirementsModal
-          isOpen={isRequirementsModalOpen}
-          onClose={() => setIsRequirementsModalOpen(false)}
-          applicantName={selectedApplicant?.name || ""}
-        />
+         {/* Modals */}
+          <SendRequirementsModal
+            isOpen={isRequirementsModalOpen}
+            onClose={() => setIsRequirementsModalOpen(false)}
+            applicantName={selectedApplicant?.name || ""}
+          />
 
-        <ReconsiderModal
-          isOpen={isReconsiderModalOpen}
-          onClose={() => setIsReconsiderModalOpen(false)}
-          applicant={selectedApplicant}
-        />
+          <ReconsiderModal
+            isOpen={isReconsiderModalOpen}
+            onClose={() => setIsReconsiderModalOpen(false)}
+            applicant={selectedApplicant}
+          />
 
-        <RescindModal
-          isOpen={isRescindModalOpen}
-          onClose={() => setIsRescindModalOpen(false)}
-          applicantName={selectedApplicant?.name || ""}
-        />
+          <RescindModal
+            isOpen={isRescindModalOpen}
+            onClose={() => setIsRescindModalOpen(false)}
+            applicantName={selectedApplicant?.name || ""}
+          />
+        </div>
       </div>
-    </div>
     </>
   )
 }
