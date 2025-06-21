@@ -69,6 +69,7 @@ export default function App() {
       <Route path="/applicants/jobdetails/leaddeveloper/LeadDeveloperFJO" element={<LeadDeveloperFJO/>} />  
       <Route  path="/applicants/OfferAndFinalization" element={<OfferAndFinalization />} />
       <Route path="/applicants/job/:jobtitle/:jobstage" element={<JobStageTemplate />} />
+      <Route path="/applicants/:name" element={<ApplicantInformationTab />} />
       </Routes>
     </BrowserRouter>
   );

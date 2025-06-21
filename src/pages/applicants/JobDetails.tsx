@@ -85,7 +85,7 @@ export default function LeadDeveloper() {
           {/* Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+              <Button variant="ghost" size="icon" onClick={() => navigate(`/applicants/job/`)}>
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <h2 className="text-3xl font-bold text-gray-800">{currentJobTitle || "Job Details"}</h2>

@@ -258,7 +258,7 @@ const resolvedJobTitle = formatJobTitle(jobtitle)
                     variant="outline"
                     size="sm"
                     className="flex items-center gap-2"
-                    onClick={() => window.history.back()}
+                    onClick={() => navigate(`/applicants/job/${jobtitle}`)}
                   >
                     <ArrowLeft className="h-4 w-4" />
                     Back

@@ -28,7 +28,7 @@ const jobData = [
     type: "Full time",
   },
   {
-    job: "Senior UI & UX Designer",
+    job: "Senior UI UX Designer",
     date: "Jul 29, 2024",
     candidates: 12,
     vacancies: 3,

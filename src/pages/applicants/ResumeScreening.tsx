@@ -122,7 +122,7 @@ export default function ResumeScreening() {
   variant="outline"
   size="sm"
   className="flex items-center gap-2"
-  onClick={() => window.history.back()}
+  onClick={() => navigate(`/applicants/job/${jobtitle}`)}
 >
   <ArrowLeft className="h-4 w-4" />
   Back
@@ -167,7 +167,7 @@ export default function ResumeScreening() {
 
           {/* Filter and Search */}
         <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-between sm:items-center">
-  <Select
+  <Select 
   value={selectedFilter || "resumescreening"}
   onValueChange={(value) => {
     setSelectedFilter(value)
@@ -178,10 +178,10 @@ export default function ResumeScreening() {
 >
 
                     <SelectTrigger className="w-40 border-none shadow-none font-bold text-black text-sm">
-                      <SelectValue placeholder="Shortlisted" />
+                      <SelectValue className="font-bold text-black" placeholder="resumescreening" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem className="font-bold" value="resumescreening">
+                      <SelectItem className="font-bold text-black" value="resumescreening">
                         Resume Screening
                       </SelectItem>
                       <SelectItem value="phonecallinterview" className="font-bold">
@@ -268,7 +268,8 @@ export default function ResumeScreening() {
     variant="success"
     size="sm"
     className="w-full px-2"
-    onClick={() => navigate("/applicants/jobdetails/leaddeveloper/LeadDeveloperPI/")}
+    onClick={() => navigate(`/applicants/job/${jobtitle}/phonecallinterview`)}
+
   >
     Pass
   </Button>
