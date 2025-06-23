@@ -292,29 +292,46 @@ function DroppableColumn({
     }
   }
 
-  const handleMaximizeClick = () => {
-    // Create a mapping from stage titles to route segments
-    const stageRouteMapping: Record<string, string> = {
-      "Resume Screening": "resumescreening",
-      "Phone-Call Interview": "phonecallinterview",
-      "Initial Interview": "initialinterview",
-      Shortlisted: "shortlisted",
-      Assessment: "assessments",
-      "Final Interview": "finalinterview",
-      "For Job Offer": "forjoboffer",
-      "Job Offer & Finalization": "forjoboffer", // You might want a different route for this
-      Onboarding: "onboarding",
-      Warm: "warm",
-      Failed: "failed",
-    }
-
-    const routeSegment = stageRouteMapping[title]
-    if (routeSegment) {
-      // Get the current job title from the URL params or use a default
-      const currentJobTitle = jobtitle || "leaddeveloper"
-      navigate(`/applicants/job/${currentJobTitle}/${routeSegment}`)
-    }
+const handleMaximizeClick = () => {
+  // Create a mapping from stage titles to route segments
+  const stageRouteMapping: Record<string, string> = {
+    "Resume Screening": "resumescreening",
+    "Phone-Call Interview": "phonecallinterview",
+    "Initial Interview": "initialinterview",
+    Shortlisted: "shortlisted",
+    Assessment: "assessments",
+    "Final Interview": "finalinterview",
+    "For Job Offer": "forjoboffer",
+    "Job Offer & Finalization": "OfferAndFinalization", // Capitalized to match custom route
+    Onboarding: "Onboarding",
+    Warm: "Warm",
+    Failed: "Failed",
   }
+
+  const routeSegment = stageRouteMapping[title]
+  if (routeSegment) {
+    // Final stages without job title
+    const isCustomFinalStage = ["OfferAndFinalization", "Onboarding", "Warm", "Failed"].includes(routeSegment)
+
+    // Get the current job title slug or use a fallback
+    const currentJobTitle = jobtitle || "leaddeveloper"
+    const jobSlug = currentJobTitle.toLowerCase().replace(/\s+/g, "")
+
+    const path = isCustomFinalStage
+      ? `/applicants/job/${routeSegment}`
+      : `/applicants/job/${jobSlug}/${routeSegment}`
+
+    navigate(path, {
+  state: {
+    jobTitle: currentJobTitle,
+    stageName: title,
+    from: location.pathname, // so ResumeScreening page can go "back"
+  },
+})
+
+  }
+}
+
 
   return (
     <div className="w-full lg:w-[280px] lg:flex-shrink-0">
@@ -1069,17 +1086,17 @@ export default function LeadDeveloperWeekly() {
 
   const formatJobTitle = (slug?: string) => {
     const titleMap: Record<string, string> = {
-      leaddeveloper: "Lead Developer",
-      projectmanager: "Project Manager",
-      socialcontentmanager: "Social Content Manager",
-      senioruiuxdesigner: "Senior UI/UX Designer",
-      customersupport: "Customer Support",
-      qaengineer: "QA Engineer",
-      humanresourcescoordinator: "Human Resources Coordinator",
-      operationsmanager: "Operations Manager",
-      socialmediamanager: "Social Media Manager",
-      marketingspecialist: "Marketing Specialist",
-      seniorsoftwareengineer: "Senior Software Engineer",
+      LeadDeveloper: "Lead Developer",
+      ProjectManager: "Project Manager",
+      SocialContentManager: "Social Content Manager",
+      SeniorUIUXDesigner: "Senior UI/UX Designer",
+      CustomerSupport: "Customer Support",
+      QAEngineer: "QA Engineer",
+      HumanResourcesCoordinator: "Human Resources Coordinator",
+      OperationsManager: "Operations Manager",
+      SocialMediaManager: "Social Media Manager",
+      MarketingSpecialist: "Marketing Specialist",
+      SeniorSoftwareEngineer: "Senior Software Engineer",
     }
     return slug ? titleMap[slug.toLowerCase()] || slug.replace(/([a-z])([A-Z])/g, "$1 $2") : "Unknown Job"
   }
@@ -1110,9 +1127,10 @@ export default function LeadDeveloperWeekly() {
           <div className="mx-auto max-w-none space-y-6 lg:mr-6">
             {/* Header */}
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
+              <Button variant="ghost" size="icon" onClick={() => navigate(`/applicants/job/${jobtitle}`)}>
+  <ArrowLeft className="h-5 w-5" />
+</Button>
+
               <div className="flex items-center gap-3">
                 <h2 className="text-2xl font-bold text-gray-900 text-center sm:text-left">{resolvedJobTitle}</h2>
 
