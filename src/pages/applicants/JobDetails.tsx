@@ -21,7 +21,7 @@ export default function LeadDeveloper() {
     const titleMap: { [key: string]: string } = {
       projectmanager: "Project Manager",
       socialcontentmanager: "Social Content Manager",
-      senioruiuxdesigner: "Senior UI/UX Designer",
+      senioruiuxdesigner: "Senior UI UX Designer",
       leaddeveloper: "Lead Developer",
       customersupport: "Customer Support",
       qaengineer: "QA Engineer",
@@ -43,19 +43,42 @@ export default function LeadDeveloper() {
   }, [location.state, jobtitle])
 
   const handleStageClick = (stageName: string) => {
-    setSelectedStage(stageName)
+  setSelectedStage(stageName)
 
-    const jobSlug = currentJobTitle.toLowerCase().replace(/\s+/g, "")
-    const stageSlug = stageName.toLowerCase().replace(/\s+/g, "").replace(/[^a-z0-9]/g, "")
-
-    navigate(`/applicants/job/${jobSlug}/${stageSlug}`, {
-      state: {
-        jobTitle: currentJobTitle,
-        stageName,
-        jobData,
-      },
-    })
+  const jobSlug = currentJobTitle.toLowerCase().replace(/\s+/g, "")
+  
+  // Define custom slugs for specific final stages
+  const customStageRoutes: { [key: string]: string } = {
+    "For Offer and Finalization": "OfferAndFinalization",
+    "Onboarding": "Onboarding",
+    "Warm": "Warm",
+    "Failed": "Failed",
   }
+
+  // Check if the stage is a custom final stage
+  const isCustomStage = customStageRoutes.hasOwnProperty(stageName)
+
+  // Get appropriate slug
+  const stageSlug = isCustomStage
+    ? customStageRoutes[stageName]
+    : stageName.toLowerCase().replace(/\s+/g, "").replace(/[^a-z0-9]/g, "")
+
+  // Build path conditionally
+  const path = isCustomStage
+    ? `/applicants/job/${stageSlug}`
+    : `/applicants/job/${jobSlug}/${stageSlug}`
+
+  // Navigate
+  navigate(path, {
+    state: {
+      jobTitle: currentJobTitle,
+      stageName,
+      jobData,
+    },
+  })
+}
+
+
 
   useEffect(() => {
     document.title = `Applicants - ${currentJobTitle || "Job Details"}`

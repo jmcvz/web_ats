@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { ArrowLeft, Search } from "lucide-react"
 import { Navbar } from "@/reusables/Navbar"
+import { useLocation } from "react-router-dom";
 
 // Sample applicant data
 const applicants = [
@@ -73,13 +74,14 @@ export default function JobManagement() {
 
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedFilter, setSelectedFilter] = useState("")
+  
 
   // Filter applicants based on search term
   const filteredApplicants = applicants.filter((applicant) =>
     applicant.name.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 const [jobStatus, setJobStatus] = useState("active")
-const navigate = useNavigate();
+
 const formatJobTitle = (slug?: string) => {
   const titleMap: Record<string, string> = {
     leaddeveloper: "Lead Developer",
@@ -99,6 +101,10 @@ const formatJobTitle = (slug?: string) => {
 
 const { jobtitle } = useParams<{ jobtitle: string }>()
 const resolvedJobTitle = formatJobTitle(jobtitle)
+const location = useLocation();
+const navigate = useNavigate();
+const backPath = location.state?.from || `/applicants/job/${jobtitle}`;
+
 
 
 
@@ -112,14 +118,14 @@ const resolvedJobTitle = formatJobTitle(jobtitle)
             {/* Back Button and Job Title */}
             <div className="flex flex-col items-center gap-2 sm:flex-row sm:items-center sm:gap-4">
               <Button
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2"
-                onClick={() => navigate(`/applicants/job/${jobtitle}`)}
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Back
-              </Button>
+        variant="outline"
+        size="sm"
+        className="flex items-center gap-2"
+        onClick={() => navigate(backPath)}
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back
+      </Button>
 
               <div className="flex flex-col items-center sm:flex-row sm:items-center sm:gap-3">
                 <h1 className="text-2xl font-bold text-gray-900 text-center sm:text-left">{resolvedJobTitle}</h1>

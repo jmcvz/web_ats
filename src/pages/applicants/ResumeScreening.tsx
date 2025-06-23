@@ -122,7 +122,15 @@ export default function ResumeScreening() {
   variant="outline"
   size="sm"
   className="flex items-center gap-2"
-  onClick={() => navigate(`/applicants/job/${jobtitle}`)}
+  onClick={() => {
+  const from = location.state?.from
+  if (from?.includes("/weekly")) {
+    navigate(from)
+  } else {
+    navigate(`/applicants/job/${jobtitle}`)
+  }
+}}
+
 >
   <ArrowLeft className="h-4 w-4" />
   Back

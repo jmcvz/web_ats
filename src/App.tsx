@@ -15,7 +15,7 @@ import ApplicantInformationTab from '@/pages/applicants/ApplicantsInformationTab
 import LeadDeveloperRS from '@/pages/applicants/ResumeScreening'
 import LeadDeveloperPI from '@/pages/applicants/PhoneInterview'
 import LeadDeveloperSL from '@/pages/applicants/Shortlisted'
-
+import Failed from '@/pages/applicants/Failed'
 import InterviewEvaluationForm from '@/pages/InterviewEvaluationFormPage'
 
 import PositionsPendings from '@/pages/positions/positions-pendings'
@@ -27,9 +27,10 @@ import LeadDeveloperII from '@/pages/InitialInterview'
 import LeadDeveloperAS from '@/pages/Assessment'
 import LeadDeveloperFI from '@/pages/FinalInterview'
 import LeadDeveloperFJO from '@/pages/ForJobOffer'
-import OfferAndFinalization from '@/pages/OfferAndFinalization'
+import OfferAndFinalization from '@/pages/applicants/OfferAndFinalization'
 import JobStageTemplate from './pages/applicants/JobStateTemplate'
-
+import Warm from '@/pages/applicants/Warm'
+import Onboarding from '@/pages/applicants/Onboarding.tsx'
 
 export default function App() {
   return (
@@ -67,9 +68,12 @@ export default function App() {
       <Route path="/applicants/jobdetails/leaddeveloper/LeadDeveloperAS" element={<LeadDeveloperAS/>} />
       <Route path="/applicants/jobdetails/leaddeveloper/LeadDeveloperFI" element={<LeadDeveloperFI/>} />
       <Route path="/applicants/jobdetails/leaddeveloper/LeadDeveloperFJO" element={<LeadDeveloperFJO/>} />  
-      <Route  path="/applicants/OfferAndFinalization" element={<OfferAndFinalization />} />
+      <Route  path="/applicants/job/OfferAndFinalization" element={<OfferAndFinalization />} />
       <Route path="/applicants/job/:jobtitle/:jobstage" element={<JobStageTemplate />} />
       <Route path="/applicants/:name" element={<ApplicantInformationTab />} />
+      <Route path="/applicants/job/Warm" element={< Warm/>} />
+      <Route path="/applicants/job/Failed" element={< Failed/>} />
+      <Route path="/applicants/job/Onboarding" element={ < Onboarding />} />
       </Routes>
     </BrowserRouter>
   );
