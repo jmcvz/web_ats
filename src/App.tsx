@@ -18,11 +18,7 @@ import LeadDeveloperSL from '@/pages/applicants/Shortlisted'
 
 import InterviewEvaluationForm from '@/pages/InterviewEvaluationFormPage'
 
-import PositionsPendings from '@/pages/positions/positions-pendings'
-import PositionsOnHold from '@/pages/positions/positions-onhold'
-import PositionsPublished from '@/pages/positions/positions-published'
-import PositionsClosed from '@/pages/positions/positions-closed'
-import PositionsArchive from '@/pages/positions/positions-archive'
+
 import LeadDeveloperII from '@/pages/InitialInterview'
 import LeadDeveloperAS from '@/pages/Assessment'
 import LeadDeveloperFI from '@/pages/FinalInterview'
@@ -55,13 +51,6 @@ export default function App() {
       <Route path="/applicants/jobdetails/leaddeveloper/LeadDeveloperSL" element={<LeadDeveloperSL/>} />
 
       <Route path="/ieform/*" element={<InterviewEvaluationForm/>} />
-
-      {/* Positions */}
-      <Route path="/positions/pendings" element={<PositionsPendings />} />
-      <Route path="/positions/on-hold" element={<PositionsOnHold />} />
-      <Route path="/positions/published" element={<PositionsPublished />} />
-      <Route path="/positions/closed" element={<PositionsClosed />} />
-      <Route path="/positions/archive" element={<PositionsArchive />} />
        
       <Route path="/applicants/jobdetails/leaddeveloper/LeadDeveloperII" element={<LeadDeveloperII/>} />
       <Route path="/applicants/jobdetails/leaddeveloper/LeadDeveloperAS" element={<LeadDeveloperAS/>} />
