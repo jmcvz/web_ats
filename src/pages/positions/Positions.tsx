@@ -1,3 +1,5 @@
+"use client"
+
 import { Navbar } from "@/reusables/Navbar"
 import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
@@ -17,6 +19,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog"
+
 
 interface BaseJobPosting {
   id: number
@@ -104,7 +107,7 @@ const generatePositionsData = () => {
 
     pendings: baseJobPostings.map((job, index) => ({
       ...job,
-      description: job.description + "....", // Add ellipsis
+      description: job.description + "....", 
       assignee: assignees[index],
       progress: getRandomProgress(),
     })),
@@ -125,7 +128,7 @@ const generatePositionsData = () => {
       status: job.id === 1 ? "Reopened" : "", 
     })),
 
-    archive: baseJobPostings.slice(0, 3), // Only show first 3 items
+    archive: baseJobPostings.slice(0, 3), 
   }
 }
 
@@ -169,7 +172,6 @@ export default function Positions() {
   const navigate = useNavigate()
   const { tab } = useParams()
 
-  // Get current tab from URL path or default to 'drafts'
   const getCurrentTab = () => {
     const path = window.location.pathname
     const tabFromPath = path.split("/positions/")[1] || "drafts"
@@ -183,24 +185,24 @@ export default function Positions() {
   const [selectedLink, setSelectedLink] = useState("")
   const [showDialog, setShowDialog] = useState(false)
 
-  // Update current tab when URL changes
   useEffect(() => {
     const newTab = getCurrentTab()
     setCurrentTab(newTab)
-    document.title = `Positions | ${newTab.charAt(0).toUpperCase() + newTab.slice(1)}`
-  }, []) 
+    document.title = `Positions | ${newTab.charAt(0).toUpperCase() + newTab.slice(1).replace("-", " ")}`
+  }, [currentTab]) 
+
+  const handleTabChange = (value: string) => {
+    setCurrentTab(value)
+    navigate(`/positions/${value}`)
+    setSelected([])
+    document.title = `Positions | ${value.charAt(0).toUpperCase() + value.slice(1).replace("-", " ")}`
+  }
 
   const currentData: JobPosting[] = positionsData[currentTab as keyof typeof positionsData] || []
 
   const filteredPostings = currentData.filter((posting: JobPosting) =>
     posting.title.toLowerCase().includes(search.toLowerCase()),
   )
-
-  const handleTabChange = (value: string) => {
-    setCurrentTab(value)
-    navigate(`/positions/${value}`)
-    setSelected([]) 
-  }
 
   const handleSelectAllToggle = () => {
     if (selected.length === filteredPostings.length) {
