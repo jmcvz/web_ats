@@ -166,7 +166,7 @@ function ReconsiderModal({ isOpen, onClose, applicant }: { isOpen: boolean; onCl
   )
 }
 
-export default function FailedApplicants() {
+export default function Failed() {
   const [searchTerm, setSearchTerm] = useState("")
   const [positionFilter, setPositionFilter] = useState("")
   const [stageFilter, setStageFilter] = useState("")
@@ -178,23 +178,7 @@ export default function FailedApplicants() {
   const navigate = useNavigate()
 
   const handleStageChange = (value: string) => {
-    const routeMap: Record<string, string> = {
-      "resume-screening": "/applicants/jobdetails/leaddeveloper/LeadDeveloperRS/",
-      "phone-call": "/applicants/jobdetails/leaddeveloper/LeadDeveloperPI",
-      shortlisted: "/applicants/jobdetails/leaddeveloper/LeadDeveloperSL",
-      "initial-interview": "/applicants/jobdetails/leaddeveloper/LeadDeveloperII",
-      assessments: "/applicants/jobdetails/leaddeveloper/LeadDeveloperAS",
-      "final-interview": "/applicants/jobdetails/leaddeveloper/LeadDeveloperFI",
-      "job-offer": "/applicants/jobdetails/leaddeveloper/LeadDeveloperFJO",
-      "offer-finalization": "/applicants/jobdetails/leaddeveloper/OfferAndFinalization",
-      onboarding: "/applicants/jobdetails/leaddeveloper/LeadDeveloperONB",
-      failed: "/applicants/jobdetails/leaddeveloper/Failed",
-    }
-
-    const target = routeMap[value]
-    if (target) {
-      navigate(target)
-    }
+    navigate(`/applicants/job/${value}`)
   }
 
   // Filter function
@@ -235,40 +219,24 @@ export default function FailedApplicants() {
               Back
             </Button>
 
-            <Select defaultValue="failed" onValueChange={handleStageChange}>
+            <Select defaultValue="Failed" onValueChange={handleStageChange}>
               <SelectTrigger className="w-64">
-                <SelectValue className="font-bold" placeholder="Failed" />
+                <SelectValue>
+                  <span className="font-bold">Failed</span>
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem className="font-bold" value="resume-screening">
-                  Resume Screening
+                <SelectItem value="OfferAndFinalization">
+                  <span className="font-bold">For Offer And Finalization</span>
                 </SelectItem>
-                <SelectItem className="font-bold" value="phone-call">
-                  Phone Call Interview
+                <SelectItem value="Onboarding">
+                  <span className="font-bold">Onboarding</span>
                 </SelectItem>
-                <SelectItem className="font-bold" value="shortlisted">
-                  Shortlisted
+                <SelectItem value="Warm">
+                  <span className="font-bold">Warm</span>
                 </SelectItem>
-                <SelectItem className="font-bold" value="initial-interview">
-                  Initial Interview
-                </SelectItem>
-                <SelectItem className="font-bold" value="assessments">
-                  Assessments
-                </SelectItem>
-                <SelectItem className="font-bold" value="final-interview">
-                  Final Interview
-                </SelectItem>
-                <SelectItem className="font-bold" value="job-offer">
-                  For Job Offer
-                </SelectItem>
-                <SelectItem className="font-bold" value="offer-finalization">
-                  For Offer And Finalization
-                </SelectItem>
-                <SelectItem className="font-bold" value="onboarding">
-                  Onboarding
-                </SelectItem>
-                <SelectItem className="font-bold" value="failed">
-                  Failed
+                <SelectItem value="Failed">
+                  <span className="font-bold">Failed</span>
                 </SelectItem>
               </SelectContent>
             </Select>
@@ -286,7 +254,6 @@ export default function FailedApplicants() {
               />
             </div>
 
-            {/* Responsive Filters Section */}
             <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
               <Select value={positionFilter} onValueChange={setPositionFilter}>
                 <SelectTrigger className="w-64 sm:w-48">
@@ -384,7 +351,7 @@ export default function FailedApplicants() {
                       <div className="flex justify-center">
                         <Button
                           onClick={() => handleReconsider(applicant)}
-                          className="bg-white text-blue-600 border border-blue-600 hover:bg-blue-50 rounded text-xs px-2 py-1 whitespace-normal leading-tight"
+                          className="bg-white text-blue-600 border border-blue-600 hover:bg-blue-600 hover:text-white rounded text-xs px-2 py-1 whitespace-normal leading-tight"
                         >
                           Reconsider
                         </Button>

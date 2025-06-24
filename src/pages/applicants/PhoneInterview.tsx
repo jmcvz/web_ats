@@ -174,7 +174,8 @@ const backPath = location.state?.from || `/applicants/job/${jobtitle}`;
   }}
 >
 
-                    <SelectTrigger className="w-40 border-none shadow-none font-bold text-black text-sm">
+                    <SelectTrigger className="min-w-[160px] border-none shadow-none font-bold text-black text-sm">
+
                       <SelectValue placeholder="Shortlisted" />
                     </SelectTrigger>
                     <SelectContent>
@@ -199,18 +200,7 @@ const backPath = location.state?.from || `/applicants/job/${jobtitle}`;
                       <SelectItem value="forjoboffer" className="font-bold">
                         For Job Offer
                       </SelectItem>
-                      <SelectItem value="offerfinalization" className="font-bold">
-                        For Offer and Finalization
-                      </SelectItem>
-                      <SelectItem value="onboarding" className="font-bold">
-                        Onboarding
-                      </SelectItem>
-                      <SelectItem value="warm" className="font-bold">
-                        Warm
-                      </SelectItem>
-                      <SelectItem value="failed" className="font-bold">
-                        Failed
-                      </SelectItem>
+                      
                     </SelectContent>
                   </Select>
               <div className="relative">
@@ -260,19 +250,23 @@ const backPath = location.state?.from || `/applicants/job/${jobtitle}`;
                       </TableCell>
                       <TableCell className="border border-gray-200 py-4 px-6 text-center w-20">
                         <Button
-  variant="default"
   size="sm"
-  className="w-full px-2 bg-[#0056d2]"
+  className="w-full px-2 border border-blue-600 text-blue-600 bg-white hover:bg-blue-600 hover:text-white transition-colors duration-200"
   onClick={() => navigate("/ieform/")}
 >
   Start interview
 </Button>
 
+
                       </TableCell>
                       <TableCell className="border border-gray-200 py-4 px-6 text-center w-20">
-                        <Button variant="outline" size="sm" className="w-full px-2 bg-red-400">
-                          Fail
-                        </Button>
+                        <Button
+  size="sm"
+  className="w-full px-2 border border-red-600 text-red-600 bg-white hover:bg-red-600 hover:text-white transition-colors duration-200"
+>
+  Fail
+</Button>
+
                       </TableCell>
                       <TableCell className="border border-gray-200 py-4 px-6 min-w-[150px] whitespace-nowrap">
                         {applicant.department}

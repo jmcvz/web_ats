@@ -1178,18 +1178,7 @@ const resolvedJobTitle = formatJobTitle(jobtitle)
                       <SelectItem value="forjoboffer" className="font-bold">
                         For Job Offer
                       </SelectItem>
-                      <SelectItem value="offerfinalization" className="font-bold">
-                        For Offer and Finalization
-                      </SelectItem>
-                      <SelectItem value="onboarding" className="font-bold">
-                        Onboarding
-                      </SelectItem>
-                      <SelectItem value="warm" className="font-bold">
-                        Warm
-                      </SelectItem>
-                      <SelectItem value="failed" className="font-bold">
-                        Failed
-                      </SelectItem>
+                      
                     </SelectContent>
                   </Select>
                   <div className="relative">
@@ -1256,7 +1245,7 @@ const resolvedJobTitle = formatJobTitle(jobtitle)
                           <TableCell className="border border-gray-200 py-3 px-3 lg:py-4 lg:px-4 text-center align-middle">
                             <Button
   onClick={() => handleSendJobOffer(applicant.name)}
-  className="bg-blue-600 text-white hover:bg-blue-700 rounded-lg px-4 py-2 text-xs lg:text-sm whitespace-normal"
+  className="bg-white text-blue-600 border border-blue-600 hover:bg-blue-600 hover:text-white rounded-lg px-4 py-2 text-xs lg:text-sm whitespace-normal"
 >
   Send Job Offer
 </Button>
@@ -1265,28 +1254,31 @@ const resolvedJobTitle = formatJobTitle(jobtitle)
                           <TableCell className="border border-gray-200 py-3 px-3 lg:py-4 lg:px-4 align-middle">
                             <div className="flex gap-2 justify-center">
                               <Button
-                                variant="outline"
-                                size="sm"
-                                className="bg-green-50 text-green-800 border-green-300 hover:bg-green-100 rounded-lg px-3 py-1 text-xs"
-                              >
-                                Accepted
-                              </Button>
+  variant="outline"
+  size="sm"
+  className="bg-white text-green-700 border border-green-500 hover:bg-green-500 hover:text-white rounded-lg px-3 py-1 text-xs"
+>
+  Accepted
+</Button>
+
                               <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleRejectOffer(applicant.name)}
-                                className="bg-red-50 text-red-800 border-red-300 hover:bg-red-100 rounded-lg px-3 py-1 text-xs"
-                              >
-                                Rejected
-                              </Button>
+  variant="outline"
+  size="sm"
+  onClick={() => handleRejectOffer(applicant.name)}
+  className="bg-white text-red-700 border border-red-500 hover:bg-red-500 hover:text-white rounded-lg px-3 py-1 text-xs"
+>
+  Rejected
+</Button>
+
                               <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleRescindOffer(applicant.name)}
-                                className="bg-yellow-50 text-yellow-800 border-yellow-300 hover:bg-yellow-100 rounded-lg px-3 py-1 text-xs"
-                              >
-                                Rescind Offer
-                              </Button>
+  variant="outline"
+  size="sm"
+  onClick={() => handleRescindOffer(applicant.name)}
+  className="bg-white text-yellow-700 border border-yellow-400 hover:bg-yellow-400 hover:text-white rounded-lg px-3 py-1 text-xs"
+>
+  Rescind Offer
+</Button>
+
                             </div>
                           </TableCell>
                         </TableRow>

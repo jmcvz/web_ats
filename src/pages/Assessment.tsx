@@ -310,7 +310,8 @@ const resolvedJobTitle = formatJobTitle(jobtitle)
   }}
 >
 
-                    <SelectTrigger className="w-40 border-none shadow-none font-bold text-black text-sm">
+                    <SelectTrigger className="min-w-[160px] border-none shadow-none font-bold text-black text-sm">
+
                       <SelectValue placeholder="Shortlisted" />
                     </SelectTrigger>
                     <SelectContent>
@@ -335,18 +336,7 @@ const resolvedJobTitle = formatJobTitle(jobtitle)
                       <SelectItem value="forjoboffer" className="font-bold">
                         For Job Offer
                       </SelectItem>
-                      <SelectItem value="offerfinalization" className="font-bold">
-                        For Offer and Finalization
-                      </SelectItem>
-                      <SelectItem value="onboarding" className="font-bold">
-                        Onboarding
-                      </SelectItem>
-                      <SelectItem value="warm" className="font-bold">
-                        Warm
-                      </SelectItem>
-                      <SelectItem value="failed" className="font-bold">
-                        Failed
-                      </SelectItem>
+                      
                     </SelectContent>
                   </Select>
                   <div className="relative">
@@ -412,21 +402,22 @@ const resolvedJobTitle = formatJobTitle(jobtitle)
                           <TableCell className="border border-gray-200 py-3 px-3 lg:py-4 lg:px-4 text-center w-32 align-middle">
                             <div className="flex gap-2 justify-center">
                               <Button
-                                variant="default"
-                                size="sm"
-                                className="px-3 bg-green-600 hover:bg-green-700 text-white text-xs h-8"
-                                onClick={() => handlePassFail(applicant.id, "pass")}
-                              >
-                                Pass
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="px-3 bg-white border-red-500 text-red-500 hover:bg-red-50 text-xs h-8"
-                                onClick={() => handlePassFail(applicant.id, "fail")}
-                              >
-                                Fail
-                              </Button>
+  variant="outline"
+  size="sm"
+  className="px-3 bg-white text-green-600 border border-green-600 hover:bg-green-600 hover:text-white text-xs h-8"
+  onClick={() => handlePassFail(applicant.id, "pass")}
+>
+  Pass
+</Button>
+<Button
+  variant="outline"
+  size="sm"
+  className="px-3 bg-white text-red-600 border border-red-600 hover:bg-red-600 hover:text-white text-xs h-8"
+  onClick={() => handlePassFail(applicant.id, "fail")}
+>
+  Fail
+</Button>
+
                             </div>
                           </TableCell>
                           <TableCell className="border border-gray-200 py-3 px-3 lg:py-4 lg:px-4 text-center w-32 align-middle">
