@@ -1,4 +1,5 @@
   "use client"
+  import { useLocation } from "react-router-dom"
   import { useParams, useNavigate } from "react-router-dom"
   import { useState } from "react"
   import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -352,6 +353,10 @@
       setIsSchedulerOpen(true)
     }
 
+    const location = useLocation()
+    const previousPath = location.state?.from
+
+
     return (
       <>
         <Navbar />
@@ -365,14 +370,21 @@
                   {/* Back Button and Job Title */}
                   <div className="flex flex-col items-center gap-2 sm:flex-row sm:items-center sm:gap-4">
                     <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex items-center gap-2"
-                      onClick={() => navigate(`/applicants/job/${jobtitle}`)}
-                    >
-                      <ArrowLeft className="h-4 w-4" />
-                      Back
-                    </Button>
+  variant="outline"
+  size="sm"
+  className="flex items-center gap-2"
+  onClick={() => {
+    if (previousPath?.includes("/weekly")) {
+      navigate(`/applicants/job/${jobtitle}/weekly`)
+    } else {
+      navigate(`/applicants/job/${jobtitle}`)
+    }
+  }}
+>
+  <ArrowLeft className="h-4 w-4" />
+  Back
+</Button>
+
 
                     <div className="flex flex-col items-center sm:flex-row sm:items-center sm:gap-3">
                       <h1 className="text-2xl font-bold text-gray-900 text-center sm:text-left">{resolvedJobTitle}</h1>

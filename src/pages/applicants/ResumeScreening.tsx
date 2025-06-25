@@ -77,9 +77,9 @@ export default function ResumeScreening() {
   const [selectedFilter, setSelectedFilter] = useState("resumescreening")
   const [jobStatus, setJobStatus] = useState("active")
   const navigate = useNavigate()
-  const location = useLocation()
+
   const { jobtitle} = useParams<{ jobtitle: string;}>()
-  const state = location.state as { jobTitle?: string; stageName?: string } | null
+
 
   // Filter applicants based on search term
   const filteredApplicants = applicants.filter((applicant) =>
@@ -103,7 +103,14 @@ export default function ResumeScreening() {
 }
 
 
-  const resolvedJobTitle = state?.jobTitle || formatJobTitle(jobtitle)
+ 
+
+const location = useLocation()
+const { jobtitle: jobTitleParam } = useParams<{ jobtitle: string }>()
+const jobTitleFromState = location.state?.jobTitle
+
+const rawJobTitle = jobTitleParam || jobTitleFromState
+const resolvedJobTitle = formatJobTitle(rawJobTitle)
 
 
   

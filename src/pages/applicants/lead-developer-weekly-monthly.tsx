@@ -321,7 +321,7 @@ function DroppableColumn({
 
       navigate(path, {
         state: {
-          jobTitle: currentJobTitle,
+          jobTitle: jobtitle,
           stageName: title,
           from: location.pathname, // so ResumeScreening page can go "back"
         },
@@ -1188,7 +1188,7 @@ export default function LeadDeveloperWeekly() {
             </div>
             <div className="flex gap-2">
               <Button variant="ghost" size="icon" className={viewMode === "grid" ? "text-black" : "text-gray-600"}>
-                <LayoutGrid className="h-4 w-4" />
+                <LayoutGrid className="h-4 w-4 text-gray-600" />
               </Button>
               <Button
                 variant="ghost"

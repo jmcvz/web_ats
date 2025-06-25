@@ -10,7 +10,7 @@ import { Progress } from "@/components/ui/progress"
 import { ArrowLeft, Search, Eye, Briefcase, Calendar, MapPin, Download } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Navbar } from "@/reusables/Navbar"
-
+import { useLocation } from "react-router-dom"
 // Sample data for onboarding applicants
 const onboardingApplicants = [
   {
@@ -239,6 +239,15 @@ export default function Onboarding() {
     )
   }
 
+const location = useLocation()
+const jobTitleFromState = location.state?.jobTitle
+const from = location.state?.from
+
+const backPath = from?.includes("/weekly")
+  ? `/applicants/job/${jobTitleFromState}/weekly`
+  : `/applicants/job/${jobTitleFromState}`
+
+
   return (
     <>
       <Navbar />
@@ -247,14 +256,14 @@ export default function Onboarding() {
           {/* Header Section */}
           <div className="flex items-center gap-4">
             <Button
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2"
-              onClick={() => window.history.back()}
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back
-            </Button>
+  variant="outline"
+  size="sm"
+  className="flex items-center gap-2"
+  onClick={() => navigate(backPath)}
+>
+  <ArrowLeft className="h-4 w-4" />
+  Back
+</Button>
 
             <Select defaultValue="Onboarding" onValueChange={handleStageChange}>
               <SelectTrigger className="w-64">

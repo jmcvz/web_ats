@@ -10,9 +10,8 @@ import { Badge } from "@/components/ui/badge"
 import { Calendar } from "@/components/ui/calendar"
 import { ArrowLeft, Search, MoreHorizontal } from "lucide-react"
 import { Navbar } from "@/reusables/Navbar"
-import { useParams, useNavigate } from "react-router-dom"
-
-
+import { useParams, useNavigate, useLocation } from "react-router-dom"
+import ExamForm from "@/pages/Exam-Form"
 
 // Sample applicant data with status
 const applicants = [
@@ -206,46 +205,53 @@ export default function JobManagement() {
   const [selectedFilter, setSelectedFilter] = useState("")
   const [jobStatus, setJobStatus] = useState("active")
 
+ 
+  const location = useLocation()
 
 
-  
+  // Check if we're on the exam form route
+  const isExamFormRoute = location.pathname.includes("/exam-form/")
 
-  
-  const handlePassFail = (applicantId: string, action: "pass" | "fail") => {
-    console.log(`${action} action for applicant ${applicantId}`)
-    // Handle pass/fail logic here
+  // If we're on the exam form route, render the ExamForm component
+  if (isExamFormRoute) {
+    return <ExamForm />
   }
 
+  
   // Filter applicants based on search term
   const filteredApplicants = applicants.filter((applicant) =>
     applicant.name.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
   const formatJobTitle = (slug?: string) => {
-  const titleMap: Record<string, string> = {
-    leaddeveloper: "Lead Developer",
-    projectmanager: "Project Manager",
-    socialcontentmanager: "Social Content Manager",
-    senioruiuxdesigner: "Senior UI/UX Designer",
-    customersupport: "Customer Support",
-    qaengineer: "QA Engineer",
-    humanresourcescoordinator: "Human Resources Coordinator",
-    operationsmanager: "Operations Manager",
-    socialmediamanager: "Social Media Manager",
-    marketingspecialist: "Marketing Specialist",
-    seniorsoftwareengineer: "Senior Software Engineer",
+    const titleMap: Record<string, string> = {
+      leaddeveloper: "Lead Developer",
+      projectmanager: "Project Manager",
+      socialcontentmanager: "Social Content Manager",
+      senioruiuxdesigner: "Senior UI/UX Designer",
+      customersupport: "Customer Support",
+      qaengineer: "QA Engineer",
+      humanresourcescoordinator: "Human Resources Coordinator",
+      operationsmanager: "Operations Manager",
+      socialmediamanager: "Social Media Manager",
+      marketingspecialist: "Marketing Specialist",
+      seniorsoftwareengineer: "Senior Software Engineer",
+    }
+    return slug ? titleMap[slug.toLowerCase()] || slug.replace(/([a-z])([A-Z])/g, "$1 $2") : "Unknown Job"
   }
-  return slug ? titleMap[slug.toLowerCase()] || slug.replace(/([a-z])([A-Z])/g, "$1 $2") : "Unknown Job"
-}
 
-const { jobtitle } = useParams<{ jobtitle: string }>()
-const resolvedJobTitle = formatJobTitle(jobtitle)
-  const navigate = useNavigate()
+  const { jobtitle } = useParams<{ jobtitle: string }>();
+  const resolvedJobTitle = formatJobTitle(jobtitle)
+  const previousPath = location.state?.from
+  const navigate = useNavigate();
+  
+
 
   return (
     <>
       <Navbar />
       <div className="min-h-screen bg-gray-50 mt-20">
+        
         <div className="flex flex-col xl:flex-row">
           {/* Main Content */}
           <div className="flex-1 p-4">
@@ -258,7 +264,13 @@ const resolvedJobTitle = formatJobTitle(jobtitle)
                     variant="outline"
                     size="sm"
                     className="flex items-center gap-2"
-                    onClick={() => navigate(`/applicants/job/${jobtitle}`)}
+                    onClick={() => {
+                      if (previousPath?.includes("/weekly")) {
+                        navigate(`/applicants/job/${jobtitle}/weekly`)
+                      } else {
+                        navigate(`/applicants/job/${jobtitle}`)
+                      }
+                    }}
                   >
                     <ArrowLeft className="h-4 w-4" />
                     Back
@@ -301,17 +313,15 @@ const resolvedJobTitle = formatJobTitle(jobtitle)
                 {/* Filter and Search */}
                 <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-between sm:items-center">
                   <Select
-  value={selectedFilter || "assessments"}
-  onValueChange={(value) => {
-    setSelectedFilter(value)
-    if (jobtitle) {
-      navigate(`/applicants/job/${jobtitle}/${value}`)
-    }
-  }}
->
-
+                    value={selectedFilter || "assessments"}
+                    onValueChange={(value) => {
+                      setSelectedFilter(value)
+                      if (jobtitle) {
+                        navigate(`/applicants/job/${jobtitle}/${value}`)
+                      }
+                    }}
+                  >
                     <SelectTrigger className="min-w-[160px] border-none shadow-none font-bold text-black text-sm">
-
                       <SelectValue placeholder="Shortlisted" />
                     </SelectTrigger>
                     <SelectContent>
@@ -336,7 +346,6 @@ const resolvedJobTitle = formatJobTitle(jobtitle)
                       <SelectItem value="forjoboffer" className="font-bold">
                         For Job Offer
                       </SelectItem>
-                      
                     </SelectContent>
                   </Select>
                   <div className="relative">
@@ -402,22 +411,21 @@ const resolvedJobTitle = formatJobTitle(jobtitle)
                           <TableCell className="border border-gray-200 py-3 px-3 lg:py-4 lg:px-4 text-center w-32 align-middle">
                             <div className="flex gap-2 justify-center">
                               <Button
-  variant="outline"
-  size="sm"
-  className="px-3 bg-white text-green-600 border border-green-600 hover:bg-green-600 hover:text-white text-xs h-8"
-  onClick={() => handlePassFail(applicant.id, "pass")}
->
-  Pass
-</Button>
-<Button
-  variant="outline"
-  size="sm"
-  className="px-3 bg-white text-red-600 border border-red-600 hover:bg-red-600 hover:text-white text-xs h-8"
-  onClick={() => handlePassFail(applicant.id, "fail")}
->
-  Fail
-</Button>
-
+                                variant="outline"
+                                size="sm"
+                                className="px-3 bg-white text-green-600 border border-green-600 hover:bg-green-600 hover:text-white text-xs h-8"
+                                onClick={() => navigate(`/applicants/job/${jobtitle}/finalinterview`)}
+                              >
+                                Pass
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="px-3 bg-white text-red-600 border border-red-600 hover:bg-red-600 hover:text-white text-xs h-8"
+                                onClick={() => navigate("/applicants/job/failed", {state: {jobTitle: jobtitle, from: location.pathname}})}
+                              >
+                                Fail
+                              </Button>
                             </div>
                           </TableCell>
                           <TableCell className="border border-gray-200 py-3 px-3 lg:py-4 lg:px-4 text-center w-32 align-middle">
@@ -432,7 +440,13 @@ const resolvedJobTitle = formatJobTitle(jobtitle)
                             </span>
                           </TableCell>
                           <TableCell className="border border-gray-200 py-3 px-3 lg:py-4 lg:px-4 text-center w-32 align-middle">
-                            <button className="text-blue-600 hover:text-blue-800 text-xs lg:text-sm underline">
+                            <button
+                              className="text-blue-600 hover:text-blue-800 text-xs lg:text-sm underline"
+                              onClick={() => {
+                                console.log(`Navigating to: /applicants/job/${jobtitle}/exam-form/${applicant.id}`)
+                                navigate(`/applicants/job/${jobtitle}/exam-form/${applicant.id}`)
+                              }}
+                            >
                               View result
                             </button>
                           </TableCell>
@@ -465,7 +479,6 @@ const resolvedJobTitle = formatJobTitle(jobtitle)
           {/* Right Sidebar - Stacks below on mobile/tablet, side by side on xl screens */}
           <Sidebar />
         </div>
-   
       </div>
     </>
   )

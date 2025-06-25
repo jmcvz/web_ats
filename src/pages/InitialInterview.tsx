@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { useParams } from "react-router-dom"
+import { useLocation } from "react-router-dom"
 
 
 // Sample applicant data
@@ -442,6 +443,9 @@ export default function JobManagement() {
 }
 const { jobtitle } = useParams<{ jobtitle: string }>()
 const resolvedJobTitle = formatJobTitle(jobtitle)
+const location = useLocation()
+const previousPath = location.state?.from
+
 
   return (
     <>
@@ -456,14 +460,21 @@ const resolvedJobTitle = formatJobTitle(jobtitle)
                 {/* Back Button and Job Title */}
                 <div className="flex flex-col items-center gap-2 sm:flex-row sm:items-center sm:gap-4">
                   <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-2"
-                    onClick={() => navigate(`/applicants/job/${jobtitle}`)}
-                  >
-                    <ArrowLeft className="h-4 w-4" />
-                    Back
-                  </Button>
+  variant="outline"
+  size="sm"
+  className="flex items-center gap-2"
+  onClick={() => {
+    if (previousPath?.includes("/weekly")) {
+      navigate(`/applicants/job/${jobtitle}/weekly`)
+    } else {
+      navigate(`/applicants/job/${jobtitle}`)
+    }
+  }}
+>
+  <ArrowLeft className="h-4 w-4" />
+  Back
+</Button>
+
 
                   <div className="flex flex-col items-center sm:flex-row sm:items-center sm:gap-3">
                     <h1 className="text-2xl font-bold text-gray-900 text-center sm:text-left">{resolvedJobTitle}</h1>
