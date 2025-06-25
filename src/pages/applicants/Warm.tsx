@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Search, ArrowLeft} from "lucide-react"
+import { Search, ArrowLeft } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Navbar } from "@/reusables/Navbar"
-
+import { useLocation } from "react-router-dom"
 // Sample data with email and phone
 const applicants = [
   {
@@ -77,34 +77,15 @@ const positions = [
 ]
 const departments = ["Engineering", "Design", "Product", "Analytics", "Marketing", "Sales"]
 
-// Send Requirements Modal
-
-export default function JobOfferManagement() {
+export default function Warm() {
   const [searchTerm, setSearchTerm] = useState("")
   const [positionFilter, setPositionFilter] = useState("")
   const [departmentFilter, setDepartmentFilter] = useState("")
 
-  // Modal states
-
   const navigate = useNavigate()
 
   const handleStageChange = (value: string) => {
-    const routeMap: Record<string, string> = {
-      "resume-screening": "/applicants/jobdetails/leaddeveloper/LeadDeveloperRS/",
-      "phone-call": "/applicants/jobdetails/leaddeveloper/LeadDeveloperPI",
-      shortlisted: "/applicants/jobdetails/leaddeveloper/LeadDeveloperSL",
-      "initial-interview": "/applicants/jobdetails/leaddeveloper/LeadDeveloperII",
-      assessments: "/applicants/jobdetails/leaddeveloper/LeadDeveloperAS",
-      "final-interview": "/applicants/jobdetails/leaddeveloper/LeadDeveloperFI",
-      "job-offer": "/applicants/jobdetails/leaddeveloper/LeadDeveloperFJO",
-      "offer-finalization": "/applicants/jobdetails/leaddeveloper/OfferAndFinalization",
-      onboarding: "/applicants/jobdetails/leaddeveloper/LeadDeveloperONB",
-    }
-
-    const target = routeMap[value]
-    if (target) {
-      navigate(target)
-    }
+    navigate(`/applicants/job/${value}`)
   }
 
   const filterApplicants = (applicants: any[]) => {
@@ -124,7 +105,6 @@ export default function JobOfferManagement() {
   }
 
   const filteredApplicants = useMemo(() => filterApplicants(applicants), [searchTerm, positionFilter, departmentFilter])
-
 
   const handlePassFail = (applicant: any, status: "pass" | "fail") => {
     console.log(`${applicant.name} marked as ${status}`)
@@ -181,6 +161,13 @@ export default function JobOfferManagement() {
       </div>
     </div>
   )
+  const location = useLocation()
+const jobTitleFromState = location.state?.jobTitle
+const from = location.state?.from
+
+const backPath = from?.includes("/weekly")
+  ? `/applicants/job/${jobTitleFromState}/weekly`
+  : `/applicants/job/${jobTitleFromState}`
 
   return (
     <>
@@ -190,33 +177,37 @@ export default function JobOfferManagement() {
           {/* Header Section */}
           <div className="flex items-center gap-4">
             <Button
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2"
-              onClick={() => window.history.back()}
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back
-            </Button>
+  variant="outline"
+  size="sm"
+  className="flex items-center gap-2"
+  onClick={() => navigate(backPath)}
+>
+  <ArrowLeft className="h-4 w-4" />
+  Back
+</Button>
 
-            <Select defaultValue="warm" onValueChange={handleStageChange}>
-  <SelectTrigger className="w-64 font-bold">
-    <SelectValue placeholder="For Offer And Finalization" />
-  </SelectTrigger>
-  <SelectContent>
-    <SelectItem className="font-bold" value="resume-screening">Resume Screening</SelectItem>
-    <SelectItem  className="font-bold" value="phone-call">Phone Call Interview</SelectItem>
-    <SelectItem  className="font-bold" value="shortlisted">Shortlisted</SelectItem>
-    <SelectItem  className="font-bold" value="initial-interview">Initial Interview</SelectItem>
-    <SelectItem  className="font-bold" value="assessments">Assessments</SelectItem>
-    <SelectItem  className="font-bold" value="final-interview">Final Interview</SelectItem>
-    <SelectItem  className="font-bold" value="job-offer">For Job Offer</SelectItem>
-    <SelectItem  className="font-bold" value="offer-finalization">For Offer And Finalization</SelectItem>
-    <SelectItem  className="font-bold" value="onboarding">Onboarding</SelectItem>
-    <SelectItem value="warm" className="font-bold">Warm</SelectItem>
-  </SelectContent>
-</Select>
 
+            <Select defaultValue="Warm" onValueChange={handleStageChange}>
+              <SelectTrigger className="w-64">
+                <SelectValue>
+                  <span className="font-bold">Warm</span>
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="OfferAndFinalization">
+                  <span className="font-bold">For Offer And Finalization</span>
+                </SelectItem>
+                <SelectItem value="Onboarding">
+                  <span className="font-bold">Onboarding</span>
+                </SelectItem>
+                <SelectItem value="Warm">
+                  <span className="font-bold">Warm</span>
+                </SelectItem>
+                <SelectItem value="Failed">
+                  <span className="font-bold">Failed</span>
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Main Content */}
@@ -257,30 +248,29 @@ export default function JobOfferManagement() {
                         {applicant.id}
                       </TableCell>
                       <TableCell className="border border-gray-200 py-3 px-2 text-xs break-words min-h-[80px] align-middle text-center">
-  <div className="flex items-center gap-2 justify-center">
-    <Avatar className="h-6 w-6 lg:h-8 lg:w-8 flex-shrink-0">
-      <AvatarImage src={applicant.avatar || "/placeholder.svg"} />
-      <AvatarFallback className="text-xs lg:text-sm">
-        {applicant.name
-          .split(" ")
-          .map((n: string) => n[0])
-          .join("")}
-      </AvatarFallback>
-    </Avatar>
-    <span
-      className="font-medium text-xs lg:text-sm break-words leading-tight lg:whitespace-nowrap"
-      title={applicant.name}
-    >
-      {applicant.name}
-    </span>
-  </div>
-</TableCell>
-
+                        <div className="flex items-center gap-2 justify-center">
+                          <Avatar className="h-6 w-6 lg:h-8 lg:w-8 flex-shrink-0">
+                            <AvatarImage src={applicant.avatar || "/placeholder.svg"} />
+                            <AvatarFallback className="text-xs lg:text-sm">
+                              {applicant.name
+                                .split(" ")
+                                .map((n: string) => n[0])
+                                .join("")}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span
+                            className="font-medium text-xs lg:text-sm break-words leading-tight lg:whitespace-nowrap"
+                            title={applicant.name}
+                          >
+                            {applicant.name}
+                          </span>
+                        </div>
+                      </TableCell>
                       <TableCell className="border border-gray-200 py-3 px-2 min-h-[80px] align-middle">
                         <div className="flex justify-center">
                           <Button
                             onClick={() => handlePassFail(applicant, "pass")}
-                            className="bg-green-50 text-green-600 border border-green-600 hover:bg-green-100 rounded text-xs px-3 py-1"
+                            className="bg-white text-green-600 border border-green-600 hover:bg-green-600 hover:text-white rounded text-xs px-3 py-1"
                           >
                             Pass
                           </Button>
@@ -290,7 +280,7 @@ export default function JobOfferManagement() {
                         <div className="flex justify-center">
                           <Button
                             onClick={() => handlePassFail(applicant, "fail")}
-                            className="bg-red-50 text-red-600 border border-red-600 hover:bg-red-100 rounded text-xs px-3 py-1"
+                            className="bg-white text-red-600 border border-red-600 hover:bg-red-600 hover:text-white rounded text-xs px-3 py-1"
                           >
                             Fail
                           </Button>
@@ -311,12 +301,6 @@ export default function JobOfferManagement() {
               </Table>
             </div>
           </div>
-
-          {/* Modals */}
-        
-
-
-      
         </div>
       </div>
     </>

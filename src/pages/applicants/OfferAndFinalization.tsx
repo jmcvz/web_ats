@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label"
 import { ArrowLeft, Search, Plus } from "lucide-react"
 import { Navbar } from "@/reusables/Navbar"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-
+import { useLocation } from "react-router-dom"
 // Sample data for different tabs
 const acceptedApplicants = [
   {
@@ -323,19 +323,14 @@ function RescindModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Overlay */}
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-
-      {/* Form modal */}
       <div className="relative z-10 w-full max-w-2xl mx-4">
         <div className="bg-white rounded-lg shadow-xl p-6">
-          {/* Header */}
           <div className="mb-6 text-center">
             <h2 className="text-2xl font-semibold text-blue-600 mb-2">Rescind Job Offer</h2>
             <p className="text-gray-700 mb-4">Are you sure you want to rescind the offer made to this applicant?</p>
           </div>
 
-          {/* Radio Buttons */}
           <div className="mb-4">
             <div className="flex gap-6">
               <div className="flex items-center space-x-2">
@@ -369,13 +364,10 @@ function RescindModal({
             </div>
           </div>
 
-          {/* Form Content - Always show the form */}
           <>
-            {/* Horizontal blue line */}
             <hr className="border-blue-600 border-t-2 mb-6" />
 
             <div className="space-y-4">
-              {/* Reason for Rescinding Dropdown */}
               <div>
                 <Label htmlFor="rescind-reason" className="text-sm font-medium text-gray-700 mb-1 block">
                   Reason for rescinding the offer
@@ -396,7 +388,6 @@ function RescindModal({
                 </Select>
               </div>
 
-              {/* Remarks Text Area */}
               <div>
                 <Label htmlFor="rescind-remarks" className="text-sm font-medium text-gray-700 mb-1 block">
                   Remarks
@@ -410,7 +401,6 @@ function RescindModal({
             </div>
           </>
 
-          {/* Action Buttons */}
           <div className="flex justify-end gap-3 mt-6">
             <Button
               variant="outline"
@@ -440,7 +430,7 @@ function RescindModal({
   )
 }
 
-export default function JobOfferManagement() {
+export default function OfferAndFinalization() {
   const [activeTab, setActiveTab] = useState("accepted")
   const [searchTerms, setSearchTerms] = useState({
     accepted: "",
@@ -467,22 +457,7 @@ export default function JobOfferManagement() {
   const navigate = useNavigate()
 
   const handleStageChange = (value: string) => {
-    const routeMap: Record<string, string> = {
-      "resume-screening": "/applicants/jobdetails/leaddeveloper/LeadDeveloperRS/",
-      "phone-call": "/applicants/jobdetails/leaddeveloper/LeadDeveloperPI",
-      shortlisted: "/applicants/jobdetails/leaddeveloper/LeadDeveloperSL",
-      "initial-interview": "/applicants/jobdetails/leaddeveloper/LeadDeveloperII",
-      assessments: "/applicants/jobdetails/leaddeveloper/LeadDeveloperAS",
-      "final-interview": "/applicants/jobdetails/leaddeveloper/LeadDeveloperFI",
-      "job-offer": "/applicants/jobdetails/leaddeveloper/LeadDeveloperFJO",
-      "offer-finalization": "/applicants/jobdetails/leaddeveloper/OfferAndFinalization",
-      onboarding: "/applicants/jobdetails/leaddeveloper/LeadDeveloperONB",
-    }
-
-    const target = routeMap[value]
-    if (target) {
-      navigate(target)
-    }
+    navigate(`/applicants/job/${value}`)
   }
 
   // Filter functions
@@ -538,63 +513,71 @@ export default function JobOfferManagement() {
   }
 
   const renderSearchAndFilters = (tab: string) => (
-  <div className="flex flex-col gap-4 mb-4">
-    <div className="relative">
-      <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-      <Input
-        placeholder="Search applicants..."
-        value={searchTerms[tab as keyof typeof searchTerms]}
-        onChange={(e) => setSearchTerms((prev) => ({ ...prev, [tab]: e.target.value }))}
-        className="pl-8"
-      />
-    </div>
-    
-    {/* Responsive Filters Section */}
-    <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
-      <Select
-        value={positionFilters[tab as keyof typeof positionFilters]}
-        onValueChange={(value) => setPositionFilters((prev) => ({ ...prev, [tab]: value }))}
-      >
-        <SelectTrigger className="w-64 sm:w-48">
-          <SelectValue placeholder="Filter by Position" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Positions</SelectItem>
-          {positions.map((position) => (
-            <SelectItem key={position} value={position}>
-              {position}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+    <div className="flex flex-col gap-4 mb-4">
+      <div className="relative">
+        <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+        <Input
+          placeholder="Search applicants..."
+          value={searchTerms[tab as keyof typeof searchTerms]}
+          onChange={(e) => setSearchTerms((prev) => ({ ...prev, [tab]: e.target.value }))}
+          className="pl-8"
+        />
+      </div>
 
-      <Select
-        value={departmentFilters[tab as keyof typeof departmentFilters]}
-        onValueChange={(value) => setDepartmentFilters((prev) => ({ ...prev, [tab]: value }))}
-      >
-        <SelectTrigger className="w-64 sm:w-48">
-          <SelectValue placeholder="Filter by Department" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Departments</SelectItem>
-          {departments.map((department) => (
-            <SelectItem key={department} value={department}>
-              {department}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
+        <Select
+          value={positionFilters[tab as keyof typeof positionFilters]}
+          onValueChange={(value) => setPositionFilters((prev) => ({ ...prev, [tab]: value }))}
+        >
+          <SelectTrigger className="w-64 sm:w-48">
+            <SelectValue placeholder="Filter by Position" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Positions</SelectItem>
+            {positions.map((position) => (
+              <SelectItem key={position} value={position}>
+                {position}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-      <Button
-        variant="outline"
-        onClick={() => clearAllFilters(tab)}
-        className="w-64 sm:w-auto bg-white text-gray-600 border-gray-300 hover:bg-gray-50"
-      >
-        Clear All Filters
-      </Button>
+        <Select
+          value={departmentFilters[tab as keyof typeof departmentFilters]}
+          onValueChange={(value) => setDepartmentFilters((prev) => ({ ...prev, [tab]: value }))}
+        >
+          <SelectTrigger className="w-64 sm:w-48">
+            <SelectValue placeholder="Filter by Department" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Departments</SelectItem>
+            {departments.map((department) => (
+              <SelectItem key={department} value={department}>
+                {department}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Button
+          variant="outline"
+          onClick={() => clearAllFilters(tab)}
+          className="w-64 sm:w-auto bg-white text-gray-600 border-gray-300 hover:bg-gray-50"
+        >
+          Clear All Filters
+        </Button>
+      </div>
     </div>
-  </div>
-);
+  )
+
+  
+const location = useLocation()
+const jobTitleFromState = location.state?.jobTitle
+const from = location.state?.from
+
+const backPath = from?.includes("/weekly")
+  ? `/applicants/job/${jobTitleFromState}/weekly`
+  : `/applicants/job/${jobTitleFromState}`
 
 
   return (
@@ -605,46 +588,33 @@ export default function JobOfferManagement() {
           {/* Header Section */}
           <div className="flex items-center gap-4">
             <Button
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2"
-              onClick={() => window.history.back()}
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back
-            </Button>
+  variant="outline"
+  size="sm"
+  className="flex items-center gap-2"
+  onClick={() => navigate(backPath)}
+>
+  <ArrowLeft className="h-4 w-4" />
+  Back
+</Button>
 
-            <Select defaultValue="offer-finalization" onValueChange={handleStageChange}>
+            <Select defaultValue="OfferAndFinalization" onValueChange={handleStageChange}>
               <SelectTrigger className="w-64">
-                <SelectValue className="font-bold" placeholder="For Offer And Finalization" />
+                <SelectValue>
+                  <span className="font-bold">For Offer And Finalization</span>
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem className="font-bold" value="resume-screening">
-                  Resume Screening
+                <SelectItem value="OfferAndFinalization">
+                  <span className="font-bold">For Offer And Finalization</span>
                 </SelectItem>
-                <SelectItem className="font-bold" value="phone-call">
-                  Phone Call Interview
+                <SelectItem value="Onboarding">
+                  <span className="font-bold">Onboarding</span>
                 </SelectItem>
-                <SelectItem className="font-bold" value="shortlisted">
-                  Shortlisted
+                <SelectItem value="Warm">
+                  <span className="font-bold">Warm</span>
                 </SelectItem>
-                <SelectItem className="font-bold" value="initial-interview">
-                  Initial Interview
-                </SelectItem>
-                <SelectItem className="font-bold" value="assessments">
-                  Assessments
-                </SelectItem>
-                <SelectItem className="font-bold" value="final-interview">
-                  Final Interview
-                </SelectItem>
-                <SelectItem className="font-bold" value="job-offer">
-                  For Job Offer
-                </SelectItem>
-                <SelectItem className="font-bold" value="offer-finalization">
-                  For Offer And Finalization
-                </SelectItem>
-                <SelectItem className="font-bold" value="onboarding">
-                  Onboarding
+                <SelectItem value="Failed">
+                  <span className="font-bold">Failed</span>
                 </SelectItem>
               </SelectContent>
             </Select>
@@ -693,25 +663,24 @@ export default function JobOfferManagement() {
                           {applicant.id}
                         </TableCell>
                         <TableCell className="border border-gray-200 py-3 px-2 text-xs break-words min-h-[80px] align-middle text-center">
-  <div className="flex items-center gap-2 justify-center">
-    <Avatar className="h-6 w-6 lg:h-8 lg:w-8 flex-shrink-0">
-      <AvatarImage src={applicant.avatar || "/placeholder.svg"} />
-      <AvatarFallback className="text-xs lg:text-sm">
-        {applicant.name
-          .split(" ")
-          .map((n: string) => n[0])
-          .join("")}
-      </AvatarFallback>
-    </Avatar>
-    <span
-      className="font-medium text-xs lg:text-sm break-words leading-tight lg:whitespace-nowrap"
-      title={applicant.name}
-    >
-      {applicant.name}
-    </span>
-  </div>
-</TableCell>
-
+                          <div className="flex items-center gap-2 justify-center">
+                            <Avatar className="h-6 w-6 lg:h-8 lg:w-8 flex-shrink-0">
+                              <AvatarImage src={applicant.avatar || "/placeholder.svg"} />
+                              <AvatarFallback className="text-xs lg:text-sm">
+                                {applicant.name
+                                  .split(" ")
+                                  .map((n: string) => n[0])
+                                  .join("")}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span
+                              className="font-medium text-xs lg:text-sm break-words leading-tight lg:whitespace-nowrap"
+                              title={applicant.name}
+                            >
+                              {applicant.name}
+                            </span>
+                          </div>
+                        </TableCell>
                         <TableCell className="border border-gray-200 py-3 px-2 text-xs break-words min-h-[80px] align-middle text-center">
                           {applicant.position}
                         </TableCell>
@@ -719,7 +688,7 @@ export default function JobOfferManagement() {
                           <div className="flex justify-center">
                             <Button
                               onClick={() => handleSendRequirements(applicant)}
-                              className="bg-white text-blue-600 border border-blue-600 hover:bg-blue-50 rounded text-xs px-2 py-1 whitespace-normal leading-tight"
+                              className="bg-white text-blue-600 border border-blue-600 hover:bg-blue-600 hover:text-white rounded text-xs px-2 py-1 whitespace-normal leading-tight"
                             >
                               Send Requirement
                             </Button>
@@ -729,7 +698,7 @@ export default function JobOfferManagement() {
                           <div className="flex justify-center">
                             <Button
                               onClick={() => handleRescind(applicant)}
-                              className="bg-white text-yellow-600 border border-yellow-600 hover:bg-yellow-50 rounded text-xs px-2 py-1 whitespace-normal leading-tight"
+                              className="bg-white text-yellow-600 border border-yellow-600 hover:bg-yellow-600 hover:text-white rounded text-xs px-2 py-1 whitespace-normal leading-tight"
                             >
                               Rescind
                             </Button>
@@ -792,7 +761,7 @@ export default function JobOfferManagement() {
                           <div className="flex justify-center">
                             <Button
                               onClick={() => handleReconsider(applicant)}
-                              className="bg-white text-blue-600 border border-blue-600 hover:bg-blue-50 rounded text-xs px-2 py-1 whitespace-normal leading-tight"
+                              className="bg-white text-blue-600 border border-blue-600 hover:bg-blue-600 hover:text-white rounded text-xs px-2 py-1 whitespace-normal leading-tight"
                             >
                               Reconsider
                             </Button>
@@ -862,7 +831,7 @@ export default function JobOfferManagement() {
                           <div className="flex justify-center">
                             <Button
                               onClick={() => handleReconsider(applicant)}
-                              className="bg-white text-blue-600 border border-blue-600 hover:bg-blue-50 rounded text-xs px-2 py-1 whitespace-normal leading-tight"
+                              className="bg-white text-blue-600 border border-blue-600 hover:bg-blue-600 hover:text-white rounded text-xs px-2 py-1 whitespace-normal leading-tight"
                             >
                               Reconsider
                             </Button>
@@ -887,7 +856,6 @@ export default function JobOfferManagement() {
           </Tabs>
 
           {/* Modals */}
-          {/* Modals */}
           <SendRequirementsModal
             isOpen={isRequirementsModalOpen}
             onClose={() => setIsRequirementsModalOpen(false)}
@@ -910,4 +878,3 @@ export default function JobOfferManagement() {
     </>
   )
 }
-  

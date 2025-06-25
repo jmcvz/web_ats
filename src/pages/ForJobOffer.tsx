@@ -1,4 +1,3 @@
-
 "use client"
 import { useParams, useNavigate } from "react-router-dom"
 import { useState } from "react"
@@ -9,9 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Calendar } from "@/components/ui/calendar"
-import { ArrowLeft, Search, MoreHorizontal } from "lucide-react"
+import { ArrowLeft, Search, MoreHorizontal, X } from "lucide-react"
 import { Navbar } from "@/reusables/Navbar"
 import { Label } from "@/components/ui/label"
+import { useLocation } from "react-router-dom"
+
 
 // Sample applicant data for job offers
 const applicants = [
@@ -66,6 +67,347 @@ interface SidebarCandidate {
   stage: number
   stageColor: "orange" | "red" | "green"
   timeAgo: string
+}
+
+// Generate random reference ID
+const generateReferenceId = () => {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+  let result = ""
+  for (let i = 0; i < 8; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return result
+}
+
+// Job Offer Document Modal Component
+function JobOfferDocumentModal({
+  isOpen,
+  onClose,
+  applicantName,
+  jobTitle,
+}: {
+  isOpen: boolean
+  onClose: () => void
+  applicantName: string
+  jobTitle: string
+}) {
+  if (!isOpen) return null
+
+  const today = new Date().toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  })
+
+  const referenceId = generateReferenceId()
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Overlay */}
+      <div className="absolute inset-0 bg-black/50" />
+
+      {/* Document modal */}
+      <div className="relative z-10 w-full max-w-4xl mx-4 max-h-[95vh] overflow-y-auto">
+        <div className="bg-white rounded-lg shadow-xl">
+          {/* Header with logo, edit button, and close button */}
+          <div className="flex justify-between items-start p-6 border-b">
+            <div className="flex items-center gap-4">
+              <img src="/OODC logo2.png" alt="OODC Logo" width={128} height={128} className="h-32 w-auto" />
+              <button className="text-blue-600 underline font-medium">Edit</button>
+            </div>
+            <button onClick={onClose} className="text-gray-500 hover:text-gray-700 p-1">
+              <X className="h-6 w-6" />
+            </button>
+          </div>
+
+          {/* Document content */}
+          <div className="p-8 space-y-6">
+            {/* Date, Sender, Location */}
+            <div className="space-y-2">
+              <p className="font-bold">{today}</p>
+              <p className="font-bold">HR Department</p>
+              <p className="font-bold">Makati City</p>
+            </div>
+
+            {/* Reference ID */}
+            <div className="mt-8">
+              <p className="font-medium">#{referenceId}</p>
+            </div>
+
+            {/* Job Details */}
+            <div className="mt-8 space-y-4 ml-4">
+              <div className="flex">
+                <span className="w-48 font-medium">I. Position:</span>
+                <span>{jobTitle}</span>
+              </div>
+
+              <div className="flex">
+                <span className="w-48 font-medium">II. Employment Status:</span>
+                <span>Full-time</span>
+              </div>
+
+              <div className="flex flex-col">
+                <div className="flex">
+                  <span className="w-48 font-medium">III. Work Schedule:</span>
+                  <span>5 days a week (9:00 AM - 6:00 PM)</span>
+                </div>
+                <p className="text-sm text-gray-600 mt-1 ml-48">
+                  **The company reserves the right to change your schedule as it deems necessary.
+                </p>
+              </div>
+
+              <div className="flex flex-col">
+                <div className="flex">
+                  <span className="w-48 font-medium">IV. Work Assignment:</span>
+                  <span>As per job description and company requirements</span>
+                </div>
+                <p className="text-sm text-gray-600 mt-1 ml-48">
+                  **The company reserves the right to change your work assignment and duties as it deems necessary.
+                </p>
+              </div>
+
+              <div className="flex">
+                <span className="w-48 font-medium">V. Immediate Head:</span>
+                <span>Department Manager, Operations</span>
+              </div>
+
+              <div className="flex">
+                <span className="w-48 font-medium">VI. Start Date:</span>
+                <span>January 15, 2025</span>
+                <span className="text-sm text-gray-600 ml-2">**or another mutually agreed upon date</span>
+              </div>
+            </div>
+
+            {/* Compensation & Benefits Separator */}
+            <div className="bg-blue-600 text-white text-center py-2 font-bold mt-8">COMPENSATION & BENEFITS</div>
+
+            {/* Compensation Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full table-fixed border-collapse border border-gray-300">
+    <thead>
+      <tr>
+        <th className="w-1/4 border border-gray-300 p-2 text-left font-bold">Cash</th>
+        <th className="w-1/4 border border-gray-300 p-2 text-left font-bold">Monthly</th>
+        <th className="w-1/4 border border-gray-300 p-2 text-left font-bold">Annual</th>
+        <th className="w-1/4 border border-gray-300 p-2 text-left font-bold">Specifications</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="border border-gray-300 p-2 pl-4">Basic Pay</td>
+                    <td className="border border-gray-300 p-2">₱25,000.00</td>
+                    <td className="border border-gray-300 p-2">₱300,000.00</td>
+                    <td className="border border-gray-300 p-2"></td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 p-2 pl-4">Allowance</td>
+                    <td className="border border-gray-300 p-2">₱3,000.00</td>
+                    <td className="border border-gray-300 p-2">₱36,000.00</td>
+                    <td className="border border-gray-300 p-2"></td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 p-2 pl-4">Transportation</td>
+                    <td className="border border-gray-300 p-2">₱2,000.00</td>
+                    <td className="border border-gray-300 p-2">₱24,000.00</td>
+                    <td className="border border-gray-300 p-2"></td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 p-2 pl-4">13th Month Pay</td>
+                    <td className="border border-gray-300 p-2"></td>
+                    <td className="border border-gray-300 p-2">₱25,000.00</td>
+                    <td className="border border-gray-300 p-2">1/12 of the annual basic salary/Prorated monthly</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 p-2 pl-4">Mobile Allowance</td>
+                    <td className="border border-gray-300 p-2">₱1,000.00</td>
+                    <td className="border border-gray-300 p-2">₱12,000.00</td>
+                    <td className="border border-gray-300 p-2"></td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 p-2 pl-4">Leave Conversion</td>
+                    <td className="border border-gray-300 p-2"></td>
+                    <td className="border border-gray-300 p-2">₱5,000.00</td>
+                    <td className="border border-gray-300 p-2">
+                      Convert up to 5 unused sick leaves after 1 year of service
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* Total Cash Separator */}
+            <div className="overflow-x-auto bg-lime-500 text-white font-bold">
+  <table className="w-full table-fixed">
+                <tr>
+                <td className="w-1/4 p-2">Total Cash</td>
+        <td className="w-1/4 p-2">₱31,000.00</td>
+        <td className="w-1/4 p-2">₱397,000.00</td>
+        <td className="w-1/4 p-2 text-center">₱402,000.00</td>
+                </tr>
+              </table>
+            </div>
+
+            {/* Other Variable Cash Benefits */}
+            <div className="mt-6 overflow-x-auto w-full">
+              <h3 className="font-bold text-lg mb-4">Other Variable Cash Benefit</h3>
+              <table className="w-full border-collapse border border-gray-300 min-w-[800px]">
+                <tbody>
+                  <tr>
+                    <td className="border border-gray-300 p-2">SSS Employer Share</td>
+                    <td className="border border-gray-300 p-2">₱1,455.00</td>
+                    <td className="border border-gray-300 p-2">₱17,460.00</td>
+                    <td className="border border-gray-300 p-2"></td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 p-2">Philhealth Employer Share</td>
+                    <td className="border border-gray-300 p-2">₱375.00</td>
+                    <td className="border border-gray-300 p-2">₱4,500.00</td>
+                    <td className="border border-gray-300 p-2"></td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 p-2">Pag-ibig Employee Share</td>
+                    <td className="border border-gray-300 p-2">₱200.00</td>
+                    <td className="border border-gray-300 p-2">₱2,400.00</td>
+                    <td className="border border-gray-300 p-2"></td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 p-2">Vacation Leave Credits</td>
+                    <td className="border border-gray-300 p-2">5 credits</td>
+                    <td className="border border-gray-300 p-2">₱3,448.28</td>
+                    <td className="border border-gray-300 p-2 whitespace-normal break-words">
+                      5 days annually/subject to company vacation leave policy
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 p-2">Sick Leave Credits</td>
+                    <td className="border border-gray-300 p-2">5 credits</td>
+                    <td className="border border-gray-300 p-2">₱3,448.28</td>
+                    <td className="border border-gray-300 p-2 whitespace-normal break-words">5 days annually/subject to company sick leave policy</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* Other Benefits */}
+            <div className="mt-6">
+              <h3 className="font-bold text-lg mb-4">Other Benefits:</h3>
+              <table className="w-full border-collapse border border-gray-300">
+                <tbody>
+                  <tr>
+                    <td className="border border-gray-300 p-2">Birthday Cake Benefit</td>
+                    <td className="border border-gray-300 p-2">Yes</td>
+                    <td className="border border-gray-300 p-2">Subject to the company's affordability</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 p-2">HMO</td>
+                    <td className="border border-gray-300 p-2">Yes</td>
+                    <td className="border border-gray-300 p-2">
+                      Available after 8 months of employment, subject to the medical coverage policy and company
+                      affordability
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 p-2">Christmas Package</td>
+                    <td className="border border-gray-300 p-2">Yes</td>
+                    <td className="border border-gray-300 p-2">Subject to the company's affordability</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 p-2">Company-Sponsored Events</td>
+                    <td className="border border-gray-300 p-2">Yes</td>
+                    <td className="border border-gray-300 p-2">
+                      Christmas party and regular People Engagement Programs
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 p-2">Employee Discounts</td>
+                    <td className="border border-gray-300 p-2">Yes</td>
+                    <td className="border border-gray-300 p-2">Discounts on One Tech Smart Solutions</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 p-2">Potential Bonus</td>
+                    <td className="border border-gray-300 p-2">Yes</td>
+                    <td className="border border-gray-300 p-2">
+                      Contingent upon the company's financial performance and profitability, as well as individual
+                      performance throughout the year
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 p-2">Annual Salary Increase</td>
+                    <td className="border border-gray-300 p-2">Yes</td>
+                    <td className="border border-gray-300 p-2">
+                      Contingent upon the company's financial performance and profitability, as well as individual
+                      performance throughout the year
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 p-2">Commissions</td>
+                    <td className="border border-gray-300 p-2">No</td>
+                    <td className="border border-gray-300 p-2">
+                      Applicable to employees in the Sales Department, based on the company's sales incentives or
+                      commission structure program
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 p-2">Referral Bonuses</td>
+                    <td className="border border-gray-300 p-2">Yes</td>
+                    <td className="border border-gray-300 p-2">Subject to company referral policy</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 p-2">Employee Salary Loan Assistance</td>
+                    <td className="border border-gray-300 p-2">Yes</td>
+                    <td className="border border-gray-300 p-2">
+                      Available after 6 months of employment, in accordance with the company's employee salary loan
+                      assistance policy
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* Legal Text */}
+            <div className="mt-8 text-sm leading-relaxed">
+              <p className="mb-4">
+                This offer, along with your employment with the company, is contingent upon your successful completion
+                of the medical examination, employment background verification, and all pre-employment requirements. If
+                you accept our offer, please indicate your agreement by signing in the space provided below.
+              </p>
+              <p className="mb-6">Thank you, and we look forward to welcoming you to One Outsource.</p>
+            </div>
+
+            {/* Signature Section */}
+            <div className="mt-8 grid grid-cols-2 gap-8">
+              {/* Left Column */}
+              <div className="space-y-6">
+                <div>
+                  <p className="font-medium mb-2">Prepared by:</p>
+                  <p className="font-medium">Maria Santos</p>
+                  <p className="text-sm">Specialist, Human Resources</p>
+                  <p className="text-sm">One Outsource Group</p>
+                </div>
+
+                <div>
+                  <p className="font-medium mb-2">Noted by:</p>
+                  <p className="font-medium">Jennifer Cruz</p>
+                  <p className="text-sm">Manager, Human Resources</p>
+                  <p className="text-sm">One Outsource Group</p>
+                </div>
+              </div>
+
+              {/* Right Column */}
+              <div>
+                <p className="font-medium mb-2">Conforme:</p>
+                <div className="mt-8">
+                  <div className="border-b border-black w-full mb-2"></div>
+                  <p className="text-sm text-center">{applicantName}</p>
+                  <p className="text-xs text-center text-gray-600">Signature Over Printed Name</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 // Sidebar Component
@@ -227,8 +569,15 @@ function ConfirmationModal({
 function JobOfferFormModal({
   isOpen,
   onClose,
-  applicantName,
-}: { isOpen: boolean; onClose: () => void; applicantName: string }) {
+ 
+  onSend,
+}: {
+  isOpen: boolean
+  onClose: () => void
+  applicantName: string
+  jobTitle: string
+  onSend: () => void
+}) {
   if (!isOpen) return null
 
   return (
@@ -486,14 +835,7 @@ function JobOfferFormModal({
             >
               Cancel
             </Button>
-            <Button
-              onClick={() => {
-                // Handle form submission here
-                console.log(`Job offer sent to ${applicantName}!`)
-                onClose()
-              }}
-              className="bg-blue-600 text-white hover:bg-blue-700"
-            >
+            <Button onClick={onSend} className="bg-blue-600 text-white hover:bg-blue-700">
               Send
             </Button>
           </div>
@@ -502,8 +844,6 @@ function JobOfferFormModal({
     </div>
   )
 }
-
-// Add the new RejectOfferModal component after the JobOfferFormModal component and before the main export
 
 // Reject Offer Modal Component
 function RejectOfferModal({
@@ -1017,19 +1357,17 @@ function RescindOfferModal({
 }
 
 export default function JobOfferManagement() {
-
-  
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedFilter, setSelectedFilter] = useState("")
   const [jobStatus, setJobStatus] = useState("active")
-  
+
   const navigate = useNavigate()
-  
+
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false)
   const [isJobOfferFormOpen, setIsJobOfferFormOpen] = useState(false)
+  const [isJobOfferDocumentOpen, setIsJobOfferDocumentOpen] = useState(false)
   const [selectedApplicant, setSelectedApplicant] = useState("")
 
-  // Add the new RejectOfferModal component after the JobOfferFormModal component and before the main export
   const [isRejectOfferOpen, setIsRejectOfferOpen] = useState(false)
   const [selectedApplicantForReject, setSelectedApplicantForReject] = useState("")
 
@@ -1046,7 +1384,19 @@ export default function JobOfferManagement() {
     setIsJobOfferFormOpen(true)
   }
 
-  // Add the handleRejectOffer function after the existing handler functions:
+  const handleSendDocument = () => {
+    setIsJobOfferFormOpen(false)
+    setIsJobOfferDocumentOpen(true)
+  }
+
+  const handleCloseAllModals = () => {
+    setIsConfirmationOpen(false)
+    setIsJobOfferFormOpen(false)
+    setIsJobOfferDocumentOpen(false)
+    setIsRejectOfferOpen(false)
+    setIsRescindOfferOpen(false)
+  }
+
   const handleRejectOffer = (applicantName: string) => {
     setSelectedApplicantForReject(applicantName)
     setIsRejectOfferOpen(true)
@@ -1062,28 +1412,28 @@ export default function JobOfferManagement() {
     applicant.name.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
-  
   const formatJobTitle = (slug?: string) => {
-  const titleMap: Record<string, string> = {
-    leaddeveloper: "Lead Developer",
-    projectmanager: "Project Manager",
-    socialcontentmanager: "Social Content Manager",
-    senioruiuxdesigner: "Senior UI/UX Designer",
-    customersupport: "Customer Support",
-    qaengineer: "QA Engineer",
-    humanresourcescoordinator: "Human Resources Coordinator",
-    operationsmanager: "Operations Manager",
-    socialmediamanager: "Social Media Manager",
-    marketingspecialist: "Marketing Specialist",
-    seniorsoftwareengineer: "Senior Software Engineer",
+    const titleMap: Record<string, string> = {
+      leaddeveloper: "Lead Developer",
+      projectmanager: "Project Manager",
+      socialcontentmanager: "Social Content Manager",
+      senioruiuxdesigner: "Senior UI/UX Designer",
+      customersupport: "Customer Support",
+      qaengineer: "QA Engineer",
+      humanresourcescoordinator: "Human Resources Coordinator",
+      operationsmanager: "Operations Manager",
+      socialmediamanager: "Social Media Manager",
+      marketingspecialist: "Marketing Specialist",
+      seniorsoftwareengineer: "Senior Software Engineer",
+    }
+    return slug ? titleMap[slug.toLowerCase()] || slug.replace(/([a-z])([A-Z])/g, "$1 $2") : "Unknown Job"
   }
-  return slug ? titleMap[slug.toLowerCase()] || slug.replace(/([a-z])([A-Z])/g, "$1 $2") : "Unknown Job"
-}
 
-const { jobtitle } = useParams<{ jobtitle: string }>()
-const resolvedJobTitle = formatJobTitle(jobtitle)
+  const { jobtitle } = useParams<{ jobtitle: string }>()
+  const resolvedJobTitle = formatJobTitle(jobtitle)
 
-  
+  const location = useLocation()
+  const previousPath = location.state?.from
 
   return (
     <>
@@ -1101,7 +1451,13 @@ const resolvedJobTitle = formatJobTitle(jobtitle)
                     variant="outline"
                     size="sm"
                     className="flex items-center gap-2"
-                    onClick={() => navigate(`/applicants/job/${jobtitle}`)}
+                    onClick={() => {
+                      if (previousPath?.includes("/weekly")) {
+                        navigate(`/applicants/job/${jobtitle}/weekly`)
+                      } else {
+                        navigate(`/applicants/job/${jobtitle}`)
+                      }
+                    }}
                   >
                     <ArrowLeft className="h-4 w-4" />
                     Back
@@ -1144,15 +1500,14 @@ const resolvedJobTitle = formatJobTitle(jobtitle)
                 {/* Filter and Search */}
                 <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-between sm:items-center">
                   <Select
-  value={selectedFilter || "forjoboffer"}
-  onValueChange={(value) => {
-    setSelectedFilter(value)
-    if (jobtitle) {
-      navigate(`/applicants/job/${jobtitle}/${value}`)
-    }
-  }}
->
-
+                    value={selectedFilter || "forjoboffer"}
+                    onValueChange={(value) => {
+                      setSelectedFilter(value)
+                      if (jobtitle) {
+                        navigate(`/applicants/job/${jobtitle}/${value}`)
+                      }
+                    }}
+                  >
                     <SelectTrigger className="w-40 border-none shadow-none font-bold text-black text-sm">
                       <SelectValue placeholder="Shortlisted" />
                     </SelectTrigger>
@@ -1178,18 +1533,6 @@ const resolvedJobTitle = formatJobTitle(jobtitle)
                       <SelectItem value="forjoboffer" className="font-bold">
                         For Job Offer
                       </SelectItem>
-                      <SelectItem value="offerfinalization" className="font-bold">
-                        For Offer and Finalization
-                      </SelectItem>
-                      <SelectItem value="onboarding" className="font-bold">
-                        Onboarding
-                      </SelectItem>
-                      <SelectItem value="warm" className="font-bold">
-                        Warm
-                      </SelectItem>
-                      <SelectItem value="failed" className="font-bold">
-                        Failed
-                      </SelectItem>
                     </SelectContent>
                   </Select>
                   <div className="relative">
@@ -1210,9 +1553,8 @@ const resolvedJobTitle = formatJobTitle(jobtitle)
                   <TableHeader>
                     <TableRow>
                       <TableHead className="break-words border border-gray-200 py-2 px-3 w-24 text-xs lg:text-sm lg:py-3 lg:px-4">
-  ID Number
-</TableHead>
-
+                        ID Number
+                      </TableHead>
                       <TableHead className="border border-gray-200 py-2 px-3 w-48 text-xs lg:text-sm lg:py-3 lg:px-4">
                         Full Name
                       </TableHead>
@@ -1255,19 +1597,18 @@ const resolvedJobTitle = formatJobTitle(jobtitle)
                           </TableCell>
                           <TableCell className="border border-gray-200 py-3 px-3 lg:py-4 lg:px-4 text-center align-middle">
                             <Button
-  onClick={() => handleSendJobOffer(applicant.name)}
-  className="bg-blue-600 text-white hover:bg-blue-700 rounded-lg px-4 py-2 text-xs lg:text-sm whitespace-normal"
->
-  Send Job Offer
-</Button>
-
+                              onClick={() => handleSendJobOffer(applicant.name)}
+                              className="bg-white text-blue-600 border border-blue-600 hover:bg-blue-600 hover:text-white rounded-lg px-4 py-2 text-xs lg:text-sm whitespace-normal"
+                            >
+                              Send Job Offer
+                            </Button>
                           </TableCell>
                           <TableCell className="border border-gray-200 py-3 px-3 lg:py-4 lg:px-4 align-middle">
                             <div className="flex gap-2 justify-center">
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="bg-green-50 text-green-800 border-green-300 hover:bg-green-100 rounded-lg px-3 py-1 text-xs"
+                                className="bg-white text-green-700 border border-green-500 hover:bg-green-500 hover:text-white rounded-lg px-3 py-1 text-xs"
                               >
                                 Accepted
                               </Button>
@@ -1275,7 +1616,7 @@ const resolvedJobTitle = formatJobTitle(jobtitle)
                                 variant="outline"
                                 size="sm"
                                 onClick={() => handleRejectOffer(applicant.name)}
-                                className="bg-red-50 text-red-800 border-red-300 hover:bg-red-100 rounded-lg px-3 py-1 text-xs"
+                                className="bg-white text-red-700 border border-red-500 hover:bg-red-500 hover:text-white rounded-lg px-3 py-1 text-xs"
                               >
                                 Rejected
                               </Button>
@@ -1283,7 +1624,7 @@ const resolvedJobTitle = formatJobTitle(jobtitle)
                                 variant="outline"
                                 size="sm"
                                 onClick={() => handleRescindOffer(applicant.name)}
-                                className="bg-yellow-50 text-yellow-800 border-yellow-300 hover:bg-yellow-100 rounded-lg px-3 py-1 text-xs"
+                                className="bg-white text-yellow-700 border border-yellow-400 hover:bg-yellow-400 hover:text-white rounded-lg px-3 py-1 text-xs"
                               >
                                 Rescind Offer
                               </Button>
@@ -1331,6 +1672,16 @@ const resolvedJobTitle = formatJobTitle(jobtitle)
           isOpen={isJobOfferFormOpen}
           onClose={() => setIsJobOfferFormOpen(false)}
           applicantName={selectedApplicant}
+          jobTitle={resolvedJobTitle}
+          onSend={handleSendDocument}
+        />
+
+        {/* Job Offer Document Modal */}
+        <JobOfferDocumentModal
+          isOpen={isJobOfferDocumentOpen}
+          onClose={handleCloseAllModals}
+          applicantName={selectedApplicant}
+          jobTitle={resolvedJobTitle}
         />
 
         {/* Reject Offer Modal */}

@@ -34,19 +34,19 @@ import {
   MapPin,
   Users,
   Clock,
-  Grid3X3,
   List,
   Maximize2,
   Star,
   Check,
   X,
+  LayoutGrid,
 } from "lucide-react"
-
-import { Navbar } from "@/reusables/Navbar"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Input } from "@/components/ui/input"
+import { Navbar } from "@/reusables/Navbar"
 
 // ----------------------
 // Interfaces
@@ -292,46 +292,42 @@ function DroppableColumn({
     }
   }
 
-const handleMaximizeClick = () => {
-  // Create a mapping from stage titles to route segments
-  const stageRouteMapping: Record<string, string> = {
-    "Resume Screening": "resumescreening",
-    "Phone-Call Interview": "phonecallinterview",
-    "Initial Interview": "initialinterview",
-    Shortlisted: "shortlisted",
-    Assessment: "assessments",
-    "Final Interview": "finalinterview",
-    "For Job Offer": "forjoboffer",
-    "Job Offer & Finalization": "OfferAndFinalization", // Capitalized to match custom route
-    Onboarding: "Onboarding",
-    Warm: "Warm",
-    Failed: "Failed",
+  const handleMaximizeClick = () => {
+    // Create a mapping from stage titles to route segments
+    const stageRouteMapping: Record<string, string> = {
+      "Resume Screening": "resumescreening",
+      "Phone-Call Interview": "phonecallinterview",
+      "Initial Interview": "initialinterview",
+      Shortlisted: "shortlisted",
+      Assessment: "assessments",
+      "Final Interview": "finalinterview",
+      "For Job Offer": "forjoboffer",
+      "Job Offer & Finalization": "OfferAndFinalization", // Capitalized to match custom route
+      Onboarding: "Onboarding",
+      Warm: "Warm",
+      Failed: "Failed",
+    }
+
+    const routeSegment = stageRouteMapping[title]
+    if (routeSegment) {
+      // Final stages without job title
+      const isCustomFinalStage = ["OfferAndFinalization", "Onboarding", "Warm", "Failed"].includes(routeSegment)
+
+      // Get the current job title slug or use a fallback
+      const currentJobTitle = jobtitle || "leaddeveloper"
+      const jobSlug = currentJobTitle.toLowerCase().replace(/\s+/g, "")
+
+      const path = isCustomFinalStage ? `/applicants/job/${routeSegment}` : `/applicants/job/${jobSlug}/${routeSegment}`
+
+      navigate(path, {
+        state: {
+          jobTitle: jobtitle,
+          stageName: title,
+          from: location.pathname, // so ResumeScreening page can go "back"
+        },
+      })
+    }
   }
-
-  const routeSegment = stageRouteMapping[title]
-  if (routeSegment) {
-    // Final stages without job title
-    const isCustomFinalStage = ["OfferAndFinalization", "Onboarding", "Warm", "Failed"].includes(routeSegment)
-
-    // Get the current job title slug or use a fallback
-    const currentJobTitle = jobtitle || "leaddeveloper"
-    const jobSlug = currentJobTitle.toLowerCase().replace(/\s+/g, "")
-
-    const path = isCustomFinalStage
-      ? `/applicants/job/${routeSegment}`
-      : `/applicants/job/${jobSlug}/${routeSegment}`
-
-    navigate(path, {
-  state: {
-    jobTitle: currentJobTitle,
-    stageName: title,
-    from: location.pathname, // so ResumeScreening page can go "back"
-  },
-})
-
-  }
-}
-
 
   return (
     <div className="w-full lg:w-[280px] lg:flex-shrink-0">
@@ -665,11 +661,11 @@ function Sidebar() {
 
       {/* Candidates List */}
       <div className="space-y-3">
-        {candidates.map((candidate) => (
+        {candidates.map((candidate: SidebarCandidate) => (
           <div key={candidate.id} className="flex items-start gap-3 p-3 rounded-lg border hover:bg-gray-50">
             <Avatar className="h-10 w-10">
               <AvatarImage src={`https://i.pravatar.cc/150?u=${candidate.id}`} alt={candidate.name} />
-              <AvatarFallback>{candidate.name.split(" ").map((n) => n[0])}</AvatarFallback>
+              <AvatarFallback>{candidate.name.split(" ").map((n: string) => n[0])}</AvatarFallback>
             </Avatar>
 
             <div className="flex-1 min-w-0">
@@ -1084,163 +1080,270 @@ export default function LeadDeveloperWeekly() {
     },
   ]
 
+  const toTitleCase = (str: string) =>
+    str
+      .replace(/([a-z])([A-Z])/g, "$1 $2") // split camelCase or PascalCase
+      .replace(/[_-]/g, " ") // optional: replace underscores or dashes with spaces
+      .toLowerCase()
+      .replace(/\b\w/g, (char) => char.toUpperCase()) // capitalize each word
+
   const formatJobTitle = (slug?: string) => {
-    const titleMap: Record<string, string> = {
-      LeadDeveloper: "Lead Developer",
-      ProjectManager: "Project Manager",
-      SocialContentManager: "Social Content Manager",
-      SeniorUIUXDesigner: "Senior UI/UX Designer",
-      CustomerSupport: "Customer Support",
-      QAEngineer: "QA Engineer",
-      HumanResourcesCoordinator: "Human Resources Coordinator",
-      OperationsManager: "Operations Manager",
-      SocialMediaManager: "Social Media Manager",
-      MarketingSpecialist: "Marketing Specialist",
-      SeniorSoftwareEngineer: "Senior Software Engineer",
+    if (!slug) return "Unknown Job"
+
+    const titleMap: { [key: string]: string } = {
+      projectmanager: "Project Manager",
+      socialcontentmanager: "Social Content Manager",
+      senioruiuxdesigner: "Senior UI/UX Designer",
+      leaddeveloper: "Lead Developer",
+      customersupport: "Customer Support",
+      qaengineer: "QA Engineer",
+      humanresourcescoordinator: "Human Resources Coordinator",
+      operationsmanager: "Operations Manager",
+      socialmediamanager: "Social Media Manager",
+      marketingspecialist: "Marketing Specialist",
     }
-    return slug ? titleMap[slug.toLowerCase()] || slug.replace(/([a-z])([A-Z])/g, "$1 $2") : "Unknown Job"
+
+    const normalizedSlug = slug.toLowerCase().replace(/\s+/g, "")
+
+    return titleMap[normalizedSlug] || toTitleCase(slug)
   }
+
   const { jobtitle } = useParams<{ jobtitle: string }>()
   const resolvedJobTitle = formatJobTitle(jobtitle)
 
+  // Mock candidates data
+  const candidates: SidebarCandidate[] = [
+    {
+      id: "c1",
+      name: "Jane Cruise",
+      title: "Senior frontend developer",
+      stage: 3,
+      stageColor: "orange",
+      timeAgo: "5d ago",
+    },
+    {
+      id: "c2",
+      name: "Green William",
+      title: "UI/UX designer & developer",
+      stage: 3,
+      stageColor: "red",
+      timeAgo: "4h ago",
+    },
+    {
+      id: "c3",
+      name: "Daniel Goldberg",
+      title: "Magna lorem consectetur",
+      stage: 1,
+      stageColor: "green",
+      timeAgo: "1 day ago",
+    },
+  ]
+
+  const getStageColorClass = (color: "orange" | "red" | "green") => {
+    switch (color) {
+      case "orange":
+        return "bg-orange-100 text-orange-800 border-orange-200"
+      case "red":
+        return "bg-red-100 text-red-800 border-red-200"
+      case "green":
+        return "bg-green-100 text-green-800 border-green-200"
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200"
+    }
+  }
+
   return (
-    <>
-      <Navbar />
-      <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row">
-        {/* Mobile Selection Bar */}
-        {isSelectionMode && (
-          <div className="lg:hidden fixed top-16 left-0 right-0 bg-blue-600 text-white p-3 z-50 flex items-center justify-between">
-            <span className="text-sm font-medium">
-              {selectedApplicants.size} applicant{selectedApplicants.size !== 1 ? "s" : ""} selected
-            </span>
+    <div className="min-h-screen bg-gray-50 p-6 pt-[100px]">
+      <div className="mx-auto max-w-7xl space-y-6">
+        <div className="w-full space-y-6">
+          {/* Mobile Selection Bar */}
+          {isSelectionMode && (
+            <div className="lg:hidden fixed top-16 left-0 right-0 bg-blue-600 text-white p-3 z-50 flex items-center justify-between">
+              <span className="text-sm font-medium">
+                {selectedApplicants.size} applicant{selectedApplicants.size !== 1 ? "s" : ""} selected
+              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs opacity-75">Tap column to move</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleClearSelection}
+                  className="text-white hover:bg-blue-700"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Header */}
+          <>
+          <Navbar />
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-xs opacity-75">Tap column to move</span>
-              <Button variant="ghost" size="sm" onClick={handleClearSelection} className="text-white hover:bg-blue-700">
-                <X className="h-4 w-4" />
+              <Button variant="ghost" size="icon" onClick={() => navigate(`/applicants/job/${jobtitle}`)}>
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <h2 className="text-3xl font-bold text-gray-800">{resolvedJobTitle}</h2>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="ghost" size="icon" className={viewMode === "grid" ? "text-black" : "text-gray-600"}>
+                <LayoutGrid className="h-4 w-4 text-gray-600" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  setViewMode("list")
+                  navigate(`/applicants/job/${jobtitle}`)
+                }}
+                className={viewMode === "list" ? "text-black" : "text-blue-800"}
+              >
+                <List className="h-4 w-4" />
               </Button>
             </div>
           </div>
-        )}
 
-        {/* Main Content */}
-        <div className={`flex-1 p-6 lg:pr-0 ${isSelectionMode ? "pt-[140px] lg:pt-[100px]" : "pt-[100px]"}`}>
-          <div className="mx-auto max-w-none space-y-6 lg:mr-6">
-            {/* Header */}
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" onClick={() => navigate(`/applicants/job/${jobtitle}`)}>
-  <ArrowLeft className="h-5 w-5" />
-</Button>
+          {/* Job Info Display */}
+          <div className="bg-white border rounded-lg p-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div className="flex items-center gap-1">
+                <Clock className="h-4 w-4 text-gray-500" />
+                <span className="text-gray-500">Full Time</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Calendar className="h-4 w-4 text-gray-500" />
+                <span className="text-gray-500">Dec 9</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <MapPin className="h-4 w-4 text-gray-500" />
+                <span className="text-gray-500">Onsite</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Users className="h-4 w-4 text-gray-500" />
+                <span className="text-gray-500">Total applicants: {totalApplicants}</span>
+              </div>
+            </div>
+          </div>
 
-              <div className="flex items-center gap-3">
-                <h2 className="text-2xl font-bold text-gray-900 text-center sm:text-left">{resolvedJobTitle}</h2>
+          {/* Search */}
+          <div>
+            <Input placeholder="Search" className="max-w-md bg-gray-100" />
+          </div>
 
-                <Select defaultValue="active">
-                  <SelectTrigger className="w-auto min-w-[80px] bg-green-100 text-green-800 border-green-300 hover:bg-green-200">
-                    <SelectValue />
+          <hr />
+
+          {/* Main Content and Sidebar Container */}
+          <div className="flex flex-col lg:flex-row gap-6">
+            {/* Main Content */}
+            <div className="flex-1">
+              <div className="space-y-6">
+                {/* Mobile Instructions */}
+                {!isSelectionMode && (
+                  <div className="lg:hidden bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                    <p className="text-sm text-blue-800">
+                      <strong>Mobile tip:</strong> Long press on any applicant to start selection mode. Then long press
+                      additional applicants to select multiple, and tap a column to move them all there.
+                    </p>
+                  </div>
+                )}
+
+                {/* Drag and Drop Context for all stages */}
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragStart={handleDragStart}
+                  onDragOver={handleDragOver}
+                  onDragEnd={handleDragEnd}
+                >
+                  {/* All Stages Stacked Vertically */}
+                  <div className="space-y-8">
+                    {stageConfigs.map((stage, index) => (
+                      <StageSection
+                        key={index}
+                        title={stage.title}
+                        columns={stage.columns}
+                        applicantColumns={allColumns}
+                        isMultiRow={stage.isMultiRow}
+                        selectedApplicants={selectedApplicants}
+                        isSelectionMode={isSelectionMode}
+                        onLongPress={handleLongPress}
+                        onToggleSelect={handleToggleSelect}
+                        onColumnClick={handleColumnClick}
+                        navigate={navigate}
+                        jobtitle={jobtitle}
+                      />
+                    ))}
+                  </div>
+
+                  <DragOverlay>
+                    {activeApplicant ? <ApplicantCard {...activeApplicant} isDragging={true} /> : null}
+                  </DragOverlay>
+                </DndContext>
+              </div>
+            </div>
+
+            {/* Right Sidebar */}
+            <div className="w-full lg:w-80 bg-white lg:border-l border-gray-200 p-4 space-y-4 lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto">
+              <MiniCalendar />
+
+              {/* Filters */}
+              <div className="flex gap-2">
+                <Select defaultValue="stage-01">
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Stage" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="stage-01">Stage: 01</SelectItem>
+                    <SelectItem value="stage-02">Stage: 02</SelectItem>
+                    <SelectItem value="stage-03">Stage: 03</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select defaultValue="today">
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Time" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="today">Today</SelectItem>
+                    <SelectItem value="week">This Week</SelectItem>
+                    <SelectItem value="month">This Month</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-            </div>
 
-            {/* Job Details */}
-            <div className="flex items-center gap-6 text-sm text-gray-600">
-              <div className="flex items-center gap-1">
-                <Clock className="h-4 w-4" />
-                <span>Full time</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Calendar className="h-4 w-4" />
-                <span>Dec 9</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <MapPin className="h-4 w-4" />
-                <span>Onsite</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Users className="h-4 w-4" />
-                <span>Total applicant: {totalApplicants}</span>
-              </div>
-            </div>
+              {/* Candidates List */}
+              <div className="space-y-3">
+                {candidates.map((candidate: SidebarCandidate) => (
+                  <div key={candidate.id} className="flex items-start gap-3 p-3 rounded-lg border hover:bg-gray-50">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={`https://i.pravatar.cc/150?u=${candidate.id}`} alt={candidate.name} />
+                      <AvatarFallback>{candidate.name.split(" ").map((n: string) => n[0])}</AvatarFallback>
+                    </Avatar>
 
-            {/* View Mode Toggle */}
-            <div className="flex items-center justify-end gap-2">
-              <button
-                onClick={() => setViewMode("grid")}
-                className={`p-2 rounded border 
-                  ${
-                    viewMode === "grid"
-                      ? "bg-white text-[#0056d2] border-[#0056d2]"
-                      : "bg-[#0056d2] text-white border-[#0056d2]"
-                  }`}
-              >
-                <Grid3X3 className="h-4 w-4" />
-              </button>
-
-              <button
-                onClick={() => {
-                  setViewMode("list")
-                  navigate("/applicants/jobdetails/leaddeveloper/")
-                }}
-                className={`p-2 rounded border 
-    ${viewMode === "list" ? "bg-white text-[#0056d2] border-[#0056d2]" : "bg-[#0056d2] text-white border-[#0056d2]"}`}
-              >
-                <List className="h-4 w-4" />
-              </button>
-            </div>
-
-            {/* Mobile Instructions */}
-            {!isSelectionMode && (
-              <div className="lg:hidden bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-                <p className="text-sm text-blue-800">
-                  <strong>Mobile tip:</strong> Long press on any applicant to start selection mode. Then long press
-                  additional applicants to select multiple, and tap a column to move them all there.
-                </p>
-              </div>
-            )}
-
-            {/* Drag and Drop Context for all stages */}
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragStart={handleDragStart}
-              onDragOver={handleDragOver}
-              onDragEnd={handleDragEnd}
-            >
-              {/* All Stages Stacked Vertically */}
-              <div className="space-y-8">
-                {stageConfigs.map((stage, index) => (
-                  <StageSection
-                    key={index}
-                    title={stage.title}
-                    columns={stage.columns}
-                    applicantColumns={allColumns}
-                    isMultiRow={stage.isMultiRow}
-                    selectedApplicants={selectedApplicants}
-                    isSelectionMode={isSelectionMode}
-                    onLongPress={handleLongPress}
-                    onToggleSelect={handleToggleSelect}
-                    onColumnClick={handleColumnClick}
-                    navigate={navigate}
-                    jobtitle={jobtitle} // Add this line
-                  />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="font-medium text-sm">{candidate.name}</p>
+                          <p className="text-xs text-gray-500 mb-2">{candidate.title}</p>
+                          <Badge variant="outline" className={`text-xs ${getStageColorClass(candidate.stageColor)}`}>
+                            Stage {candidate.stage}
+                          </Badge>
+                        </div>
+                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <p className="text-xs text-gray-400 mt-2">{candidate.timeAgo}</p>
+                    </div>
+                  </div>
                 ))}
               </div>
-
-              <DragOverlay>
-                {activeApplicant ? <ApplicantCard {...activeApplicant} isDragging={true} /> : null}
-              </DragOverlay>
-            </DndContext>
+            </div>
           </div>
+          </>
         </div>
-
-        {/* Right Sidebar */}
-        <Sidebar />
       </div>
-    </>
+    </div>
   )
 }
