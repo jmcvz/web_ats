@@ -74,12 +74,12 @@ const statusStyles = {
 
 export default function ResumeScreening() {
   const [searchTerm, setSearchTerm] = useState("")
-  const [selectedFilter, setSelectedFilter] = useState("resume-screening")
+  const [selectedFilter, setSelectedFilter] = useState("resumescreening")
   const [jobStatus, setJobStatus] = useState("active")
   const navigate = useNavigate()
-  const location = useLocation()
+
   const { jobtitle} = useParams<{ jobtitle: string;}>()
-  const state = location.state as { jobTitle?: string; stageName?: string } | null
+
 
   // Filter applicants based on search term
   const filteredApplicants = applicants.filter((applicant) =>
@@ -103,7 +103,14 @@ export default function ResumeScreening() {
 }
 
 
-  const resolvedJobTitle = state?.jobTitle || formatJobTitle(jobtitle)
+ 
+
+const location = useLocation()
+const { jobtitle: jobTitleParam } = useParams<{ jobtitle: string }>()
+const jobTitleFromState = location.state?.jobTitle
+
+const rawJobTitle = jobTitleParam || jobTitleFromState
+const resolvedJobTitle = formatJobTitle(rawJobTitle)
 
 
   
@@ -185,7 +192,8 @@ export default function ResumeScreening() {
   }}
 >
 
-                    <SelectTrigger className="w-40 border-none shadow-none font-bold text-black text-sm">
+                    <SelectTrigger className="min-w-[160px] border-none shadow-none font-bold text-black text-sm">
+
                       <SelectValue className="font-bold text-black" placeholder="resumescreening" />
                     </SelectTrigger>
                     <SelectContent>
@@ -210,18 +218,7 @@ export default function ResumeScreening() {
                       <SelectItem value="forjoboffer" className="font-bold">
                         For Job Offer
                       </SelectItem>
-                      <SelectItem value="offerfinalization" className="font-bold">
-                        For Offer and Finalization
-                      </SelectItem>
-                      <SelectItem value="onboarding" className="font-bold">
-                        Onboarding
-                      </SelectItem>
-                      <SelectItem value="warm" className="font-bold">
-                        Warm
-                      </SelectItem>
-                      <SelectItem value="failed" className="font-bold">
-                        Failed
-                      </SelectItem>
+                      
                     </SelectContent>
                   </Select>
 
@@ -273,20 +270,23 @@ export default function ResumeScreening() {
             </TableCell>
             <TableCell className="border border-gray-200 py-4 px-6 text-center w-20">
   <Button
-    variant="success"
-    size="sm"
-    className="w-full px-2"
-    onClick={() => navigate(`/applicants/job/${jobtitle}/phonecallinterview`)}
+  size="sm"
+  className="w-full px-2 border border-green-600 text-green-600 bg-white hover:bg-green-600 hover:text-white transition-colors duration-200"
+  onClick={() => navigate(`/applicants/job/${jobtitle}/phonecallinterview`)}
+>
+  Pass
+</Button>
 
-  >
-    Pass
-  </Button>
 </TableCell>
 
             <TableCell className="border border-gray-200 py-4 px-6 text-center w-20">
-              <Button variant="danger" size="sm" className="w-full px-2">
-                Fail
-              </Button>
+              <Button
+  size="sm"
+  className="w-full px-2 border border-red-600 text-red-600 bg-white hover:bg-red-600 hover:text-white transition-colors duration-200"
+>
+  Fail
+</Button>
+
             </TableCell>
             <TableCell className="border border-gray-200 py-4 px-6 min-w-[150px] whitespace-nowrap">
               {applicant.department}

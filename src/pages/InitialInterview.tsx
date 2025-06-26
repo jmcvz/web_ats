@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { useParams } from "react-router-dom"
+import { useLocation } from "react-router-dom"
 
 
 // Sample applicant data
@@ -442,6 +443,9 @@ export default function JobManagement() {
 }
 const { jobtitle } = useParams<{ jobtitle: string }>()
 const resolvedJobTitle = formatJobTitle(jobtitle)
+const location = useLocation()
+const previousPath = location.state?.from
+
 
   return (
     <>
@@ -456,14 +460,21 @@ const resolvedJobTitle = formatJobTitle(jobtitle)
                 {/* Back Button and Job Title */}
                 <div className="flex flex-col items-center gap-2 sm:flex-row sm:items-center sm:gap-4">
                   <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-2"
-                    onClick={() => navigate(`/applicants/job/${jobtitle}`)}
-                  >
-                    <ArrowLeft className="h-4 w-4" />
-                    Back
-                  </Button>
+  variant="outline"
+  size="sm"
+  className="flex items-center gap-2"
+  onClick={() => {
+    if (previousPath?.includes("/weekly")) {
+      navigate(`/applicants/job/${jobtitle}/weekly`)
+    } else {
+      navigate(`/applicants/job/${jobtitle}`)
+    }
+  }}
+>
+  <ArrowLeft className="h-4 w-4" />
+  Back
+</Button>
+
 
                   <div className="flex flex-col items-center sm:flex-row sm:items-center sm:gap-3">
                     <h1 className="text-2xl font-bold text-gray-900 text-center sm:text-left">{resolvedJobTitle}</h1>
@@ -511,7 +522,8 @@ const resolvedJobTitle = formatJobTitle(jobtitle)
   }}
 >
 
-                    <SelectTrigger className="w-40 border-none shadow-none font-bold text-black text-sm">
+                    <SelectTrigger className="min-w-[160px] border-none shadow-none font-bold text-black text-sm">
+
                       <SelectValue placeholder="Shortlisted" />
                     </SelectTrigger>
                     <SelectContent>
@@ -536,18 +548,7 @@ const resolvedJobTitle = formatJobTitle(jobtitle)
                       <SelectItem value="forjoboffer" className="font-bold">
                         For Job Offer
                       </SelectItem>
-                      <SelectItem value="offerfinalization" className="font-bold">
-                        For Offer and Finalization
-                      </SelectItem>
-                      <SelectItem value="onboarding" className="font-bold">
-                        Onboarding
-                      </SelectItem>
-                      <SelectItem value="warm" className="font-bold">
-                        Warm
-                      </SelectItem>
-                      <SelectItem value="failed" className="font-bold">
-                        Failed
-                      </SelectItem>
+                      
                     </SelectContent>
                   </Select>
                   <div className="relative">
@@ -624,34 +625,37 @@ const resolvedJobTitle = formatJobTitle(jobtitle)
                           </TableCell>
                           <TableCell className="border border-gray-200 py-3 px-3 lg:py-4 lg:px-4 text-center w-20 align-middle">
                             <Button
-                              variant="default"
-                              size="sm"
-                              className="w-full px-2 lg:px-3 bg-[#0056d2] text-xs lg:text-sm h-9 lg:h-10 leading-tight lg:whitespace-nowrap"
-                              onClick={() => navigate("/ieform/")}
-                            >
-                              Start
-                              <br />
-                              Interview
-                            </Button>
+  variant="outline"
+  size="sm"
+  className="w-full px-2 lg:px-3 h-9 lg:h-10 text-xs lg:text-sm text-[#0056d2] border-[#0056d2] bg-white hover:bg-[#0056d2] hover:text-white transition"
+  onClick={() => navigate("/ieform/")}
+>
+  Start
+  <br />
+  Interview
+</Button>
+
                           </TableCell>
                           <TableCell className="border border-gray-200 py-3 px-3 lg:py-4 lg:px-4 text-center w-20 align-middle">
                             <Button
-                              variant="default"
-                              size="sm"
-                              className="w-full px-2 lg:px-3 bg-yellow-500 hover:bg-yellow-600 text-white text-xs lg:text-sm h-9 lg:h-10 leading-tight lg:whitespace-nowrap"
-                              onClick={() => handleRescheduleInterview(applicant.name)}
-                            >
-                              Reschedule
-                            </Button>
+  variant="outline"
+  size="sm"
+  className="w-full px-2 lg:px-3 h-9 lg:h-10 text-xs lg:text-sm text-yellow-500 border-yellow-500 bg-white hover:bg-yellow-500 hover:text-white transition"
+  onClick={() => handleRescheduleInterview(applicant.name)}
+>
+  Reschedule
+</Button>
+
                           </TableCell>
                           <TableCell className="border border-gray-200 py-3 px-3 lg:py-4 lg:px-4 text-center w-12 align-middle">
                             <Button
-                              variant="outline"
-                              size="sm"
-                              className="w-full px-1 lg:px-3 bg-white border-red-500 text-xs lg:text-sm h-7 lg:h-8 lg:whitespace-nowrap"
-                            >
-                              Fail
-                            </Button>
+  variant="outline"
+  size="sm"
+  className="w-full px-1 lg:px-3 h-7 lg:h-8 text-xs lg:text-sm text-red-600 border-red-500 bg-white hover:bg-red-500 hover:text-white transition"
+>
+  Fail
+</Button>
+
                           </TableCell>
                           <TableCell className="border border-gray-200 py-3 px-3 lg:py-4 lg:px-4 w-20 text-xs lg:text-sm align-middle">
                             <span className="break-words leading-tight lg:whitespace-nowrap">

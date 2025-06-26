@@ -27,6 +27,10 @@ import OfferAndFinalization from '@/pages/applicants/OfferAndFinalization'
 import JobStageTemplate from './pages/applicants/JobStateTemplate'
 import Warm from '@/pages/applicants/Warm'
 import Onboarding from '@/pages/applicants/Onboarding.tsx'
+import IEForm2 from '@/forms/InterviewEvaluationForm2'
+import CustomStages from '@/pages/applicants/CustomStages'
+import ExamForm from '@/pages/Exam-Form'
+
 
 export default function App() {
   return (
@@ -52,17 +56,23 @@ export default function App() {
       <Route path="/applicants/jobdetails/leaddeveloper/LeadDeveloperSL" element={<LeadDeveloperSL/>} />
 
       <Route path="/ieform/*" element={<InterviewEvaluationForm/>} />
+      <Route path="/applicants/:name/IEForm" element ={<IEForm2/>} />
+      <Route path="/applicants/:id/IEForm" element={<IEForm2 />} />
+
        
       <Route path="/applicants/jobdetails/leaddeveloper/LeadDeveloperII" element={<LeadDeveloperII/>} />
       <Route path="/applicants/jobdetails/leaddeveloper/LeadDeveloperAS" element={<LeadDeveloperAS/>} />
       <Route path="/applicants/jobdetails/leaddeveloper/LeadDeveloperFI" element={<LeadDeveloperFI/>} />
       <Route path="/applicants/jobdetails/leaddeveloper/LeadDeveloperFJO" element={<LeadDeveloperFJO/>} />  
-      <Route  path="/applicants/job/OfferAndFinalization" element={<OfferAndFinalization />} />
+      <Route path="/applicants/job/OfferAndFinalization" element={<OfferAndFinalization />} />
       <Route path="/applicants/job/:jobtitle/:jobstage" element={<JobStageTemplate />} />
       <Route path="/applicants/:name" element={<ApplicantInformationTab />} />
       <Route path="/applicants/job/Warm" element={< Warm/>} />
       <Route path="/applicants/job/Failed" element={< Failed/>} />
       <Route path="/applicants/job/Onboarding" element={ < Onboarding />} />
+      <Route path="/applicants/job/:customStage" element={ <CustomStages/>} />
+      <Route path="/applicants/job/:jobtitle/exam-form/:applicantId" element={<ExamForm />} />
+
       </Routes>
     </BrowserRouter>
   );

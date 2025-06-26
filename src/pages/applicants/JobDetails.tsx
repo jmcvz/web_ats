@@ -123,10 +123,10 @@ export default function LeadDeveloper() {
                   })
                 }
               >
-                <LayoutGrid className="text-gray-600" />
+                <LayoutGrid className="text-blue-800" />
               </Button>
               <Button variant="ghost" size="icon">
-                <List className="text-blue-800" />
+                <List className="text-gray-600" />
               </Button>
             </div>
           </div>
