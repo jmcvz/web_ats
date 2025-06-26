@@ -1,3 +1,5 @@
+"use client"
+
 import { Navbar } from "@/reusables/Navbar"
 import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
@@ -497,7 +499,12 @@ export default function Positions() {
     switch (currentTab) {
       case "drafts":
         return (
-          <Button variant="ghost" size="sm" className="text-blue-600 hover:underline text-sm flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-blue-600 hover:underline text-sm flex items-center gap-1"
+            onClick={() => navigate("/positions/create-new-position")}
+          >
             <Pencil className="w-4 h-4" />
             Edit
           </Button>
@@ -520,7 +527,12 @@ export default function Positions() {
         )
       case "closed":
         return (
-          <Button variant="ghost" size="sm" className="text-blue-600 hover:underline text-sm flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-blue-600 hover:underline text-sm flex items-center gap-1"
+            onClick={() => navigate("/positions/create-new-position")}
+          >
             <Pencil className="w-4 h-4" />
             Edit
           </Button>
