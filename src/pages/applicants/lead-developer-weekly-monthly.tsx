@@ -150,7 +150,15 @@ function ApplicantCard({
 
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 1024) // lg breakpoint
+      // Check for actual touch capability and mobile user agent
+      const hasTouchScreen = "ontouchstart" in window || navigator.maxTouchPoints > 0
+      const isMobileUserAgent = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent,
+      )
+      
+
+      // Only consider it mobile if it has touch AND (is mobile user agent OR very small screen)
+      setIsMobile(hasTouchScreen && (isMobileUserAgent || window.innerWidth < 768))
     }
 
     checkMobile()
@@ -278,7 +286,15 @@ function DroppableColumn({
 
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 1024)
+      // Check for actual touch capability and mobile user agent
+      const hasTouchScreen = "ontouchstart" in window || navigator.maxTouchPoints > 0
+      const isMobileUserAgent = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent,
+      )
+      
+
+      // Only consider it mobile if it has touch AND (is mobile user agent OR very small screen)
+      setIsMobile(hasTouchScreen && (isMobileUserAgent || window.innerWidth < 768))
     }
 
     checkMobile()
@@ -1178,169 +1194,169 @@ export default function LeadDeveloperWeekly() {
 
           {/* Header */}
           <>
-          <Navbar />
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" onClick={() => navigate(`/applicants/job/${jobtitle}`)}>
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <h2 className="text-3xl font-bold text-gray-800">{resolvedJobTitle}</h2>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="ghost" size="icon" className={viewMode === "grid" ? "text-black" : "text-gray-600"}>
-                <LayoutGrid className="h-4 w-4 text-gray-600" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => {
-                  setViewMode("list")
-                  navigate(`/applicants/job/${jobtitle}`)
-                }}
-                className={viewMode === "list" ? "text-black" : "text-blue-800"}
-              >
-                <List className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-
-          {/* Job Info Display */}
-          <div className="bg-white border rounded-lg p-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div className="flex items-center gap-1">
-                <Clock className="h-4 w-4 text-gray-500" />
-                <span className="text-gray-500">Full Time</span>
+            <Navbar />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" onClick={() => navigate(`/applicants/job/${jobtitle}`)}>
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <h2 className="text-3xl font-bold text-gray-800">{resolvedJobTitle}</h2>
               </div>
-              <div className="flex items-center gap-1">
-                <Calendar className="h-4 w-4 text-gray-500" />
-                <span className="text-gray-500">Dec 9</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <MapPin className="h-4 w-4 text-gray-500" />
-                <span className="text-gray-500">Onsite</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Users className="h-4 w-4 text-gray-500" />
-                <span className="text-gray-500">Total applicants: {totalApplicants}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Search */}
-          <div>
-            <Input placeholder="Search" className="max-w-md bg-gray-100" />
-          </div>
-
-          <hr />
-
-          {/* Main Content and Sidebar Container */}
-          <div className="flex flex-col lg:flex-row gap-6">
-            {/* Main Content */}
-            <div className="flex-1">
-              <div className="space-y-6">
-                {/* Mobile Instructions */}
-                {!isSelectionMode && (
-                  <div className="lg:hidden bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-                    <p className="text-sm text-blue-800">
-                      <strong>Mobile tip:</strong> Long press on any applicant to start selection mode. Then long press
-                      additional applicants to select multiple, and tap a column to move them all there.
-                    </p>
-                  </div>
-                )}
-
-                {/* Drag and Drop Context for all stages */}
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragStart={handleDragStart}
-                  onDragOver={handleDragOver}
-                  onDragEnd={handleDragEnd}
-                >
-                  {/* All Stages Stacked Vertically */}
-                  <div className="space-y-8">
-                    {stageConfigs.map((stage, index) => (
-                      <StageSection
-                        key={index}
-                        title={stage.title}
-                        columns={stage.columns}
-                        applicantColumns={allColumns}
-                        isMultiRow={stage.isMultiRow}
-                        selectedApplicants={selectedApplicants}
-                        isSelectionMode={isSelectionMode}
-                        onLongPress={handleLongPress}
-                        onToggleSelect={handleToggleSelect}
-                        onColumnClick={handleColumnClick}
-                        navigate={navigate}
-                        jobtitle={jobtitle}
-                      />
-                    ))}
-                  </div>
-
-                  <DragOverlay>
-                    {activeApplicant ? <ApplicantCard {...activeApplicant} isDragging={true} /> : null}
-                  </DragOverlay>
-                </DndContext>
-              </div>
-            </div>
-
-            {/* Right Sidebar */}
-            <div className="w-full lg:w-80 bg-white lg:border-l border-gray-200 p-4 space-y-4 lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto">
-              <MiniCalendar />
-
-              {/* Filters */}
               <div className="flex gap-2">
-                <Select defaultValue="stage-01">
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Stage" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="stage-01">Stage: 01</SelectItem>
-                    <SelectItem value="stage-02">Stage: 02</SelectItem>
-                    <SelectItem value="stage-03">Stage: 03</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select defaultValue="today">
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Time" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="today">Today</SelectItem>
-                    <SelectItem value="week">This Week</SelectItem>
-                    <SelectItem value="month">This Month</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Candidates List */}
-              <div className="space-y-3">
-                {candidates.map((candidate: SidebarCandidate) => (
-                  <div key={candidate.id} className="flex items-start gap-3 p-3 rounded-lg border hover:bg-gray-50">
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage src={`https://i.pravatar.cc/150?u=${candidate.id}`} alt={candidate.name} />
-                      <AvatarFallback>{candidate.name.split(" ").map((n: string) => n[0])}</AvatarFallback>
-                    </Avatar>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <p className="font-medium text-sm">{candidate.name}</p>
-                          <p className="text-xs text-gray-500 mb-2">{candidate.title}</p>
-                          <Badge variant="outline" className={`text-xs ${getStageColorClass(candidate.stageColor)}`}>
-                            Stage {candidate.stage}
-                          </Badge>
-                        </div>
-                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <p className="text-xs text-gray-400 mt-2">{candidate.timeAgo}</p>
-                    </div>
-                  </div>
-                ))}
+                <Button variant="ghost" size="icon" className={viewMode === "grid" ? "text-black" : "text-gray-600"}>
+                  <LayoutGrid className="h-4 w-4 text-gray-600" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    setViewMode("list")
+                    navigate(`/applicants/job/${jobtitle}`)
+                  }}
+                  className={viewMode === "list" ? "text-black" : "text-blue-800"}
+                >
+                  <List className="h-4 w-4" />
+                </Button>
               </div>
             </div>
-          </div>
+
+            {/* Job Info Display */}
+            <div className="bg-white border rounded-lg p-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div className="flex items-center gap-1">
+                  <Clock className="h-4 w-4 text-gray-500" />
+                  <span className="text-gray-500">Full Time</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Calendar className="h-4 w-4 text-gray-500" />
+                  <span className="text-gray-500">Dec 9</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <MapPin className="h-4 w-4 text-gray-500" />
+                  <span className="text-gray-500">Onsite</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Users className="h-4 w-4 text-gray-500" />
+                  <span className="text-gray-500">Total applicants: {totalApplicants}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Search */}
+            <div>
+              <Input placeholder="Search" className="max-w-md bg-gray-100" />
+            </div>
+
+            <hr />
+
+            {/* Main Content and Sidebar Container */}
+            <div className="flex flex-col lg:flex-row gap-6">
+              {/* Main Content */}
+              <div className="flex-1">
+                <div className="space-y-6">
+                  {/* Mobile Instructions */}
+                  {!isSelectionMode && (
+                    <div className="lg:hidden bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                      <p className="text-sm text-blue-800">
+                        <strong>Mobile tip:</strong> Long press on any applicant to start selection mode. Then long
+                        press additional applicants to select multiple, and tap a column to move them all there.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Drag and Drop Context for all stages */}
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragStart={handleDragStart}
+                    onDragOver={handleDragOver}
+                    onDragEnd={handleDragEnd}
+                  >
+                    {/* All Stages Stacked Vertically */}
+                    <div className="space-y-8">
+                      {stageConfigs.map((stage, index) => (
+                        <StageSection
+                          key={index}
+                          title={stage.title}
+                          columns={stage.columns}
+                          applicantColumns={allColumns}
+                          isMultiRow={stage.isMultiRow}
+                          selectedApplicants={selectedApplicants}
+                          isSelectionMode={isSelectionMode}
+                          onLongPress={handleLongPress}
+                          onToggleSelect={handleToggleSelect}
+                          onColumnClick={handleColumnClick}
+                          navigate={navigate}
+                          jobtitle={jobtitle}
+                        />
+                      ))}
+                    </div>
+
+                    <DragOverlay>
+                      {activeApplicant ? <ApplicantCard {...activeApplicant} isDragging={true} /> : null}
+                    </DragOverlay>
+                  </DndContext>
+                </div>
+              </div>
+
+              {/* Right Sidebar */}
+              <div className="w-full lg:w-80 bg-white lg:border-l border-gray-200 p-4 space-y-4 lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto">
+                <MiniCalendar />
+
+                {/* Filters */}
+                <div className="flex gap-2">
+                  <Select defaultValue="stage-01">
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Stage" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="stage-01">Stage: 01</SelectItem>
+                      <SelectItem value="stage-02">Stage: 02</SelectItem>
+                      <SelectItem value="stage-03">Stage: 03</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Select defaultValue="today">
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Time" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="today">Today</SelectItem>
+                      <SelectItem value="week">This Week</SelectItem>
+                      <SelectItem value="month">This Month</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Candidates List */}
+                <div className="space-y-3">
+                  {candidates.map((candidate: SidebarCandidate) => (
+                    <div key={candidate.id} className="flex items-start gap-3 p-3 rounded-lg border hover:bg-gray-50">
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={`https://i.pravatar.cc/150?u=${candidate.id}`} alt={candidate.name} />
+                        <AvatarFallback>{candidate.name.split(" ").map((n: string) => n[0])}</AvatarFallback>
+                      </Avatar>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <p className="font-medium text-sm">{candidate.name}</p>
+                            <p className="text-xs text-gray-500 mb-2">{candidate.title}</p>
+                            <Badge variant="outline" className={`text-xs ${getStageColorClass(candidate.stageColor)}`}>
+                              Stage {candidate.stage}
+                            </Badge>
+                          </div>
+                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <p className="text-xs text-gray-400 mt-2">{candidate.timeAgo}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </>
         </div>
       </div>

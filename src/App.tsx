@@ -30,6 +30,7 @@ import Onboarding from '@/pages/applicants/Onboarding.tsx'
 import IEForm2 from '@/forms/InterviewEvaluationForm2'
 import CustomStages from '@/pages/applicants/CustomStages'
 import ExamForm from '@/pages/Exam-Form'
+import ApplicantLandingPage from '@/pages/applicantslandingpage'
 
 
 export default function App() {
@@ -72,6 +73,8 @@ export default function App() {
       <Route path="/applicants/job/Onboarding" element={ < Onboarding />} />
       <Route path="/applicants/job/:customStage" element={ <CustomStages/>} />
       <Route path="/applicants/job/:jobtitle/exam-form/:applicantId" element={<ExamForm />} />
+      <Route path="/test" element={ <ApplicantLandingPage />} />
+
 
       </Routes>
     </BrowserRouter>
