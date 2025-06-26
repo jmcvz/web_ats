@@ -23,6 +23,7 @@ import {
   FileText,
   Trash2,
   Upload,
+  Scale,
 } from "lucide-react"
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts"
 import { Navbar } from "@/reusables/Navbar"
@@ -186,7 +187,6 @@ function RadialChart({ score }: { score: number }) {
 
   const colors = getColors(score)
 
-
   return (
     <div className="pr-2">
       <ResponsiveContainer width={80} height={70}>
@@ -247,20 +247,21 @@ export default function ApplicantTracker() {
   const overallScore = Math.round(assessments.reduce((acc, curr) => acc + curr.score, 0) / assessments.length)
   const navigate = useNavigate()
   const { name } = useParams()
-  type ApplicantKey = keyof typeof applicantsData;
+  type ApplicantKey = keyof typeof applicantsData
 
   // Get current applicant data or fallback to default
-  const currentApplicant = name && (name in applicantsData)
-  ? applicantsData[name as ApplicantKey]
-  : {
-      name: "John Doe",
-      email: "john.doe@email.com",
-      position: "Software Engineer",
-      phone: "+1 (555) 123-4567",
-      address: "123 Main St, San Francisco, CA",
-      avatar: "https://i.pravatar.cc/64?img=1",
-      status: "For Interview",
-    };
+  const currentApplicant =
+    name && name in applicantsData
+      ? applicantsData[name as ApplicantKey]
+      : {
+          name: "John Doe",
+          email: "john.doe@email.com",
+          position: "Software Engineer",
+          phone: "+1 (555) 123-4567",
+          address: "123 Main St, San Francisco, CA",
+          avatar: "https://i.pravatar.cc/64?img=1",
+          status: "For Interview",
+        }
 
   return (
     <>
@@ -493,7 +494,7 @@ export default function ApplicantTracker() {
                               <Button size="icon" variant="outline">
                                 <Smile className="h-4 w-4" />
                               </Button>
-                              <Button size="icon">
+                              <Button size="icon" className="bg-[#0056d2]">
                                 <Send className="h-4 w-4" />
                               </Button>
                             </div>
@@ -541,7 +542,7 @@ export default function ApplicantTracker() {
                                 <span className="text-xs font-bold text-blue-600">DOC</span>
                               </div>
                               <div>
-                                 <h4 className="font-medium text-gray-900">
+                                <h4 className="font-medium text-gray-900">
                                   Cover_Letter_{currentApplicant.name.replace(/\s+/g, "_")}.docx
                                 </h4>
                                 <p className="text-sm text-gray-500">Uploaded on Dec 14, 2023 at 4:15 PM</p>
@@ -645,7 +646,18 @@ export default function ApplicantTracker() {
               <div className="md:col-span-2">
                 <Card className="h-full">
                   <CardHeader>
-                    <CardTitle>Interview Evaluation Form</CardTitle>
+                    <div className="flex items-center justify-between">
+                      <CardTitle>Interview Evaluation Form</CardTitle>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigate(`/applicants/${name || "john-doe"}/IEForm`)}
+                        className="flex items-center gap-2 text-blue-600 hover:bg-blue-50"
+                      >
+                        <Scale className="h-4 w-4" />
+                        Preview
+                      </Button>
+                    </div>
                   </CardHeader>
                   <CardContent className="space-y-8">
                     {/* Assessments */}
@@ -689,7 +701,7 @@ export default function ApplicantTracker() {
                         <HalfCircleChart score={overallScore} />
                       </div>
 
-                      <Button className="w-full">Set Interview</Button>
+                      <Button className="w-full bg-[#0056d2]">Set Interview</Button>
 
                       <div className="grid grid-cols-2 gap-2">
                         <Button
