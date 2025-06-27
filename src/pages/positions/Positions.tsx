@@ -20,7 +20,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 
-
 interface BaseJobPosting {
   id: number
   title: string
@@ -28,66 +27,300 @@ interface BaseJobPosting {
   description: string
   status?: string
   assignee?: string
-  progress?: boolean[]
+  progress?: { completed: number; total: number }
   link?: string
 }
 
 type JobPosting = BaseJobPosting
 
-const baseJobPostings = [
-  {
-    id: 1,
-    title: "Social Media Manager Posting",
-    department: "Marketing",
-    description:
-      "We are looking for a Social Media Manager to lead our digital marketing efforts and enhance our online presence.",
-  },
-  {
-    id: 2,
-    title: "Web Developer Posting",
-    department: "Information Technology",
-    description:
-      "We are seeking a skilled Web Developer to design, develop, and maintain high-quality websites and web applications.",
-  },
-  {
-    id: 3,
-    title: "Human Resources Coordinator Posting",
-    department: "Human Resource",
-    description:
-      "We are looking for a Human Resource Coordinator to support the HR department in various administrative and operational tasks.",
-  },
-  {
-    id: 4,
-    title: "Marketing Specialist Posting",
-    department: "Marketing",
-    description:
-      "We are looking for a Marketing Specialist to lead our digital marketing efforts and enhance our online presence.",
-  },
-  {
-    id: 5,
-    title: "Social Media Content Posting",
-    department: "Marketing",
-    description:
-      "We are looking for a Social Media Content to lead our digital marketing efforts and enhance our online presence.",
-  },
-  {
-    id: 6,
-    title: "Marketing Manager Posting",
-    department: "Marketing",
-    description:
-      "We are looking for a Marketing Manager to lead our digital marketing efforts and enhance our online presence.",
-  },
-]
+// Dummy data (different data per tab)
+const jobData = {
+  drafts: [
+    {
+      id: 1,
+      title: "Senior Frontend Developer",
+      department: "Engineering",
+      description:
+        "We are seeking an experienced Frontend Developer to join our engineering team and build cutting-edge user interfaces.",
+      status: "Reopened",
+    },
+    {
+      id: 2,
+      title: "Product Marketing Manager",
+      department: "Marketing",
+      description:
+        "Looking for a strategic Product Marketing Manager to drive go-to-market initiatives and product positioning.",
+    },
+    {
+      id: 3,
+      title: "Data Scientist",
+      department: "Analytics",
+      description:
+        "Join our analytics team to extract insights from complex datasets and drive data-driven decision making.",
+    },
+    {
+      id: 4,
+      title: "UX/UI Designer",
+      department: "Design",
+      description:
+        "We need a creative UX/UI Designer to craft intuitive and beautiful user experiences for our products.",
+    },
+    {
+      id: 5,
+      title: "DevOps Engineer",
+      department: "Engineering",
+      description: "Seeking a DevOps Engineer to optimize our infrastructure and streamline deployment processes.",
+    },
+    {
+      id: 6,
+      title: "Business Analyst",
+      department: "Operations",
+      description: "Business Analyst to bridge the gap between business requirements and technical solutions.",
+    },
+    {
+      id: 7,
+      title: "Security Engineer",
+      department: "Engineering",
+      description: "Cybersecurity expert to protect our systems and implement security best practices.",
+    },
+  ],
 
-const assignees = ["Joseph Santos", "Virla Getalado", "Daniel Jackson", "Anthony Davis", "Flynn Rider", "Choi Yeonjun"]
+  pendings: [
+    {
+      id: 11,
+      title: "Sales Development Representative",
+      department: "Sales",
+      description:
+        "Energetic SDR needed to generate leads and build our sales pipeline through outbound prospecting....",
+    },
+    {
+      id: 12,
+      title: "Customer Success Manager",
+      department: "Customer Success",
+      description: "Join our customer success team to ensure client satisfaction and drive account growth....",
+    },
+    {
+      id: 13,
+      title: "Backend Engineer",
+      department: "Engineering",
+      description: "We're looking for a skilled Backend Engineer to build scalable APIs and microservices....",
+    },
+    {
+      id: 14,
+      title: "Content Marketing Specialist",
+      department: "Marketing",
+      description: "Creative content marketer needed to develop engaging content across multiple channels....",
+    },
+    {
+      id: 15,
+      title: "Financial Analyst",
+      department: "Finance",
+      description: "Detail-oriented Financial Analyst to support budgeting, forecasting, and financial reporting....",
+    },
+    {
+      id: 16,
+      title: "HR Business Partner",
+      department: "Human Resources",
+      description: "Strategic HR Business Partner to support organizational development and employee relations....",
+    },
+    {
+      id: 17,
+      title: "Machine Learning Engineer",
+      department: "Analytics",
+      description: "ML Engineer to develop and deploy machine learning models for our AI-powered features....",
+    },
+    {
+      id: 18,
+      title: "Partnership Manager",
+      department: "Business Development",
+      description: "Partnership Manager to identify and develop strategic alliances and business partnerships....",
+    },
+  ],
+
+  "on-hold": [
+    {
+      id: 21,
+      title: "Mobile App Developer",
+      department: "Engineering",
+      description: "iOS/Android developer to build native mobile applications for our growing user base....",
+    },
+    {
+      id: 22,
+      title: "Brand Manager",
+      department: "Marketing",
+      description:
+        "Brand Manager to oversee brand strategy and maintain consistent messaging across all touchpoints....",
+    },
+    {
+      id: 23,
+      title: "Quality Assurance Engineer",
+      department: "Engineering",
+      description: "QA Engineer to ensure product quality through comprehensive testing and automation....",
+    },
+    {
+      id: 24,
+      title: "Operations Manager",
+      department: "Operations",
+      description:
+        "Operations Manager to streamline processes and improve operational efficiency across departments....",
+    },
+    {
+      id: 25,
+      title: "Legal Counsel",
+      department: "Legal",
+      description: "In-house Legal Counsel to handle contracts, compliance, and corporate legal matters....",
+    },
+    {
+      id: 26,
+      title: "Research Scientist",
+      department: "R&D",
+      description: "Research Scientist to lead innovative research projects and explore new technologies....",
+    },
+  ],
+
+  published: [
+    {
+      id: 31,
+      title: "Account Executive",
+      department: "Sales",
+      description: "Experienced Account Executive to manage enterprise client relationships and close deals....",
+    },
+    {
+      id: 32,
+      title: "Software Engineer",
+      department: "Engineering",
+      description: "Full-stack Software Engineer to work on our core platform and new feature development....",
+    },
+    {
+      id: 33,
+      title: "Digital Marketing Manager",
+      department: "Marketing",
+      description: "Digital Marketing Manager to lead our online marketing efforts and campaign optimization....",
+    },
+    {
+      id: 34,
+      title: "Product Manager",
+      department: "Product",
+      description: "Product Manager to define product roadmap and work closely with engineering and design teams....",
+    },
+    {
+      id: 35,
+      title: "Technical Writer",
+      department: "Documentation",
+      description: "Technical Writer to create clear documentation and user guides for our products and APIs....",
+    },
+    {
+      id: 36,
+      title: "Site Reliability Engineer",
+      department: "Engineering",
+      description: "SRE to ensure system reliability, performance monitoring, and incident response....",
+    },
+    {
+      id: 37,
+      title: "Growth Marketing Manager",
+      department: "Marketing",
+      description: "Growth Marketing Manager to drive user acquisition and retention through data-driven campaigns....",
+    },
+    {
+      id: 38,
+      title: "Solutions Architect",
+      department: "Engineering",
+      description: "Solutions Architect to design scalable system architectures for enterprise clients....",
+    },
+  ],
+
+  closed: [
+    {
+      id: 41,
+      title: "Marketing Coordinator",
+      department: "Marketing",
+      description: "Entry-level Marketing Coordinator to support marketing campaigns and event coordination.",
+      status: "Reopened",
+    },
+    {
+      id: 42,
+      title: "Junior Developer",
+      department: "Engineering",
+      description: "Junior Developer position for recent graduates to start their career in software development.",
+    },
+    {
+      id: 43,
+      title: "Sales Intern",
+      department: "Sales",
+      description: "Summer internship opportunity in sales to gain hands-on experience in B2B sales.",
+    },
+    {
+      id: 44,
+      title: "Graphic Designer",
+      department: "Design",
+      description: "Graphic Designer to create visual assets for marketing materials and digital campaigns.",
+    },
+    {
+      id: 45,
+      title: "Administrative Assistant",
+      department: "Operations",
+      description: "Administrative Assistant to provide executive support and manage office operations.",
+    },
+    {
+      id: 46,
+      title: "Social Media Manager",
+      department: "Marketing",
+      description: "Social Media Manager to manage our social media presence and community engagement.",
+    },
+    {
+      id: 47,
+      title: "IT Support Specialist",
+      department: "IT",
+      description: "IT Support Specialist to provide technical support and maintain office technology systems.",
+    },
+  ],
+
+  archive: [
+    {
+      id: 51,
+      title: "Legacy System Administrator",
+      department: "IT",
+      description:
+        "System Administrator role for maintaining legacy infrastructure (position archived due to system migration).",
+    },
+    {
+      id: 52,
+      title: "Regional Sales Manager",
+      department: "Sales",
+      description: "Regional Sales Manager position for European market expansion (archived due to strategy change).",
+    },
+    {
+      id: 53,
+      title: "Print Marketing Specialist",
+      department: "Marketing",
+      description: "Specialist for traditional print marketing campaigns (archived due to digital-first strategy).",
+    },
+    {
+      id: 54,
+      title: "Flash Developer",
+      department: "Engineering",
+      description: "Flash Developer for interactive web content (archived due to technology deprecation).",
+    },
+    {
+      id: 55,
+      title: "Telemarketing Representative",
+      department: "Sales",
+      description: "Telemarketing role for cold calling campaigns (archived due to strategy pivot).",
+    },
+  ],
+}
+
+// Interviewers for pending jobs
+const assignees = ["Joseph Santos", "Virla Getalado", "Choi Beomgyu", "Kang Taehyun", "Flynn Rider", "Choi Yeonjun"]
 
 const getRandomProgress = () => {
-  const steps = [true]
-  const second = Math.random() > 0.5
-  const third = Math.random() > 0.5
-  steps.push(third ? true : second)
-  steps.push(third)
-  return steps
+  // Generate a random total number of interviews (1 to 5)
+  const totalSteps = Math.floor(Math.random() * 5) + 1
+
+  // Generate a random completion level (0 to totalSteps completed)
+  const completedSteps = Math.floor(Math.random() * (totalSteps + 1))
+
+  return { completed: completedSteps, total: totalSteps }
 }
 
 const generateJobLink = (title: string) => {
@@ -100,35 +333,24 @@ const generateJobLink = (title: string) => {
 
 const generatePositionsData = () => {
   return {
-    drafts: baseJobPostings.map((job) => ({
-      ...job,
-      status: job.id === 1 ? "Reopened" : "", 
-    })),
+    drafts: jobData.drafts,
 
-    pendings: baseJobPostings.map((job, index) => ({
+    pendings: jobData.pendings.map((job, index) => ({
       ...job,
-      description: job.description + "....", 
-      assignee: assignees[index],
+      assignee: assignees[index % assignees.length],
       progress: getRandomProgress(),
     })),
 
-    "on-hold": baseJobPostings.map((job) => ({
-      ...job,
-      description: job.description + "....", 
-    })),
+    "on-hold": jobData["on-hold"],
 
-    published: baseJobPostings.map((job) => ({
+    published: jobData.published.map((job) => ({
       ...job,
-      description: job.description + "....", 
       link: generateJobLink(job.title),
     })),
 
-    closed: baseJobPostings.map((job) => ({
-      ...job,
-      status: job.id === 1 ? "Reopened" : "", 
-    })),
+    closed: jobData.closed,
 
-    archive: baseJobPostings.slice(0, 3), 
+    archive: jobData.archive,
   }
 }
 
@@ -138,32 +360,85 @@ const getDepartmentColor = (department: string) => {
   switch (department) {
     case "Marketing":
       return "bg-blue-100 text-blue-700"
-    case "Information Technology":
-      return "bg-orange-100 text-orange-700"
-    case "Human Resource":
+    case "Engineering":
+      return "bg-purple-100 text-purple-700"
+    case "Sales":
       return "bg-green-100 text-green-700"
+    case "Design":
+      return "bg-pink-100 text-pink-700"
+    case "Analytics":
+      return "bg-orange-100 text-orange-700"
+    case "Customer Success":
+      return "bg-teal-100 text-teal-700"
+    case "Finance":
+      return "bg-yellow-100 text-yellow-700"
+    case "Human Resources":
+      return "bg-indigo-100 text-indigo-700"
+    case "Operations":
+      return "bg-gray-100 text-gray-700"
+    case "Product":
+      return "bg-red-100 text-red-700"
+    case "Documentation":
+      return "bg-cyan-100 text-cyan-700"
+    case "IT":
+      return "bg-slate-100 text-slate-700"
+    case "Business Development":
+      return "bg-emerald-100 text-emerald-700"
+    case "Legal":
+      return "bg-amber-100 text-amber-700"
+    case "R&D":
+      return "bg-violet-100 text-violet-700"
     default:
       return "bg-gray-100 text-gray-700"
   }
 }
 
-const ProgressSteps = ({ progress }: { progress: boolean[] }) => {
+const ProgressBar = ({ progress, assignee }: { progress: { completed: number; total: number }; assignee: string }) => {
+  // Colors for each interview
+  const segmentColors = [
+    "bg-red-500", // Step 1
+    "bg-orange-500", // Step 2
+    "bg-yellow-500", // Step 3
+    "bg-green-500", // Step 4
+    "bg-blue-500", // Step 5
+  ]
+
+  // Use actual total for number of interview
+  const numberOfSegments = progress.total
+
+  // Fixed total width for all progress bars
+  const totalWidth = 90 // pixels
+  const segmentWidth = Math.floor(totalWidth / numberOfSegments)
+
+  // Find the index of the last completed segment for hover functionality
+  const lastCompletedIndex = progress.completed > 0 ? progress.completed - 1 : -1
+
   return (
-    <div className="flex items-center mt-1">
-      {progress.map((isDone, i) => (
-        <div key={i} className="flex items-center">
+    <div className="flex flex-col items-end gap-1 mt-1">
+      <span className="text-xs text-gray-500 font-medium">
+        {progress.completed}/{progress.total} completed
+      </span>
+      <div className="flex bg-gray-200 rounded-full p-1 shadow-inner" style={{ width: `${totalWidth}px` }}>
+        {Array.from({ length: numberOfSegments }, (_, index) => (
           <div
-            className={`relative z-10 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${
-              isDone ? "bg-blue-500 text-white" : "border border-gray-400 bg-white text-gray-400"
+            key={index}
+            className={`relative h-3 ${index < progress.completed ? segmentColors[index] : "bg-gray-300"} ${
+              index === 0 ? "rounded-l-full" : index === numberOfSegments - 1 ? "rounded-r-full" : ""
+            } ${index > 0 ? "ml-0.5" : ""} transition-all duration-300 ease-in-out ${
+              index === lastCompletedIndex && index < progress.completed ? "group cursor-pointer" : ""
             }`}
+            style={{ width: `${segmentWidth - (index > 0 ? 2 : 0)}px` }}
           >
-            {isDone ? "✓" : ""}
+            {/* Hover effect on the last accomplished interview */}
+            {index === lastCompletedIndex && index < progress.completed && (
+              <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
+                {assignee}
+                <div className="absolute top-full right-2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-gray-800"></div>
+              </div>
+            )}
           </div>
-          {i < progress.length - 1 && (
-            <div className={`-ml-[2px] w-12 h-0.5 ${progress[i] && progress[i + 1] ? "bg-blue-500" : "bg-gray-300"}`} />
-          )}
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   )
 }
@@ -172,6 +447,7 @@ export default function Positions() {
   const navigate = useNavigate()
   const { tab } = useParams()
 
+  // Get current tab from URL path or default to 'drafts'
   const getCurrentTab = () => {
     const path = window.location.pathname
     const tabFromPath = path.split("/positions/")[1] || "drafts"
@@ -185,16 +461,18 @@ export default function Positions() {
   const [selectedLink, setSelectedLink] = useState("")
   const [showDialog, setShowDialog] = useState(false)
 
+  // Update current tab when URL changes
   useEffect(() => {
     const newTab = getCurrentTab()
     setCurrentTab(newTab)
     document.title = `Positions | ${newTab.charAt(0).toUpperCase() + newTab.slice(1).replace("-", " ")}`
-  }, [currentTab]) 
+  }, [currentTab]) // Add currentTab as dependency
 
   const handleTabChange = (value: string) => {
     setCurrentTab(value)
     navigate(`/positions/${value}`)
     setSelected([])
+    // Update document title
     document.title = `Positions | ${value.charAt(0).toUpperCase() + value.slice(1).replace("-", " ")}`
   }
 
@@ -205,7 +483,7 @@ export default function Positions() {
   )
 
   const handleSelectAllToggle = () => {
-    if (selected.length === filteredPostings.length) {
+    if (selected.length === filteredPostings.length && filteredPostings.length > 0) {
       setSelected([])
     } else {
       setSelected(filteredPostings.map((_, idx) => idx))
@@ -221,7 +499,12 @@ export default function Positions() {
     switch (currentTab) {
       case "drafts":
         return (
-          <Button variant="ghost" size="sm" className="text-blue-600 hover:underline text-sm flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-blue-600 hover:underline text-sm flex items-center gap-1"
+            onClick={() => navigate("/positions/create-new-position")}
+          >
             <Pencil className="w-4 h-4" />
             Edit
           </Button>
@@ -244,7 +527,12 @@ export default function Positions() {
         )
       case "closed":
         return (
-          <Button variant="ghost" size="sm" className="text-blue-600 hover:underline text-sm flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-blue-600 hover:underline text-sm flex items-center gap-1"
+            onClick={() => navigate("/positions/create-new-position")}
+          >
             <Pencil className="w-4 h-4" />
             Edit
           </Button>
@@ -269,21 +557,12 @@ export default function Positions() {
     if (currentTab === "pendings" && posting.assignee && posting.progress) {
       return (
         <div className="flex flex-col items-end min-w-[150px] text-sm text-gray-500">
-          <span>{posting.assignee}</span>
-          <ProgressSteps progress={posting.progress} />
+          <ProgressBar progress={posting.progress} assignee={posting.assignee} />
         </div>
       )
     }
     return renderActionButton(posting)
   }
-
-  const showSelect =
-    currentTab === "drafts" ||
-    currentTab === "pendings" ||
-    currentTab === "on-hold" ||
-    currentTab === "published" ||
-    currentTab === "closed"
-  const showCheckboxes = currentTab === "closed"
 
   return (
     <>
@@ -334,57 +613,55 @@ export default function Positions() {
             </Tabs>
 
             {/* Select Controls */}
-            {showSelect && (
-              <div className="flex items-center gap-3 ml-4">
-                <label className="flex items-center gap-1 text-sm text-gray-700 font-medium cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={selected.length === filteredPostings.length}
-                    onChange={handleSelectAllToggle}
-                    className="w-4 h-4 accent-blue-600"
-                  />
-                  <span>Select</span>
-                </label>
+            <div className="flex items-center gap-3 ml-4">
+              <label className="flex items-center gap-2 text-sm text-gray-700 font-medium cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={selected.length === filteredPostings.length && filteredPostings.length > 0}
+                  onChange={handleSelectAllToggle}
+                  className="w-4 h-4 bg-white border-2 border-gray-400 rounded focus:ring-2 focus:ring-blue-500 checked:bg-white checked:border-blue-600 appearance-none relative checked:after:content-['✓'] checked:after:absolute checked:after:inset-0 checked:after:flex checked:after:items-center checked:after:justify-center checked:after:text-blue-600 checked:after:text-xs checked:after:font-bold"
+                />
+                Select All
+              </label>
 
-                {currentTab === "closed" && selected.length > 0 && (
-                  <Dialog open={showDialog} onOpenChange={setShowDialog}>
-                    <DialogTrigger asChild>
-                      <button
-                        className="p-2 rounded border hover:bg-gray-100 transition text-gray-600"
-                        aria-label="Archive"
-                      >
-                        <Archive className="w-4 h-4" />
+              {currentTab === "closed" && selected.length > 0 && (
+                <Dialog open={showDialog} onOpenChange={setShowDialog}>
+                  <DialogTrigger asChild>
+                    <button
+                      className="p-2 rounded border hover:bg-gray-100 transition text-gray-600"
+                      aria-label="Archive"
+                    >
+                      <Archive className="w-4 h-4" />
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle className="text-sm font-medium flex items-center gap-2 text-gray-800">
+                        <Info className="text-blue-600 w-4 h-4" /> Archive Item
+                      </DialogTitle>
+                      <DialogDescription className="text-sm text-gray-600">
+                        This will be moved to your archives. You can restore it later if needed.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="text-sm text-gray-800 mt-4">Archive now?</div>
+                    <DialogFooter className="mt-4 flex justify-end gap-2">
+                      <button onClick={() => setShowDialog(false)} className="text-sm text-gray-600 hover:underline">
+                        Cancel
                       </button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-md">
-                      <DialogHeader>
-                        <DialogTitle className="text-sm font-medium flex items-center gap-2 text-gray-800">
-                          <Info className="text-blue-600 w-4 h-4" /> Archive Item
-                        </DialogTitle>
-                        <DialogDescription className="text-sm text-gray-600">
-                          This will be moved to your archives. You can restore it later if needed.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="text-sm text-gray-800 mt-4">Archive now?</div>
-                      <DialogFooter className="mt-4 flex justify-end gap-2">
-                        <button onClick={() => setShowDialog(false)} className="text-sm text-gray-600 hover:underline">
-                          Cancel
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSelected([])
-                            setShowDialog(false)
-                          }}
-                          className="text-sm text-blue-600 font-medium hover:underline"
-                        >
-                          Confirm
-                        </button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-                )}
-              </div>
-            )}
+                      <button
+                        onClick={() => {
+                          setSelected([])
+                          setShowDialog(false)
+                        }}
+                        className="text-sm text-blue-600 font-medium hover:underline"
+                      >
+                        Confirm
+                      </button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              )}
+            </div>
           </div>
 
           {/* Postings */}
@@ -392,17 +669,15 @@ export default function Positions() {
             {filteredPostings.map((posting: JobPosting, idx: number) => (
               <Card key={posting.id} className="p-4 shadow-sm hover:shadow-md transition border rounded-md">
                 <div className="flex justify-between items-start">
-                  <div className={`flex items-start ${showCheckboxes ? "gap-4" : ""}`}>
-                    {showCheckboxes && (
-                      <input
-                        type="checkbox"
-                        className="mt-1 w-4 h-4 accent-blue-600"
-                        checked={selected.includes(idx)}
-                        onChange={() =>
-                          setSelected((prev) => (prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx]))
-                        }
-                      />
-                    )}
+                  <div className="flex items-start gap-4">
+                    <input
+                      type="checkbox"
+                      className="mt-1 w-4 h-4 bg-white border-2 border-gray-400 rounded focus:ring-2 focus:ring-blue-500 checked:bg-white checked:border-blue-600 appearance-none relative checked:after:content-['✓'] checked:after:absolute checked:after:inset-0 checked:after:flex checked:after:items-center checked:after:justify-center checked:after:text-blue-600 checked:after:text-xs checked:after:font-bold"
+                      checked={selected.includes(idx)}
+                      onChange={() =>
+                        setSelected((prev) => (prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx]))
+                      }
+                    />
                     <div>
                       <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="text-base font-semibold text-gray-800">{posting.title}</h3>
