@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 import {
   Search,
   FileCode2,
@@ -17,17 +18,21 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import type { JobData } from "@/data/applicantview/jobs"
 
-export default function JobPortal() {
-const [searchTerm, setSearchTerm] = useState("")
-const [categoryFilter, setCategoryFilter] = useState("All")
-const [workTypeFilter, setWorkTypeFilter] = useState("All")
-const [workSetupFilter, setWorkSetupFilter] = useState("All")
-const [isSearchActive, setIsSearchActive] = useState(false)
+interface JobOpeningsProps {
+  onJobSelect?: (job: JobData) => void
+}
 
+export default function JobOpenings({ onJobSelect }: JobOpeningsProps) {
+  const navigate = useNavigate()
+  const [searchTerm, setSearchTerm] = useState("")
+  const [categoryFilter, setCategoryFilter] = useState("All")
+  const [workTypeFilter, setWorkTypeFilter] = useState("All")
+  const [workSetupFilter, setWorkSetupFilter] = useState("All")
+  const [isSearchActive, setIsSearchActive] = useState(false)
 
-
-  const jobCards = [
+  const jobCards: JobData[] = [
     {
       id: 1,
       title: "Lead Developer",
@@ -124,39 +129,48 @@ const [isSearchActive, setIsSearchActive] = useState(false)
   }
 
   const handleClearFilters = () => {
-  setSearchTerm("")
-  setCategoryFilter("All")
-  setWorkTypeFilter("All")
-  setWorkSetupFilter("All")
-  setIsSearchActive(false)
-}
+    setSearchTerm("")
+    setCategoryFilter("All")
+    setWorkTypeFilter("All")
+    setWorkSetupFilter("All")
+    setIsSearchActive(false)
+  }
 
- const filteredJobs = isSearchActive
-  ? jobCards.filter((job) => {
-      const matchesSearch =
-        searchTerm === "" ||
-        job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        job.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        job.description.toLowerCase().includes(searchTerm.toLowerCase())
+  const handleApplyNow = (job: JobData) => {
+    if (onJobSelect) {
+      onJobSelect(job)
+    }
+    // Store job data in localStorage for the application page
+    localStorage.setItem("selectedJob", JSON.stringify(job))
+    navigate("/test2")
+  }
 
-      const matchesCategory = categoryFilter === "All" || job.category === categoryFilter
-      const matchesWorkType = workTypeFilter === "All" || job.workType === workTypeFilter
-      const matchesWorkSetup = workSetupFilter === "All" || job.workSetup === workSetupFilter
+  const filteredJobs = isSearchActive
+    ? jobCards.filter((job) => {
+        const matchesSearch =
+          searchTerm === "" ||
+          job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          job.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          job.description.toLowerCase().includes(searchTerm.toLowerCase())
 
-      return matchesSearch && matchesCategory && matchesWorkType && matchesWorkSetup
-    })
-  : jobCards
+        const matchesCategory = categoryFilter === "All" || job.category === categoryFilter
+        const matchesWorkType = workTypeFilter === "All" || job.workType === workTypeFilter
+        const matchesWorkSetup = workSetupFilter === "All" || job.workSetup === workSetupFilter
+
+        return matchesSearch && matchesCategory && matchesWorkType && matchesWorkSetup
+      })
+    : jobCards
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
-
         {/* Header */}
         <header className="w-full mt-0 p-4 flex items-center justify-between bg-white shadow-md rounded-b-2xl">
           <div className="flex items-center gap-4 ml-6">
-            <div className="text-2xl font-bold text-blue-600"><img src="/OODC logo2.png" alt="OODC Logo" className="h-24 mx-auto" /></div>
+            <div className="text-2xl font-bold text-blue-600">
+              <img src="/OODC logo2.png" alt="OODC Logo" className="h-24 mx-auto" />
+            </div>
           </div>
           <button className="border-2 border-blue-500 bg-white text-blue-400 px-6 py-2 rounded-lg hover:bg-blue-500 hover:text-white transition-colors duration-200 mr-6">
             Track Application
@@ -180,75 +194,75 @@ const [isSearchActive, setIsSearchActive] = useState(false)
           {/* Search & Filters */}
           <div className="mx-auto max-w-6xl mt-6 bg-white rounded-lg shadow-sm p-6">
             <div className="flex flex-wrap gap-4 items-end">
-  <div className="flex-1 min-w-[200px]">
-    <div className="relative">
-      <Input
-        placeholder="Search jobs..."
-        className="pr-10"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-      />
-      <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-    </div>
-  </div>
+              <div className="flex-1 min-w-[200px]">
+                <div className="relative">
+                  <Input
+                    placeholder="Search jobs..."
+                    className="pr-10"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                  <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                </div>
+              </div>
 
-  <div className="min-w-[150px]">
-    <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-      <SelectTrigger>
-        <SelectValue placeholder="Category" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="All">All Categories</SelectItem>
-        <SelectItem value="Entry-level">Entry-level</SelectItem>
-        <SelectItem value="Mid-level">Mid-level</SelectItem>
-        <SelectItem value="Senior-level">Senior-level</SelectItem>
-        <SelectItem value="Executive/Management">Executive/Management</SelectItem>
-      </SelectContent>
-    </Select>
-  </div>
+              <div className="min-w-[150px]">
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="All">All Categories</SelectItem>
+                    <SelectItem value="Entry-level">Entry-level</SelectItem>
+                    <SelectItem value="Mid-level">Mid-level</SelectItem>
+                    <SelectItem value="Senior-level">Senior-level</SelectItem>
+                    <SelectItem value="Executive/Management">Executive/Management</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-  <div className="min-w-[150px]">
-    <Select value={workTypeFilter} onValueChange={setWorkTypeFilter}>
-      <SelectTrigger>
-        <SelectValue placeholder="Work Type" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="All">All Work Types</SelectItem>
-        <SelectItem value="Full-time">Full-time</SelectItem>
-        <SelectItem value="Part-time">Part-time</SelectItem>
-        <SelectItem value="Contract">Contract</SelectItem>
-        <SelectItem value="Freelance">Freelance</SelectItem>
-        <SelectItem value="Temporary employment">Temporary employment</SelectItem>
-        <SelectItem value="Internships">Internships</SelectItem>
-        <SelectItem value="Apprenticeships">Apprenticeships</SelectItem>
-      </SelectContent>
-    </Select>
-  </div>
+              <div className="min-w-[150px]">
+                <Select value={workTypeFilter} onValueChange={setWorkTypeFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Work Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="All">All Work Types</SelectItem>
+                    <SelectItem value="Full-time">Full-time</SelectItem>
+                    <SelectItem value="Part-time">Part-time</SelectItem>
+                    <SelectItem value="Contract">Contract</SelectItem>
+                    <SelectItem value="Freelance">Freelance</SelectItem>
+                    <SelectItem value="Temporary employment">Temporary employment</SelectItem>
+                    <SelectItem value="Internships">Internships</SelectItem>
+                    <SelectItem value="Apprenticeships">Apprenticeships</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-  <div className="min-w-[150px]">
-    <Select value={workSetupFilter} onValueChange={setWorkSetupFilter}>
-      <SelectTrigger>
-        <SelectValue placeholder="Work Setup" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="All">All Work Setup</SelectItem>
-        <SelectItem value="Onsite">Onsite</SelectItem>
-        <SelectItem value="Remote">Remote</SelectItem>
-        <SelectItem value="Hybrid">Hybrid</SelectItem>
-      </SelectContent>
-    </Select>
-  </div>
+              <div className="min-w-[150px]">
+                <Select value={workSetupFilter} onValueChange={setWorkSetupFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Work Setup" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="All">All Work Setup</SelectItem>
+                    <SelectItem value="Onsite">Onsite</SelectItem>
+                    <SelectItem value="Remote">Remote</SelectItem>
+                    <SelectItem value="Hybrid">Hybrid</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-  <div className="flex gap-2">
-    <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6" onClick={handleSearch}>
-      Search
-    </Button>
-    <Button variant="outline" onClick={handleClearFilters}>
-      Clear Filters
-    </Button>
-  </div>
-</div>
-</div>
+              <div className="flex gap-2">
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6" onClick={handleSearch}>
+                  Search
+                </Button>
+                <Button variant="outline" onClick={handleClearFilters}>
+                  Clear Filters
+                </Button>
+              </div>
+            </div>
+          </div>
 
           {/* Job Cards */}
           <div className="mx-auto max-w-6xl mt-6 mb-16 bg-white rounded-lg shadow-sm p-6 relative z-20">
@@ -296,7 +310,11 @@ const [isSearchActive, setIsSearchActive] = useState(false)
                           <span className="text-green-600 font-medium">{job.applicants} Applicants</span>
                         </div>
                         <div className="flex justify-end">
-                          <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+                          <Button
+                            size="sm"
+                            className="bg-blue-600 hover:bg-blue-700 text-white"
+                            onClick={() => handleApplyNow(job)}
+                          >
                             Apply Now
                           </Button>
                         </div>
@@ -311,7 +329,6 @@ const [isSearchActive, setIsSearchActive] = useState(false)
 
         {/* Footer */}
         <footer className="w-full mx-auto h-30 mt-0 bg-blue-600 rounded-t-2xl p-8 relative z-10">
-
           <div className="text-center">
             <div className="flex justify-center gap-6 mb-4">
               <Facebook className="h-6 w-6 text-white" />
