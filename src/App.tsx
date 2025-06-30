@@ -34,6 +34,8 @@ import ExamForm from '@/pages/Exam-Form'
 import ApplicantLandingPage from '@/pages/applicantview/applicantslandingpage'
 import JobDescription from '@/pages/applicantview/jobdescription'
 import ApplicationProcess from '@/pages/applicantview/applicationprocess'
+import Tracker from '@/pages/applicantview/tracker'
+import Documents from './pages/applicantview/Documents'
 
 
 export default function App() {
@@ -82,6 +84,8 @@ export default function App() {
       <Route path="/test" element={ <ApplicantLandingPage />} />
       <Route path="/test2" element={<JobDescription />} />
       <Route path="/test3" element={<ApplicationProcess />} />
+      <Route path="/track-application" element={<Tracker />} />
+      <Route path='/documents' element={<Documents/>} />
 
       
 

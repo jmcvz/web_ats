@@ -2,24 +2,14 @@
 
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import {
-  FileCode2,
-  SquareActivity,
-  ShieldCheck,
-  FileLineChartIcon as FileChartLine,
-  MapPinned,
-  FolderIcon as FolderCode,
-  Phone,
-  Mail,
-  Linkedin,
-  Cake,
-} from "lucide-react"
+import { FileCode2, SquareActivity, ShieldCheck, FileLineChartIcon as FileChartLine, MapPinned, FolderIcon as FolderCode, Phone, Mail, Linkedin, Cake, Upload } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { DocumentUploadModal } from "@/assets/components/document-upload-modal"
+import SignaturePad from "@/components/ui/signaturepad"
 
 interface JobData {
   id: number
@@ -74,6 +64,36 @@ export default function JobApplicationPage() {
     country: "",
   })
 
+  const [stage2Data, setStage2Data] = useState({
+    positionApplyingFor: "",
+    expectedSalary: "",
+    willingToWorkOnsite: "",
+    photo: null as File | null,
+    medicalCertificate: null as File | null,
+    interviewSchedule: "",
+  })
+
+  const [stage3Data, setStage3Data] = useState({
+    highestEducation: "",
+    yearGraduated: "",
+    institution: "",
+    program: "",
+    hasWorkExperience: "",
+    currentJobTitle: "",
+    currentCompany: "",
+    currentYearsExperience: "",
+    workExperience: [] as Array<{ jobTitle: string; company: string; years: string }>,
+  })
+
+  const [stage4Data, setStage4Data] = useState({
+    howDidYouLearn: "",
+    certificationAccepted: false,
+    signature: null as string | File | null,
+  })
+
+  const [showCompletionModal, setShowCompletionModal] = useState(false)
+  const [trackingCode, setTrackingCode] = useState("")
+
   // Icon mapping function
   const getIconComponent = (jobTitle: string) => {
     const iconMap: { [key: string]: any } = {
@@ -97,6 +117,19 @@ export default function JobApplicationPage() {
     }
   }, [])
 
+  // Prevent body scroll when modals are open
+  useEffect(() => {
+    if (showUploadModal || showCompletionModal) {
+      document.body.style.overflow = "hidden"
+    } else {
+      document.body.style.overflow = "unset"
+    }
+
+    return () => {
+      document.body.style.overflow = "unset"
+    }
+  }, [showUploadModal, showCompletionModal])
+
   const handleDocumentsUploaded = (resumeData: any) => {
     // Auto-fill form with resume data
     if (resumeData) {
@@ -115,6 +148,21 @@ export default function JobApplicationPage() {
         postalCode: resumeData.postalCode || "1203",
         country: resumeData.country || "Philippines",
       })
+
+      // Auto-fill stage 2 data
+      setStage2Data((prev) => ({
+        ...prev,
+        positionApplyingFor: jobData?.title || "",
+      }))
+
+      // Auto-fill stage 3 work experience from resume
+      setStage3Data((prev) => ({
+        ...prev,
+        workExperience: [
+          { jobTitle: "Software Developer", company: "Tech Solutions Inc.", years: "3" },
+          { jobTitle: "Junior Developer", company: "StartUp Co.", years: "2" },
+        ],
+      }))
     }
     setShowUploadModal(false)
   }
@@ -123,14 +171,64 @@ export default function JobApplicationPage() {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
-  const handleNext = () => {
-    if (currentStage < 4) {
-      setCurrentStage(currentStage + 1)
+  const handleStage2Change = (field: string, value: string | File | null) => {
+    setStage2Data((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const handleStage3Change = (field: string, value: string) => {
+    setStage3Data((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const handleStage4Change = (field: string, value: string | boolean | File | null) => {
+    setStage4Data((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const handleAddWorkExperience = () => {
+    if (stage3Data.currentJobTitle && stage3Data.currentCompany && stage3Data.currentYearsExperience) {
+      setStage3Data((prev) => ({
+        ...prev,
+        workExperience: [
+          ...prev.workExperience,
+          {
+            jobTitle: prev.currentJobTitle,
+            company: prev.currentCompany,
+            years: prev.currentYearsExperience,
+          },
+        ],
+        currentJobTitle: "",
+        currentCompany: "",
+        currentYearsExperience: "",
+      }))
     }
   }
 
+  const handleBack = () => {
+    if (currentStage > 1) {
+      setCurrentStage(currentStage - 1)
+    }
+  }
+
+  const handleNext = () => {
+    if (currentStage < 4) {
+      setCurrentStage(currentStage + 1)
+    } else {
+      // Generate tracking code
+      const code = Math.random().toString(36).substring(2, 8).toUpperCase()
+      setTrackingCode(code)
+      setShowCompletionModal(true)
+    }
+  }
+
+  const handleBackToHome = () => {
+    navigate("/test")
+  }
+
+  const handleTrackApplication = () => {
+    navigate("/track-application")
+  }
+
   const handleBackToJobDescription = () => {
-    navigate("/test2")
+    navigate("/job-description")
   }
 
   if (!jobData) {
@@ -146,14 +244,61 @@ export default function JobApplicationPage() {
   const IconComponent = jobData.icon
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row">
       {/* Document Upload Modal */}
       {showUploadModal && (
-        <DocumentUploadModal onClose={() => setShowUploadModal(false)} onDocumentsUploaded={handleDocumentsUploaded} />
+        <div className="fixed inset-0 bg-gray-900 bg-opacity-30 flex items-center justify-center z-50 p-4">
+          <div className="max-h-[90vh] overflow-y-auto">
+            <DocumentUploadModal
+              onClose={() => setShowUploadModal(false)}
+              onDocumentsUploaded={handleDocumentsUploaded}
+            />
+          </div>
+        </div>
       )}
 
-      {/* Sidebar */}
-      <div className="w-80 bg-white shadow-lg p-6 flex flex-col">
+      {/* Mobile Navigation Bar */}
+      <div className="lg:hidden bg-white shadow-sm border-b border-gray-200 p-4">
+        <div className="flex items-center justify-between mb-4">
+          <img src="/OODC logo2.png" alt="OODC Logo" className="h-12" />
+          <div className="flex items-center gap-2">
+            <IconComponent className="h-5 w-5 text-blue-600" />
+            <span className="text-sm font-medium text-gray-900">{jobData.title}</span>
+          </div>
+        </div>
+
+        {/* Mobile Progress Steps - Vertical Layout */}
+        <div className="space-y-3">
+          {[
+            { step: 1, title: "Applicant Information" },
+            { step: 2, title: "Job Details" },
+            { step: 3, title: "Work and Education" },
+            { step: 4, title: "Acknowledgement" }
+          ].map(({ step, title }) => (
+            <div key={step} className="flex items-center gap-3">
+              <div
+                className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium flex-shrink-0 ${
+                  currentStage >= step 
+                    ? "bg-blue-600 text-white" 
+                    : currentStage === step 
+                      ? "border-2 border-blue-600 bg-white text-blue-600"
+                      : "border-2 border-gray-300 text-gray-400"
+                }`}
+              >
+                {currentStage > step ? "✓" : step}
+              </div>
+              <span className={`text-sm ${
+                currentStage >= step ? "text-gray-900 font-medium" : "text-gray-400"
+              }`}>
+                {title}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Desktop Sidebar */}
+      <div className="hidden lg:flex w-80 bg-white shadow-lg p-6 flex-col">
         {/* Logo */}
         <div className="mb-8">
           <img src="/OODC logo2.png" alt="OODC Logo" className="h-16 mx-auto" />
@@ -226,8 +371,8 @@ export default function JobApplicationPage() {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <header className="bg-white shadow-sm p-6 border-b border-gray-200">
+        {/* Desktop Header */}
+        <header className="hidden lg:block bg-white shadow-sm p-6 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <IconComponent className="h-6 w-6 text-blue-600 flex-shrink-0" />
@@ -244,7 +389,7 @@ export default function JobApplicationPage() {
         </header>
 
         {/* Form Content */}
-        <div className="flex-1 p-8 overflow-y-auto">
+        <div className="flex-1 p-4 lg:p-8 overflow-y-auto">
           {currentStage === 1 && (
             <div className="max-w-4xl mx-auto space-y-8">
               {/* Data Privacy Section */}
@@ -498,17 +643,472 @@ export default function JobApplicationPage() {
             </div>
           )}
 
-          {/* Placeholder for other stages */}
-          {currentStage > 1 && (
-            <div className="max-w-4xl mx-auto">
-              <div className="bg-white rounded-lg shadow-sm p-8 text-center">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Stage {currentStage} - Coming Soon</h2>
-                <p className="text-gray-600">This stage of the application form is under development.</p>
+          {/* Stage 2 - Job Details */}
+          {currentStage === 2 && (
+            <div className="max-w-4xl mx-auto space-y-8">
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <div className="space-y-6">
+                  {/* Position Applying For */}
+                  <div>
+                    <Label htmlFor="position" className="text-sm font-medium text-gray-700">
+                      Position Applying For
+                    </Label>
+                    <Input id="position" value={jobData?.title || ""} readOnly className="mt-1 bg-gray-50" />
+                  </div>
+
+                  {/* Expected Salary */}
+                  <div>
+                    <Label htmlFor="salary" className="text-sm font-medium text-gray-700">
+                      Expected Salary (PHP)
+                    </Label>
+                    <Input
+                      id="salary"
+                      placeholder="e.g., 50,000"
+                      value={stage2Data.expectedSalary}
+                      onChange={(e) => handleStage2Change("expectedSalary", e.target.value)}
+                      className="mt-1"
+                    />
+                  </div>
+
+                  {/* Willing to work onsite */}
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700 mb-3 block">
+                      Are you willing to work onsite?
+                    </Label>
+                    <RadioGroup
+                      value={stage2Data.willingToWorkOnsite}
+                      onValueChange={(value) => handleStage2Change("willingToWorkOnsite", value)}
+                      className="flex gap-6"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="yes" id="onsite-yes" />
+                        <Label htmlFor="onsite-yes">Yes</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="no" id="onsite-no" />
+                        <Label htmlFor="onsite-no">No</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="flexible" id="onsite-flexible" />
+                        <Label htmlFor="onsite-flexible">Flexible</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  {/* Upload 2x2 Photo */}
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700 mb-2 block">Upload Recent 2x2 Photo</Label>
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleStage2Change("photo", e.target.files?.[0] || null)}
+                        className="hidden"
+                        id="photo-upload"
+                      />
+                      <label htmlFor="photo-upload" className="cursor-pointer">
+                        <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                        <span className="text-sm text-gray-600">
+                          {stage2Data.photo ? stage2Data.photo.name : "Click to upload photo"}
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Upload Medical Certificate */}
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                      Upload Medical Certificate (from the last 6 months)
+                    </Label>
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                      <input
+                        type="file"
+                        accept=".pdf,.doc,.docx,image/*"
+                        onChange={(e) => handleStage2Change("medicalCertificate", e.target.files?.[0] || null)}
+                        className="hidden"
+                        id="medical-upload"
+                      />
+                      <label htmlFor="medical-upload" className="cursor-pointer">
+                        <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                        <span className="text-sm text-gray-600">
+                          {stage2Data.medicalCertificate
+                            ? stage2Data.medicalCertificate.name
+                            : "Click to upload certificate"}
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Interview Schedule */}
+                  <div>
+                    <Label htmlFor="interview-schedule" className="text-sm font-medium text-gray-700">
+                      Preferred Interview Schedule (3 dates, e.g., February 20)
+                    </Label>
+                    <Input
+                      id="interview-schedule"
+                      placeholder="e.g., February 20, February 22, February 25"
+                      value={stage2Data.interviewSchedule}
+                      onChange={(e) => handleStage2Change("interviewSchedule", e.target.value)}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Navigation Buttons */}
+              <div className="flex justify-between">
+                <Button
+                  onClick={handleBack}
+                  variant="outline"
+                  className="border-blue-600 text-blue-600 hover:bg-blue-50 bg-transparent px-8 py-2"
+                >
+                  Back
+                </Button>
+                <Button onClick={handleNext} className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2">
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Stage 3 - Work and Education */}
+          {currentStage === 3 && (
+            <div className="max-w-4xl mx-auto space-y-8">
+              {/* Educational Background */}
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <h2 className="text-lg font-semibold text-blue-600">Educational Background</h2>
+                  <div className="flex-1 h-px bg-blue-600"></div>
+                </div>
+
+                <div className="space-y-6">
+                  {/* Education Level and Year */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="education-level" className="text-sm font-medium text-gray-700">
+                        Highest Educational Attained
+                      </Label>
+                      <select
+                        id="education-level"
+                        value={stage3Data.highestEducation}
+                        onChange={(e) => handleStage3Change("highestEducation", e.target.value)}
+                        className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">Select education level</option>
+                        <option value="High School">High School</option>
+                        <option value="Associate Degree">Associate Degree</option>
+                        <option value="Bachelor's Degree">Bachelor's Degree</option>
+                        <option value="Master's Degree">Master's Degree</option>
+                        <option value="Doctorate">Doctorate</option>
+                      </select>
+                    </div>
+                    <div>
+                      <Label htmlFor="year-graduated" className="text-sm font-medium text-gray-700">
+                        Year Graduated
+                      </Label>
+                      <Input
+                        id="year-graduated"
+                        placeholder="e.g., 2020"
+                        value={stage3Data.yearGraduated}
+                        onChange={(e) => handleStage3Change("yearGraduated", e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Institution and Program */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="institution" className="text-sm font-medium text-gray-700">
+                        Institution Name
+                      </Label>
+                      <Input
+                        id="institution"
+                        value={stage3Data.institution}
+                        onChange={(e) => handleStage3Change("institution", e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="program" className="text-sm font-medium text-gray-700">
+                        Program/Course
+                      </Label>
+                      <Input
+                        id="program"
+                        value={stage3Data.program}
+                        onChange={(e) => handleStage3Change("program", e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Work Experience */}
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <h2 className="text-lg font-semibold text-blue-600">Work Experience</h2>
+                  <div className="flex-1 h-px bg-blue-600"></div>
+                </div>
+
+                <div className="space-y-6">
+                  {/* Previous Work Experience Question */}
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700 mb-3 block">
+                      Do you have any previous work experience?
+                    </Label>
+                    <RadioGroup
+                      value={stage3Data.hasWorkExperience}
+                      onValueChange={(value) => handleStage3Change("hasWorkExperience", value)}
+                      className="flex gap-6"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="yes" id="work-yes" />
+                        <Label htmlFor="work-yes">Yes</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="no" id="work-no" />
+                        <Label htmlFor="work-no">No</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  {/* Work Experience Form (shown if Yes) */}
+                  {stage3Data.hasWorkExperience === "yes" && (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <Label htmlFor="job-title" className="text-sm font-medium text-gray-700">
+                            Job Title
+                          </Label>
+                          <Input
+                            id="job-title"
+                            value={stage3Data.currentJobTitle}
+                            onChange={(e) => handleStage3Change("currentJobTitle", e.target.value)}
+                            className="mt-1"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="company-name" className="text-sm font-medium text-gray-700">
+                            Company Name
+                          </Label>
+                          <Input
+                            id="company-name"
+                            value={stage3Data.currentCompany}
+                            onChange={(e) => handleStage3Change("currentCompany", e.target.value)}
+                            className="mt-1"
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <div className="flex-1">
+                            <Label htmlFor="years-experience" className="text-sm font-medium text-gray-700">
+                              Years of Experience
+                            </Label>
+                            <Input
+                              id="years-experience"
+                              value={stage3Data.currentYearsExperience}
+                              onChange={(e) => handleStage3Change("currentYearsExperience", e.target.value)}
+                              className="mt-1"
+                            />
+                          </div>
+                          <div className="flex items-end">
+                            <Button
+                              onClick={handleAddWorkExperience}
+                              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2"
+                            >
+                              Add
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Work Experience Table */}
+                      {stage3Data.workExperience.length > 0 && (
+                        <div className="mt-6 overflow-x-auto">
+                          <table className="w-full border border-gray-300 rounded-lg overflow-hidden">
+                            <thead>
+                              <tr className="bg-blue-600 text-white">
+                                <th className="px-4 py-3 text-left">Job Title</th>
+                                <th className="px-4 py-3 text-left">Company Name</th>
+                                <th className="px-4 py-3 text-left">Years of Experience</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {stage3Data.workExperience.map((exp, index) => (
+                                <tr key={index} className="border-t border-gray-300">
+                                  <td className="px-4 py-3 text-gray-900">{exp.jobTitle}</td>
+                                  <td className="px-4 py-3 text-gray-900">{exp.company}</td>
+                                  <td className="px-4 py-3 text-gray-900">{exp.years}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Navigation Buttons */}
+              <div className="flex justify-between">
+                <Button
+                  onClick={handleBack}
+                  variant="outline"
+                  className="border-blue-600 text-blue-600 hover:bg-blue-50 bg-transparent px-8 py-2"
+                >
+                  Back
+                </Button>
+                <Button onClick={handleNext} className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2">
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Stage 4 - Acknowledgement */}
+          {currentStage === 4 && (
+            <div className="max-w-4xl mx-auto space-y-8">
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <div className="space-y-6">
+                  {/* Confidentiality Statement */}
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <p className="text-gray-700 text-sm leading-relaxed">
+                      All information provided is for application purposes only and will be treated with strict
+                      confidentiality in accordance with applicable laws.
+                    </p>
+                  </div>
+
+                  {/* How did you learn about this job */}
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700 mb-3 block">
+                      How did you learn about this job opportunity?
+                    </Label>
+                    <RadioGroup
+                      value={stage4Data.howDidYouLearn}
+                      onValueChange={(value) => handleStage4Change("howDidYouLearn", value)}
+                      className="space-y-3"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="jobstreet" id="jobstreet" />
+                        <Label htmlFor="jobstreet">JobStreet</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="indeed" id="indeed" />
+                        <Label htmlFor="indeed">Indeed</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="facebook" id="facebook" />
+                        <Label htmlFor="facebook">Facebook</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="referral" id="referral" />
+                        <Label htmlFor="referral">Referral</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="other" id="other" />
+                        <Label htmlFor="other">Other</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  {/* Certification Checkbox */}
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="certification"
+                      checked={stage4Data.certificationAccepted}
+                      onCheckedChange={(checked) => handleStage4Change("certificationAccepted", checked)}
+                    />
+                    <Label htmlFor="certification" className="text-sm text-gray-700">
+                      This is to certify that all information provided is accurate to the best of my abilities and
+                      knowledge
+                    </Label>
+                  </div>
+
+                  {/* Signature Section */}
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700 mb-3 block">Signature</Label>
+
+                    <div className="flex flex-col md:flex-row gap-4">
+                      {/* Signature Pad */}
+                      <div className="flex-1">
+                        <div className="rounded-lg p-4 bg-gray-50 flex flex-col justify-between w-full max-w-full">
+                          <SignaturePad />
+                        </div>
+                      </div>
+
+                      {/* Upload Signature */}
+                      <div className="flex-1">
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center h-40 flex items-center justify-center bg-white w-full max-w-full">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleStage4Change("signature", e.target.files?.[0] || null)}
+                            className="hidden"
+                            id="signature-upload"
+                          />
+                          <label htmlFor="signature-upload" className="cursor-pointer">
+                            <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                            <span className="text-sm text-gray-600">
+                              {stage4Data.signature && typeof stage4Data.signature !== "string"
+                                ? (stage4Data.signature as File).name
+                                : "Upload signature"}
+                            </span>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Navigation Buttons */}
+              <div className="flex justify-between">
+                <Button
+                  onClick={handleBack}
+                  variant="outline"
+                  className="border-blue-600 text-blue-600 hover:bg-blue-50 bg-transparent px-8 py-2"
+                >
+                  Back
+                </Button>
+                <Button
+                  onClick={handleNext}
+                  disabled={!stage4Data.certificationAccepted}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2"
+                >
+                  Submit Application
+                </Button>
               </div>
             </div>
           )}
         </div>
       </div>
+
+      {/* Application Complete Modal */}
+      {showCompletionModal && (
+        <div className="fixed inset-0 bg-gray-900 bg-opacity-30 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 text-center max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Application Complete!</h2>
+            <p className="text-gray-600 text-sm leading-relaxed mb-4">
+              Congratulations! Your application is complete! 🎉 A tracking code has been sent to your email. You can use
+              this code to easily track your application's progress through the Track Application section. We're excited
+              to have you on this journey!
+            </p>
+            <div className="bg-blue-50 p-3 rounded-lg mb-6">
+              <p className="text-sm text-gray-600 mb-1">Your tracking code:</p>
+              <p className="text-lg font-bold text-blue-600">{trackingCode}</p>
+            </div>
+            <div className="flex gap-3">
+              <Button onClick={handleBackToHome} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
+                Back to Home
+              </Button>
+              <Button onClick={handleTrackApplication} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
+                Track Application
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

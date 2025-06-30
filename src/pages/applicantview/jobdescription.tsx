@@ -85,7 +85,7 @@ export default function JobApplication() {
 
           {/* Action Buttons */}
           <div className="flex gap-4 ml-9">
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2">Apply Now</Button>
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2" onClick={() => navigate(`/test3`)}>Apply Now</Button>
             <Button variant="outline" className="px-6 py-2 bg-transparent" onClick={handleViewOtherOpenings}>
               View Other Opening
             </Button>

@@ -87,8 +87,8 @@ export function DocumentUploadModal({ onClose, onDocumentsUploaded }: DocumentUp
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+    <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-auto max-h-full overflow-y-auto">
+      <div className="p-6">
         {/* Header */}
         <div className="text-center mb-6">
           <h2 className="text-xl font-bold text-gray-900 mb-2">Attach Documents</h2>
@@ -116,12 +116,13 @@ export function DocumentUploadModal({ onClose, onDocumentsUploaded }: DocumentUp
             {resumeFile ? (
               <div className="flex items-center justify-center gap-2">
                 <FileText className="h-5 w-5 text-green-600" />
-                <span className="text-sm text-green-700 font-medium">{resumeFile.name}</span>
+                <span className="text-sm text-green-700 font-medium truncate">{resumeFile.name}</span>
               </div>
             ) : (
               <div className="flex flex-col items-center gap-2">
                 <Upload className="h-8 w-8 text-gray-400" />
                 <span className="text-sm text-gray-600">Upload Resume</span>
+                <span className="text-xs text-gray-500">PDF, DOC, DOCX</span>
               </div>
             )}
           </div>
@@ -152,12 +153,13 @@ export function DocumentUploadModal({ onClose, onDocumentsUploaded }: DocumentUp
             {coverLetterFile ? (
               <div className="flex items-center justify-center gap-2">
                 <FileText className="h-5 w-5 text-green-600" />
-                <span className="text-sm text-green-700 font-medium">{coverLetterFile.name}</span>
+                <span className="text-sm text-green-700 font-medium truncate">{coverLetterFile.name}</span>
               </div>
             ) : (
               <div className="flex flex-col items-center gap-2">
                 <Upload className="h-8 w-8 text-gray-400" />
                 <span className="text-sm text-gray-600">Upload Cover Letter</span>
+                <span className="text-xs text-gray-500">Optional - PDF, DOC, DOCX</span>
               </div>
             )}
           </div>
