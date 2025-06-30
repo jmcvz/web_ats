@@ -23,7 +23,7 @@ import {
   FileText,
   Trash2,
   Upload,
-  Scale,
+  Scaling,
 } from "lucide-react"
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts"
 import { Navbar } from "@/reusables/Navbar"
@@ -654,7 +654,7 @@ export default function ApplicantTracker() {
                         onClick={() => navigate(`/applicants/${name || "john-doe"}/IEForm`)}
                         className="flex items-center gap-2 text-blue-600 hover:bg-blue-50"
                       >
-                        <Scale className="h-4 w-4" />
+                        <Scaling className="h-4 w-4" />
                         Preview
                       </Button>
                     </div>

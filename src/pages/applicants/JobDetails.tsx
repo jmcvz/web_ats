@@ -7,7 +7,7 @@ import { ArrowLeft, LayoutGrid, List } from "lucide-react"
 import { useNavigate, useLocation, useParams } from "react-router-dom"
 import { Navbar } from "@/reusables/Navbar"
 
-export default function LeadDeveloper() {
+export default function JobDetails() {
   const navigate = useNavigate()
   const location = useLocation()
   const { jobtitle } = useParams<{ jobtitle: string }>()

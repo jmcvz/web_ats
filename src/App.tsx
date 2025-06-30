@@ -31,6 +31,9 @@ import CreateNewPosition from './pages/requests/create-new-position'
 import IEForm2 from '@/forms/InterviewEvaluationForm2'
 import CustomStages from '@/pages/applicants/CustomStages'
 import ExamForm from '@/pages/Exam-Form'
+import ApplicantLandingPage from '@/pages/applicantview/applicantslandingpage'
+import JobDescription from '@/pages/applicantview/jobdescription'
+import ApplicationProcess from '@/pages/applicantview/applicationprocess'
 
 
 export default function App() {
@@ -76,6 +79,12 @@ export default function App() {
       <Route path="/positions/create-new-position" element={ < CreateNewPosition />} />
       <Route path="/applicants/job/:customStage" element={ <CustomStages/>} />
       <Route path="/applicants/job/:jobtitle/exam-form/:applicantId" element={<ExamForm />} />
+      <Route path="/test" element={ <ApplicantLandingPage />} />
+      <Route path="/test2" element={<JobDescription />} />
+      <Route path="/test3" element={<ApplicationProcess />} />
+
+      
+
 
       </Routes>
     </BrowserRouter>

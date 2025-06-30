@@ -177,9 +177,16 @@ export default function Failed() {
 
   const navigate = useNavigate()
 
-  const handleStageChange = (value: string) => {
-    navigate(`/applicants/job/${value}`)
-  }
+const handleStageChange = (value: string) => {
+  navigate(`/applicants/job/${slugify(value)}`, {
+    state: {
+      jobTitle: location.state?.jobTitle,
+      jobData: location.state?.jobData,
+      from: location.pathname, // helpful for back button logic
+    },
+  });
+};
+
 
   // Filter function
   const filteredApplicants = useMemo(() => {
@@ -206,9 +213,14 @@ export default function Failed() {
 const jobTitleFromState = location.state?.jobTitle
 const from = location.state?.from
 
+const slugify = (str: string) =>
+  str.toLowerCase().replace(/\s+/g, "").replace(/[^\w]+/g, "");
+
+
 const backPath = from?.includes("/weekly")
-  ? `/applicants/job/${jobTitleFromState}/weekly`
-  : `/applicants/job/${jobTitleFromState}`
+  ? `/applicants/job/${slugify(jobTitleFromState)}\/weekly`
+  : `/applicants/job/${slugify(jobTitleFromState)}`
+
 
   return (
     <>
