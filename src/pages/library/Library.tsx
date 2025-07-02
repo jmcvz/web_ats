@@ -1,0 +1,271 @@
+import { useState, useEffect, cloneElement } from "react";
+import { useNavigate } from "react-router-dom";
+import { Navbar } from "@/reusables/Navbar";
+import {
+  Users,
+  Building2,
+  Trash2,
+  FolderIcon,
+  MailIcon,
+  UserIcon,
+  FileTextIcon,
+  Plus,
+  CheckSquare,
+  LayoutGrid,
+  List,
+} from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+
+export default function Library() {
+  const navigate = useNavigate();
+  const [view, setView] = useState<"home" | "internal" | "external" | "forms">("home");
+  const [selectedForms, setSelectedForms] = useState<string[]>([]);
+  const [formsViewType, setFormsViewType] = useState<"grid" | "list">("grid");
+  const [isArchiveDialogOpen, setIsArchiveDialogOpen] = useState(false);
+
+  useEffect(() => {
+    document.title = "Library";
+  }, []);
+
+  const folderStroke = 1;
+  const iconStroke = 1.5;
+
+  const sharedFolders = [
+    {
+      label: "Forms",
+      folderColor: "text-blue-600",
+      icon: <FileTextIcon className="text-blue-600" />,
+      textColor: "text-blue-600",
+      onClick: () => setView("forms"),
+    },
+    {
+      label: "Email Templates",
+      folderColor: "text-gray-700",
+      icon: <MailIcon className="text-gray-800" />,
+      textColor: "text-gray-800",
+    },
+    {
+      label: "Applicants",
+      folderColor: "text-gray-700",
+      icon: <UserIcon className="text-gray-800" />,
+      textColor: "text-gray-800",
+    },
+  ];
+
+  const forms = [
+    "Personnel Requisition Form (PRF)",
+    "Open Position (For External Client)",
+    "Interview Evaluation Form",
+  ];
+
+  const toggleFormSelection = (formName: string) => {
+    setSelectedForms((prev) =>
+      prev.includes(formName)
+        ? prev.filter((name) => name !== formName)
+        : [...prev, formName]
+    );
+  };
+
+  const handleFormClick = (formName: string) => {
+    if (formName === "Interview Evaluation Form") {
+      navigate("/ieform");
+    } else {
+      toggleFormSelection(formName);
+    }
+  };
+
+  const handleArchive = () => {
+    console.log("Archived forms:", selectedForms);
+    setSelectedForms([]);
+    setIsArchiveDialogOpen(false);
+  };
+
+  const isFolderView = view === "internal" || view === "external";
+
+  return (
+    <>
+      <Navbar />
+      <div className="min-h-screen bg-gray-50 p-6 pt-[100px]">
+        <div className="mx-auto max-w-7xl space-y-6">
+          {view !== "forms" && (
+            <h1 className="text-3xl font-bold text-gray-800">Library</h1>
+          )}
+
+          <div className="flex items-start justify-between py-4">
+            {/* Home View */}
+            {view === "home" ? (
+              <div className="flex space-x-10">
+                <div
+                  onClick={() => setView("internal")}
+                  className="flex flex-col items-center cursor-pointer group transition"
+                >
+                  <Users className="text-blue-600 w-6 h-6 group-hover:scale-110 transition-transform" />
+                  <span className="text-sm font-medium text-blue-600 mt-1 group-hover:underline">
+                    Internal
+                  </span>
+                </div>
+
+                <div
+                  onClick={() => setView("external")}
+                  className="flex flex-col items-center cursor-pointer group transition"
+                >
+                  <Building2 className="text-gray-800 w-6 h-6 group-hover:scale-110 transition-transform" />
+                  <span className="text-sm font-medium text-gray-800 mt-1 group-hover:underline">
+                    External Client
+                  </span>
+                </div>
+              </div>
+            ) : isFolderView ? (
+              <div className="flex space-x-10">
+                {sharedFolders.map((folder, index) => (
+                  <div key={index} className="flex flex-col items-center space-y-2">
+                    <div
+                      className="cursor-pointer transition-transform hover:scale-105 group"
+                      onClick={folder.onClick}
+                    >
+                      <div className="relative w-16 h-16">
+                        <FolderIcon
+                          className={`${folder.folderColor} w-full h-full`}
+                          strokeWidth={folderStroke}
+                        />
+                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                          {cloneElement(folder.icon, {
+                            strokeWidth: iconStroke,
+                            className: `${folder.icon.props.className} w-5 h-5`,
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                    <span className={`text-sm font-medium ${folder.textColor}`}>
+                      {folder.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              // Forms View
+              <div className="w-full">
+                <h2 className="text-2xl font-bold text-blue-600 mb-2">Forms</h2>
+
+                {/* Toolbar */}
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center space-x-2 text-gray-600">
+                    <span className="text-sm">View by:</span>
+                    <button
+                      onClick={() => setFormsViewType("grid")}
+                      className={`p-1 rounded ${
+                        formsViewType === "grid"
+                          ? "bg-gray-200 text-gray-800"
+                          : "hover:bg-gray-100"
+                      }`}
+                    >
+                      <LayoutGrid className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setFormsViewType("list")}
+                      className={`p-1 rounded ${
+                        formsViewType === "list"
+                          ? "bg-gray-200 text-gray-800"
+                          : "hover:bg-gray-100"
+                      }`}
+                    >
+                      <List className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div className="flex items-center space-x-4">
+                    {selectedForms.length > 0 && (
+                      <div
+                        onClick={() => setIsArchiveDialogOpen(true)}
+                        className="flex items-center space-x-1 text-blue-600 cursor-pointer hover:underline"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        <span>Archive</span>
+                      </div>
+                    )}
+                    <button className="flex items-center space-x-1 bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">
+                      <Plus className="w-4 h-4" />
+                      <span>Add Form</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Forms List */}
+                <div className="border-t border-gray-200 pt-4">
+                  <div className="space-y-3">
+                    {forms.map((form, index) => (
+                      <div
+                        key={index}
+                        className={`flex items-center p-3 rounded-lg cursor-pointer ${
+                          selectedForms.includes(form)
+                            ? "bg-blue-50"
+                            : "hover:bg-gray-100"
+                        }`}
+                        onClick={() => handleFormClick(form)}
+                      >
+                        <div
+                          className={`w-5 h-5 border rounded flex items-center justify-center mr-3 ${
+                            selectedForms.includes(form)
+                              ? "bg-blue-600 border-blue-600"
+                              : "border-gray-400"
+                          }`}
+                        >
+                          {selectedForms.includes(form) && (
+                            <CheckSquare
+                              className="w-3 h-3 text-white"
+                              strokeWidth={3}
+                            />
+                          )}
+                        </div>
+                        <span className="text-gray-800">{form}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {isFolderView && (
+              <div className="flex items-center space-x-1 text-blue-600 cursor-pointer hover:underline transition">
+                <Trash2 className="w-4 h-4" />
+                <span className="text-sm font-medium">Archive Folder</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Archive Confirmation Dialog */}
+      <Dialog open={isArchiveDialogOpen} onOpenChange={setIsArchiveDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-semibold">
+              Archive {selectedForms.length > 1 ? "Files" : "File"}
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-gray-600 text-left">
+            Are you sure you want to archive {selectedForms.length > 1 ? "these files" : "this file"}?
+          </p>
+          <DialogFooter className="justify-end gap-2 pt-4">
+            <Button variant="ghost" onClick={() => setIsArchiveDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleArchive}
+            >
+              Archive
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}

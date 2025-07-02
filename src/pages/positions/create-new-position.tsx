@@ -1,3 +1,5 @@
+"use client"
+
 import { Navbar } from "@/reusables/Navbar"
 import { useEffect, useState } from "react"
 import { Input } from "@/components/ui/input"
@@ -70,18 +72,18 @@ export default function CreateNewPosition() {
   const [currentStep, setCurrentStep] = useState(1)
 
   const [formData, setFormData] = useState({
-    jobTitle: "",
-    department: "",
+    jobTitle: "UI Designer",
+    department: "Continuous Improvement",
     employmentType: "Full-Time",
     educationNeeded: "Bachelor's Degree",
     workSetup: "Hybrid",
     experience: "Entry Level",
-    headcountsNeeded: "",
-    dateNeeded: "",
+    headcountsNeeded: "5",
+    dateNeeded: "2024-10-01",
     reasonForHire: "Others, Please Specify",
     reasonSpecify: "",
-    budgetFrom: "",
-    budgetTo: "",
+    budgetFrom: "50000",
+    budgetTo: "80000",
   })
 
   const [locations, setLocations] = useState<LocationEntry[]>([
@@ -250,12 +252,10 @@ UI Designer requirements are:
   }
 
   const addStepToStage = (stageId: number) => {
-    // This would open a modal or form to add a new step
     console.log("Add step to stage", stageId)
   }
 
   const editStep = (stepId: number) => {
-    // This would open a modal or form to edit the step
     console.log("Edit step", stepId)
   }
 
@@ -293,6 +293,7 @@ UI Designer requirements are:
                   onChange={(e) => handleInputChange("department", e.target.value)}
                 >
                   <option value="">Input Text</option>
+                  <option value="Continuous Improvement">Continuous Improvement</option>
                   <option value="Engineering">Engineering</option>
                   <option value="Marketing">Marketing</option>
                   <option value="Sales">Sales</option>
@@ -1067,7 +1068,6 @@ UI Designer requirements are:
       case 5:
         return (
           <Card className="p-6">
-            
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Left Column - Assessment Configuration */}
               <div className="lg:col-span-2 space-y-6">
@@ -1153,6 +1153,47 @@ UI Designer requirements are:
                         <div className="flex-1">
                           <div className="flex items-start gap-3">
                             <span className="text-sm font-medium text-gray-700">2.</span>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-gray-800 mb-2">
+                                What is the process flow diagram?
+                              </p>
+                              <div className="flex items-center gap-4 text-xs text-gray-600">
+                                <label className="flex items-center gap-1">
+                                  <input type="checkbox" className="w-3 h-3" />
+                                  Check Boxes
+                                </label>
+                                <label className="flex items-center gap-1">
+                                  <input type="checkbox" className="w-3 h-3" />
+                                  Required
+                                </label>
+                                <label className="flex items-center gap-1">
+                                  <input type="checkbox" className="w-3 h-3" />
+                                  Parameters
+                                </label>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button variant="ghost" size="sm">
+                            <Plus className="w-4 h-4 text-gray-500" />
+                          </Button>
+                          <Button variant="ghost" size="sm">
+                            <Edit className="w-4 h-4 text-gray-500" />
+                          </Button>
+                          <Button variant="ghost" size="sm">
+                            <Trash2 className="w-4 h-4 text-gray-500" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Question 3 */}
+                    <div className="border rounded-lg p-4 bg-gray-50">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-start gap-3">
+                            <span className="text-sm font-medium text-gray-700">3.</span>
                             <div className="flex-1">
                               <p className="text-sm font-medium text-gray-800 mb-2">
                                 What is the process flow diagram?
@@ -1309,7 +1350,7 @@ UI Designer requirements are:
           {/* Main Content */}
           <div className="flex justify-between items-start">
             <h2 className="text-3xl font-bold text-gray-800">{getStepTitle()}</h2>
-            <Button variant="outline" className="text-blue-600 border-blue-600">
+            <Button variant="outline" className="text-blue-600 border-blue-600 bg-white hover:bg-blue-50">
               Preview
             </Button>
           </div>
@@ -1319,7 +1360,12 @@ UI Designer requirements are:
 
           {/* Navigation Buttons */}
           <div className="flex justify-between">
-            <Button variant="outline" className="text-gray-600" onClick={handleBack} disabled={currentStep === 1}>
+            <Button
+              variant="outline"
+              className="text-gray-600 bg-white hover:bg-gray-50"
+              onClick={handleBack}
+              disabled={currentStep === 1}
+            >
               ← Back
             </Button>
             <Button

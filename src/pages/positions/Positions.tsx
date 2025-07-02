@@ -1,5 +1,3 @@
-"use client"
-
 import { Navbar } from "@/reusables/Navbar"
 import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
@@ -19,6 +17,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog"
+import { User, Users2 } from "lucide-react"
 
 interface BaseJobPosting {
   id: number
@@ -589,9 +588,43 @@ export default function Positions() {
               <select className="border p-2 rounded text-sm w-full sm:w-auto">
                 <option>All Employment Type</option>
               </select>
-              <Button variant="outline" className="w-full sm:w-auto">
-                + File Request
-              </Button>
+              <Dialog>
+  <DialogTrigger asChild>
+    <Button variant="outline" className="w-full sm:w-auto">
+      + File Request
+    </Button>
+  </DialogTrigger>
+  <DialogContent className="text-center">
+    <DialogHeader>
+      <DialogTitle className="text-blue-700 text-sm font-semibold">
+        SELECT REQUISITION FORM
+      </DialogTitle>
+    </DialogHeader>
+
+    <div className="flex justify-center gap-12 mt-6">
+      {/* Internal Hiring */}
+      <div
+        className="flex flex-col items-center space-y-2 cursor-pointer"
+        onClick={() => navigate("/prf")}
+      >
+        <div className="w-16 h-16 rounded-full border border-blue-500 text-blue-500 flex items-center justify-center">
+          <User className="w-6 h-6" />
+        </div>
+        <span className="text-sm text-blue-500 font-medium">Internal Hiring</span>
+      </div>
+
+      {/* Client */}
+      <div className="flex flex-col items-center space-y-2 cursor-pointer">
+        <div className="w-16 h-16 rounded-full border border-gray-400 text-gray-500 flex items-center justify-center">
+          <Users2 className="w-6 h-6" />
+        </div>
+        <span className="text-sm text-gray-500 font-medium">Client</span>
+      </div>
+    </div>
+  </DialogContent>
+</Dialog>
+
+
             </div>
           </div>
 
