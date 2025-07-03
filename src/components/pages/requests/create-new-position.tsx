@@ -40,8 +40,8 @@ interface LocationEntry {
 interface BatchEntry {
   id: number
   batch: number
-  deploymentDate: string
   headcount: number
+  deploymentDate: string
 }
 
 interface PipelineStep {
@@ -49,6 +49,12 @@ interface PipelineStep {
   name: string
   type: string
   icon: any
+  description?: string
+  redactedInfo?: boolean
+  assessments?: Assessment[]
+  teamMembers?: TeamMember[]
+  templateType?: string
+  reminderTime?: string
 }
 
 interface PipelineStage {
@@ -72,18 +78,34 @@ interface Assessment {
   description: string
   required: boolean
   stage: string
+  dueDate?: string
+  timeLimit?: string
 }
 
+// Updated Question Interface to include nonNegotiableOptions
 interface Question {
   id: number
   question: string
   description: string
-  type: string
-  mode: string
-  options: string[]
-  parameters: number[]
-  nonNegotiableText?: string
-  required: boolean
+  type: string // "Multiple Choice", "Checkboxes", "Text Entry", "Paragraph", "Number", "Date"
+  mode: string // "Non-negotiable", "Preferred", "Optional"
+  options: string[] // For Multiple Choice and Checkboxes
+  parameters: number[] // For scores, if applicable (e.g., Multiple Choice)
+  nonNegotiableText?: string // For Text Entry/Paragraph (exact required text)
+  // New: For Multiple Choice/Checkboxes non-negotiable requirements
+  nonNegotiableOptions?: Array<{ option: string; required: boolean; requiredValue?: string }>
+  required: boolean // General question required status
+}
+
+interface QuestionnaireSection {
+  id: number
+  name: string
+  questions: Question[]
+}
+
+interface SavedQuestionnaire {
+  name: string
+  sections: QuestionnaireSection[]
 }
 
 interface StagePopupData {
@@ -203,6 +225,7 @@ export default function CreateNewPosition() {
   // Stage popup states
   const [showStagePopup, setShowStagePopup] = useState(false)
   const [currentStageId, setCurrentStageId] = useState<number | null>(null)
+  const [editingStepId, setEditingStepId] = useState<number | null>(null)
   const [stagePopupData, setStagePopupData] = useState<StagePopupData>({
     processType: "",
     processTitle: "",
@@ -241,14 +264,23 @@ export default function CreateNewPosition() {
 
   // Step 5 states
   const [selectedAssessmentForEdit, setSelectedAssessmentForEdit] = useState<Assessment | null>(null)
-  const [assessmentQuestions, setAssessmentQuestions] = useState<Question[]>([])
+  const [assessmentQuestions, setAssessmentQuestions] = useState<{ [key: number]: Question[] }>({})
   const [isEditingAssessment, setIsEditingAssessment] = useState(false)
   const [showAddQuestionModal, setShowAddQuestionModal] = useState(false)
   const [editingQuestionId, setEditingQuestionId] = useState<number | null>(null)
   const [templateSearchQuery, setTemplateSearchQuery] = useState("")
 
+  // Assessment settings per assessment (Added state for due dates and time limits)
+  const [assessmentSettings, setAssessmentSettings] = useState<{
+    [key: number]: {
+      dueDate: string
+      timeLimit: string
+    }
+  }>({})
+
   // Question form state for Step 5
-  const [questionForm, setQuestionForm] = useState({
+  const [questionForm, setQuestionForm] = useState<Question>({
+    id: 0, // Will be set on save
     question: "",
     description: "",
     type: "Multiple Choice",
@@ -256,8 +288,20 @@ export default function CreateNewPosition() {
     options: ["", "", "", ""],
     parameters: [0, 0, 0, 0],
     nonNegotiableText: "",
+    nonNegotiableOptions: [], // Initialize new field
     required: false,
   })
+
+  // Step move mode (for pipeline steps)
+  const [stepMoveMode, setStepMoveMode] = useState(false)
+  const [selectedStepForMove, setSelectedStepForMove] = useState<{
+    stageId: number
+    stepId: number
+  } | null>(null)
+
+  // Template confirmation modal
+  const [showTemplateConfirmModal, setShowTemplateConfirmModal] = useState(false)
+  const [pendingTemplate, setPendingTemplate] = useState<string>("")
 
   const [jobDescription, setJobDescription] = useState(`About the UI Designer position
 
@@ -395,6 +439,7 @@ UI Designer requirements are:
 
   const addStepToStage = (stageId: number) => {
     setCurrentStageId(stageId)
+    setEditingStepId(null)
     setStagePopupData({
       processType: "",
       processTitle: "",
@@ -425,17 +470,18 @@ UI Designer requirements are:
 
     if (foundStep && foundStageId) {
       setCurrentStageId(foundStageId)
+      setEditingStepId(stepId)
       setStagePopupData({
         processType: foundStep.type,
         processTitle: foundStep.name,
-        description: "",
-        redactedInfo: false,
-        assessments: [],
-        teamMembers: [],
-        templateType: "",
-        reminderTime: "00:00:00",
+        description: foundStep.description || "",
+        redactedInfo: foundStep.redactedInfo || false,
+        assessments: foundStep.assessments || [],
+        teamMembers: foundStep.teamMembers || [],
+        templateType: foundStep.templateType || "",
+        reminderTime: foundStep.reminderTime || "00:00:00",
       })
-      setSelectedTeamMembers([])
+      setSelectedTeamMembers(foundStep.teamMembers || [])
       setShowStagePopup(true)
     }
   }
@@ -446,6 +492,73 @@ UI Designer requirements are:
         stage.id === stageId ? { ...stage, steps: stage.steps.filter((step) => step.id !== stepId) } : stage,
       ),
     )
+  }
+
+  // Updated step move functions to properly swap positions instead of copying
+  const handleMoveStep = (stageId: number, stepId: number) => {
+    if (selectedStepForMove) {
+      const sourceStageId = selectedStepForMove.stageId
+      const sourceStepId = selectedStepForMove.stepId
+
+      // Don't move if it's the same step
+      if (sourceStageId === stageId && sourceStepId === stepId) {
+        setStepMoveMode(false)
+        setSelectedStepForMove(null)
+        return
+      }
+
+      // Find source and target steps with their complete data
+      let sourceStep: PipelineStep | null = null
+      let targetStep: PipelineStep | null = null
+      let sourceStageIndex = -1
+      let targetStageIndex = -1
+      let sourceStepIndex = -1
+      let targetStepIndex = -1
+
+      const updatedStages = [...pipelineStages]
+
+      // Find source step and its indices
+      for (let i = 0; i < updatedStages.length; i++) {
+        if (updatedStages[i].id === sourceStageId) {
+          sourceStageIndex = i
+          sourceStepIndex = updatedStages[i].steps.findIndex((step) => step.id === sourceStepId)
+          if (sourceStepIndex !== -1) {
+            sourceStep = { ...updatedStages[i].steps[sourceStepIndex] }
+          }
+          break
+        }
+      }
+
+      // Find target step and its indices
+      for (let i = 0; i < updatedStages.length; i++) {
+        if (updatedStages[i].id === stageId) {
+          targetStageIndex = i
+          targetStepIndex = updatedStages[i].steps.findIndex((step) => step.id === stepId)
+          if (targetStepIndex !== -1) {
+            targetStep = { ...updatedStages[i].steps[targetStepIndex] }
+          }
+          break
+        }
+      }
+
+      if (sourceStep && targetStep && sourceStepIndex !== -1 && targetStepIndex !== -1) {
+        if (sourceStageId === stageId) {
+          // Same stage - swap positions
+          const newSteps = [...updatedStages[sourceStageIndex].steps]
+          newSteps[sourceStepIndex] = targetStep
+          newSteps[targetStepIndex] = sourceStep
+          updatedStages[sourceStageIndex] = { ...updatedStages[sourceStageIndex], steps: newSteps }
+        } else {
+          // Different stages - remove from source, add to target
+          updatedStages[sourceStageIndex].steps.splice(sourceStepIndex, 1)
+          updatedStages[targetStageIndex].steps.splice(targetStepIndex, 0, sourceStep)
+        }
+        setPipelineStages(updatedStages)
+      }
+
+      setStepMoveMode(false)
+      setSelectedStepForMove(null)
+    }
   }
 
   // Assessment management functions
@@ -482,16 +595,33 @@ UI Designer requirements are:
   const deleteGlobalAssessment = (assessmentId: number) => {
     setGlobalAssessments((prev) => prev.filter((a) => a.id !== assessmentId))
     // Also remove from current stage popup if it exists there
-    setStagePopupData((prev) => ({
-      ...prev,
-      assessments: prev.assessments.filter((a) => a.id !== assessmentId),
-    }))
+    setPipelineStages((prevStages) =>
+      prevStages.map((stage) => ({
+        ...stage,
+        steps: stage.steps.map((step) => ({
+          ...step,
+          assessments: (step.assessments || []).filter((a) => a.id !== assessmentId),
+        })),
+      })),
+    )
+
     // If currently editing this assessment, clear the editing state
     if (selectedAssessmentForEdit?.id === assessmentId) {
       setSelectedAssessmentForEdit(null)
-      setAssessmentQuestions([])
       setIsEditingAssessment(false)
     }
+    // Remove questions for this assessment
+    setAssessmentQuestions((prev) => {
+      const updated = { ...prev }
+      delete updated[assessmentId]
+      return updated
+    })
+    // Remove assessment settings when deleting assessment
+    setAssessmentSettings((prev) => {
+      const updated = { ...prev }
+      delete updated[assessmentId]
+      return updated
+    })
   }
 
   // Assessment move mode
@@ -590,16 +720,52 @@ UI Designer requirements are:
     if (currentStageId && stagePopupData.processTitle.trim()) {
       const IconComponent = getProcessTypeIcon(stagePopupData.processType)
 
-      const newStep: PipelineStep = {
-        id: Date.now(),
-        name: stagePopupData.processTitle,
-        type: stagePopupData.processType,
-        icon: IconComponent,
-      }
+      if (editingStepId) {
+        // Update existing step
+        setPipelineStages((prev) =>
+          prev.map((stage) =>
+            stage.id === currentStageId
+              ? {
+                  ...stage,
+                  steps: stage.steps.map((step) =>
+                    step.id === editingStepId
+                      ? {
+                          ...step,
+                          name: stagePopupData.processTitle,
+                          type: stagePopupData.processType,
+                          icon: IconComponent,
+                          description: stagePopupData.description,
+                          redactedInfo: stagePopupData.redactedInfo,
+                          assessments: stagePopupData.assessments,
+                          teamMembers: selectedTeamMembers,
+                          templateType: stagePopupData.templateType,
+                          reminderTime: stagePopupData.reminderTime,
+                        }
+                      : step,
+                  ),
+                }
+              : stage,
+          ),
+        )
+      } else {
+        // Create new step
+        const newStep: PipelineStep = {
+          id: Date.now(),
+          name: stagePopupData.processTitle,
+          type: stagePopupData.processType,
+          icon: IconComponent,
+          description: stagePopupData.description,
+          redactedInfo: stagePopupData.redactedInfo,
+          assessments: stagePopupData.assessments,
+          teamMembers: selectedTeamMembers,
+          templateType: stagePopupData.templateType,
+          reminderTime: stagePopupData.reminderTime,
+        }
 
-      setPipelineStages((prev) =>
-        prev.map((stage) => (stage.id === currentStageId ? { ...stage, steps: [...stage.steps, newStep] } : stage)),
-      )
+        setPipelineStages((prev) =>
+          prev.map((stage) => (stage.id === currentStageId ? { ...stage, steps: [...stage.steps, newStep] } : stage)),
+        )
+      }
 
       // Add assessments to global assessments with stage information
       const assessmentsWithStage = stagePopupData.assessments.map((assessment) => ({
@@ -607,32 +773,67 @@ UI Designer requirements are:
         stage: `Stage ${currentStageId < 10 ? `0${currentStageId}` : currentStageId}`,
       }))
 
-      setGlobalAssessments((prev) => [...prev, ...assessmentsWithStage])
+      setGlobalAssessments((prev) => {
+        // Remove existing assessments from this step if editing
+        const filteredAssessments = editingStepId
+          ? prev.filter((a) => !stagePopupData.assessments.find((sa) => sa.id === a.id))
+          : prev
+        return [...filteredAssessments, ...assessmentsWithStage]
+      })
     }
 
-    setStagePopupData((prev) => ({
-      ...prev,
-      teamMembers: selectedTeamMembers,
-    }))
     setShowStagePopup(false)
     setCurrentStageId(null)
+    setEditingStepId(null)
   }
 
   // Step 5 functions
   const selectAssessmentForEdit = (assessment: Assessment) => {
     setSelectedAssessmentForEdit(assessment)
     setIsEditingAssessment(true)
-    // Load existing questions for this assessment (if any)
-    setAssessmentQuestions([])
+    // Initialize assessment settings if they don't exist
+    if (!assessmentSettings[assessment.id]) {
+      setAssessmentSettings((prev) => ({
+        ...prev,
+        [assessment.id]: {
+          dueDate: assessment.dueDate || "2021-02-09",
+          timeLimit: assessment.timeLimit || "01:00:00",
+        },
+      }))
+    }
   }
 
   const saveAssessmentChanges = () => {
+    if (selectedAssessmentForEdit) {
+      // Save the current questions to the assessment
+      const currentQuestions = assessmentQuestions[selectedAssessmentForEdit.id] || []
+      setAssessmentQuestions((prev) => ({
+        ...prev,
+        [selectedAssessmentForEdit.id]: currentQuestions,
+      }))
+
+      // Update the global assessment with saved settings
+      const settings = assessmentSettings[selectedAssessmentForEdit.id]
+      if (settings) {
+        setGlobalAssessments((prev) =>
+          prev.map((assessment) =>
+            assessment.id === selectedAssessmentForEdit.id
+              ? {
+                  ...assessment,
+                  dueDate: settings.dueDate,
+                  timeLimit: settings.timeLimit,
+                }
+              : assessment,
+          ),
+        )
+      }
+    }
     setIsEditingAssessment(false)
-    // Save logic here if needed
   }
 
   const openQuestionModal = () => {
     setQuestionForm({
+      id: 0,
       question: "",
       description: "",
       type: "Multiple Choice",
@@ -640,6 +841,7 @@ UI Designer requirements are:
       options: ["", "", "", ""],
       parameters: [0, 0, 0, 0],
       nonNegotiableText: "",
+      nonNegotiableOptions: [], // Reset new field
       required: false,
     })
     setEditingQuestionId(null)
@@ -648,6 +850,7 @@ UI Designer requirements are:
 
   const editQuestion = (question: Question) => {
     setQuestionForm({
+      id: question.id,
       question: question.question,
       description: question.description,
       type: question.type,
@@ -655,6 +858,7 @@ UI Designer requirements are:
       options: question.options,
       parameters: question.parameters,
       nonNegotiableText: question.nonNegotiableText || "",
+      nonNegotiableOptions: question.nonNegotiableOptions || [], // Load new field
       required: question.required,
     })
     setEditingQuestionId(question.id)
@@ -662,11 +866,16 @@ UI Designer requirements are:
   }
 
   const deleteQuestion = (questionId: number) => {
-    setAssessmentQuestions((prev) => prev.filter((q) => q.id !== questionId))
+    if (selectedAssessmentForEdit) {
+      setAssessmentQuestions((prev) => ({
+        ...prev,
+        [selectedAssessmentForEdit.id]: (prev[selectedAssessmentForEdit.id] || []).filter((q) => q.id !== questionId),
+      }))
+    }
   }
 
   const saveQuestion = () => {
-    if (questionForm.question.trim()) {
+    if (questionForm.question.trim() && selectedAssessmentForEdit) {
       const newQuestion: Question = {
         id: editingQuestionId || Date.now(),
         question: questionForm.question,
@@ -676,46 +885,66 @@ UI Designer requirements are:
         options: questionForm.options,
         parameters: questionForm.parameters,
         nonNegotiableText: questionForm.nonNegotiableText,
+        nonNegotiableOptions: questionForm.nonNegotiableOptions, // Save new field
         required: questionForm.required,
       }
 
-      if (editingQuestionId) {
-        setAssessmentQuestions((prev) => prev.map((q) => (q.id === editingQuestionId ? newQuestion : q)))
-      } else {
-        setAssessmentQuestions((prev) => [...prev, newQuestion])
-      }
+      setAssessmentQuestions((prev) => {
+        const currentQuestions = prev[selectedAssessmentForEdit.id] || []
+        if (editingQuestionId) {
+          return {
+            ...prev,
+            [selectedAssessmentForEdit.id]: currentQuestions.map((q) => (q.id === editingQuestionId ? newQuestion : q)),
+          }
+        } else {
+          return {
+            ...prev,
+            [selectedAssessmentForEdit.id]: [...currentQuestions, newQuestion],
+          }
+        }
+      })
 
       setShowAddQuestionModal(false)
       setEditingQuestionId(null)
     }
   }
 
+  // Functions to handle assessment settings changes
+  const handleAssessmentDueDateChange = (assessmentId: number, dueDate: string) => {
+    setAssessmentSettings((prev) => ({
+      ...prev,
+      [assessmentId]: {
+        ...prev[assessmentId],
+        dueDate,
+      },
+    }))
+  }
+
+  const handleAssessmentTimeLimitChange = (assessmentId: number, timeLimit: string) => {
+    setAssessmentSettings((prev) => ({
+      ...prev,
+      [assessmentId]: {
+        ...prev[assessmentId],
+        timeLimit,
+      },
+    }))
+  }
+
   // Step 3 Questionnaire states and functions
   const [showQuestionnaireModal, setShowQuestionnaireModal] = useState(false)
   const [questionnaireName, setQuestionnaireName] = useState("")
-  const [sections, setSections] = useState<
-    Array<{
-      id: number
-      name: string
-      questions: Array<{
-        id: number
-        question: string
-        description: string
-        type: string
-        mode: string
-        options: string[]
-        parameters: number[]
-        nonNegotiableText?: string
-      }>
-    }>
-  >([])
+  const [sections, setSections] = useState<QuestionnaireSection[]>([])
   const [currentSectionId, setCurrentSectionId] = useState<number | null>(null)
   const [newSectionName, setNewSectionName] = useState("")
   const [showSectionInput, setShowSectionInput] = useState(false)
   const [editingQuestionIdStep3, setEditingQuestionIdStep3] = useState<number | null>(null)
+  // Fix: Declare showAddQuestionModalStep3
+  const [showAddQuestionModalStep3, setShowAddQuestionModalStep3] = useState(false)
+
 
   // Question form state for Step 3
-  const [questionFormStep3, setQuestionFormStep3] = useState({
+  const [questionFormStep3, setQuestionFormStep3] = useState<Question>({
+    id: 0,
     question: "",
     description: "",
     type: "Multiple Choice",
@@ -723,18 +952,48 @@ UI Designer requirements are:
     options: ["", "", "", ""],
     parameters: [0, 0, 0, 0],
     nonNegotiableText: "",
+    nonNegotiableOptions: [], // Initialize new field
+    required: false, // Default to false for questionnaire questions
   })
 
-  const [moveMode, setMoveMode] = useState(false)
+  // State for renaming sections
+  const [editingSectionId, setEditingSectionId] = useState<number | null>(null)
+  const [editingSectionName, setEditingSectionName] = useState("")
+
+  const [moveMode, setMoveMode] = useState(false) // For Step 3 question reordering
   const [selectedQuestionForMove, setSelectedQuestionForMove] = useState<{
     sectionId: number
     questionId: number
   } | null>(null)
-  const [savedQuestionnaires, setSavedQuestionnaires] = useState<Array<{ name: string; sections: any[] }>>([])
-  const [selectedTemplate, setSelectedTemplate] = useState("")
-  const [editingQuestionnaireName, setEditingQuestionnaireName] = useState("")
 
-  const [showAddQuestionModalStep3, setShowAddQuestionModalStep3] = useState(false)
+  const [savedQuestionnaires, setSavedQuestionnaires] = useState<SavedQuestionnaire[]>([])
+  const [selectedTemplate, setSelectedTemplate] = useState("")
+  const [isTemplateSelected, setIsTemplateSelected] = useState(false) // New state to track if a template is loaded
+
+  // Step 5 question move mode
+  const [moveQuestionModeStep5, setMoveQuestionModeStep5] = useState(false)
+  const [selectedQuestionForMoveStep5, setSelectedQuestionForMoveStep5] = useState<number | null>(null)
+
+  // Function to handle moving questions within an assessment in Step 5
+  const handleMoveQuestionStep5 = (targetQuestionId: number) => {
+    if (selectedAssessmentForEdit && selectedQuestionForMoveStep5 !== null) {
+      const currentQuestions = [...(assessmentQuestions[selectedAssessmentForEdit.id] || [])]
+      const sourceIndex = currentQuestions.findIndex((q) => q.id === selectedQuestionForMoveStep5)
+      const targetIndex = currentQuestions.findIndex((q) => q.id === targetQuestionId)
+
+      if (sourceIndex !== -1 && targetIndex !== -1 && sourceIndex !== targetIndex) {
+        const [movedQuestion] = currentQuestions.splice(sourceIndex, 1)
+        currentQuestions.splice(targetIndex, 0, movedQuestion)
+
+        setAssessmentQuestions((prev) => ({
+          ...prev,
+          [selectedAssessmentForEdit.id]: currentQuestions,
+        }))
+      }
+      setMoveQuestionModeStep5(false)
+      setSelectedQuestionForMoveStep5(null)
+    }
+  }
 
   const handleMoveQuestion = (sectionId: number, questionId: number) => {
     if (selectedQuestionForMove) {
@@ -757,9 +1016,18 @@ UI Designer requirements are:
         // Add the question to the destination section
         const finalSections = updatedSections.map((section) => {
           if (section.id === sectionId) {
+            // Find the index of the target question to insert before it
+            const targetQuestionIndex = section.questions.findIndex((q) => q.id === questionId);
+            const newQuestions = [...section.questions];
+            if (targetQuestionIndex !== -1) {
+              newQuestions.splice(targetQuestionIndex, 0, questionToMove);
+            } else {
+              // If target question not found (e.g., section is empty or target is last), just add to end
+              newQuestions.push(questionToMove);
+            }
             return {
               ...section,
-              questions: [...section.questions, questionToMove],
+              questions: newQuestions,
             }
           }
           return section
@@ -778,6 +1046,21 @@ UI Designer requirements are:
   )
 
   const selectTemplate = (templateName: string) => {
+    if (selectedAssessmentForEdit) {
+      const currentQuestions = assessmentQuestions[selectedAssessmentForEdit.id] || []
+      if (currentQuestions.length > 0) {
+        // Show confirmation modal if there are existing questions
+        setPendingTemplate(templateName)
+        setShowTemplateConfirmModal(true)
+      } else {
+        // Apply template directly if no existing questions
+        applyTemplate(templateName)
+      }
+    }
+    setTemplateSearchQuery("")
+  }
+
+  const applyTemplate = (templateName: string) => {
     const template = savedQuestionnaires.find((t) => t.name === templateName)
     if (template && selectedAssessmentForEdit) {
       // Convert template questions to assessment questions
@@ -785,7 +1068,7 @@ UI Designer requirements are:
       template.sections.forEach((section) => {
         section.questions.forEach((q: any) => {
           templateQuestions.push({
-            id: Date.now() + Math.random(),
+            id: Date.now() + Math.random(), // Ensure unique IDs for new questions
             question: q.question,
             description: q.description,
             type: q.type,
@@ -793,20 +1076,34 @@ UI Designer requirements are:
             options: q.options,
             parameters: q.parameters,
             nonNegotiableText: q.nonNegotiableText,
-            required: false, // Default to not required
+            nonNegotiableOptions: q.nonNegotiableOptions || [], // Apply new field
+            required: false, // Default to not required for assessment questions
           })
         })
       })
-      setAssessmentQuestions(templateQuestions)
+      setAssessmentQuestions((prev) => ({
+        ...prev,
+        [selectedAssessmentForEdit.id]: templateQuestions,
+      }))
     }
-    setTemplateSearchQuery("")
+  }
+
+  const handleTemplateConfirm = () => {
+    applyTemplate(pendingTemplate)
+    setShowTemplateConfirmModal(false)
+    setPendingTemplate("")
+  }
+
+  const handleTemplateCancel = () => {
+    setShowTemplateConfirmModal(false)
+    setPendingTemplate("")
   }
 
   const getNonNegotiableFields = () => {
     const nonNegotiableFields: Array<{
       category: string
       field: string
-      type: "text" | "select" | "radio" | "checkbox" | "file"
+      type: "text" | "select" | "radio" | "checkbox" | "file" | "date" | "number"
       options?: string[]
     }> = []
 
@@ -816,7 +1113,7 @@ UI Designer requirements are:
         nonNegotiableFields.push({
           category: "Personal Information",
           field: item.field,
-          type: "text",
+          type: "text", // Assuming all personal non-negotiable are text for simplicity
         })
       }
     })
@@ -824,14 +1121,16 @@ UI Designer requirements are:
     // Check Job Details
     formFieldConfig.job.forEach((item) => {
       if (item.nonNegotiable) {
-        let fieldType: "text" | "select" | "radio" | "checkbox" | "file" = "text"
+        let fieldType: "text" | "select" | "radio" | "checkbox" | "file" | "date" | "number" = "text"
 
         if (item.field === "Are you willing to work onsite?") {
           fieldType = "radio"
         } else if (item.field.toLowerCase().includes("upload")) {
           fieldType = "file"
         } else if (item.field === "Expected Salary") {
-          fieldType = "text"
+          fieldType = "number" // Changed to number
+        } else if (item.field.toLowerCase().includes("date")) {
+          fieldType = "date"
         }
 
         nonNegotiableFields.push({
@@ -846,7 +1145,7 @@ UI Designer requirements are:
     // Check Work and Education
     formFieldConfig.education.forEach((item) => {
       if (item.nonNegotiable) {
-        let fieldType: "text" | "select" | "radio" | "checkbox" | "file" = "text"
+        let fieldType: "text" | "select" | "radio" | "checkbox" | "file" | "date" | "number" = "text"
 
         if (item.field === "Highest Educational Attained") {
           fieldType = "select"
@@ -880,9 +1179,11 @@ UI Designer requirements are:
                 ? "radio"
                 : question.type === "Checkboxes"
                   ? "checkbox"
-                  : question.type === "Text Entry"
+                  : question.type === "Text Entry" || question.type === "Paragraph"
                     ? "text"
-                    : "text",
+                    : question.type === "Number"
+                      ? "number"
+                      : "date", // Assuming Date for other types
             options:
               question.type === "Multiple Choice" || question.type === "Checkboxes"
                 ? question.options.filter((opt) => opt.trim() !== "")
@@ -1355,7 +1656,7 @@ UI Designer requirements are:
                               type="radio"
                               name={`personal_${index}_status`}
                               value="disabled"
-                              className="w-4 h-4 bg-white border-2 border-gray-400 rounded-full appearance-none focus:ring-2 focus:ring-blue-500 checked:bg-white checked:border-blue-600 checked:after:content-[''] checked:after:w-2 checked:after:h-2 checked:after:bg-blue-600 checked:after:rounded-full checked:after:absolute checked:after:top-1/2 checked:after:left-1/2 checked:after:transform checked:after:-translate-x-1/2 checked:after:-translate-y-1/2 relative"
+                              className="w-4 h-4 bg-white border-2 border-gray-400 rounded-full appearance-none focus:ring-2 focus:ring-blue-500 checked:bg-white checked:border-blue-600 checked:after:content-[''] checke:after:w-2 checked:after:h-2 checked:after:bg-blue-600 checked:after:rounded-full checked:after:absolute checked:after:top-1/2 checked:after:left-1/2 checked:after:transform checked:after:-translate-x-1/2 checked:after:-translate-y-1/2 relative"
                             />
                           </td>
                         </tr>
@@ -1552,7 +1853,7 @@ UI Designer requirements are:
                               type="radio"
                               name={`acknowledgement_${index}_status`}
                               value="optional"
-                              className="w-4 h-4 bg-white border-2 border-gray-400 rounded-full appearance-none focus:ring-2 focus:ring-blue-500 checked:bg-white checked:border-blue-600 checked:after:content-[''] checked:after:w-2 checked:after:h-2 checked:after:bg-blue-600 checked:after:rounded-full checked:after:absolute checked:after:top-1/2 checked:after:left-1/2 checked:after:transform checked:after:-translate-x-1/2 checked:after:-translate-y-1/2 relative"
+                              className="w-4 h-4 bg-white border-2 border-gray-400 rounded-full appearance-none focus:ring-2 focus:ring-2 focus:ring-blue-500 checked:bg-white checked:border-blue-600 checked:after:content-[''] checked:after:w-2 checked:after:h-2 checked:after:bg-blue-600 checked:after:rounded-full checked:after:absolute checked:after:top-1/2 checked:after:left-1/2 checked:after:transform checked:after:-translate-x-1/2 checked:after:-translate-y-1/2 relative"
                             />
                           </td>
                           <td className="p-4 text-center w-1/6">
@@ -1584,16 +1885,16 @@ UI Designer requirements are:
                         if (template) {
                           setSections(template.sections)
                           setQuestionnaireName(template.name)
-                          setEditingQuestionnaireName(template.name)
+                          setIsTemplateSelected(true) // A template is selected
                         } else {
                           setSections([])
                           setQuestionnaireName("")
-                          setEditingQuestionnaireName("")
+                          setIsTemplateSelected(false)
                         }
                       } else {
                         setSections([])
                         setQuestionnaireName("")
-                        setEditingQuestionnaireName("")
+                        setIsTemplateSelected(false)
                       }
                     }}
                     value={selectedTemplate}
@@ -1612,7 +1913,12 @@ UI Designer requirements are:
                     className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2"
                     onClick={() => {
                       setShowQuestionnaireModal(true)
-                      // Don't clear editingQuestionnaireName here - keep the existing value
+                      // If a template is selected, do NOT clear the questionnaireName and sections.
+                      // Otherwise, clear them for a new questionnaire.
+                      if (!isTemplateSelected) {
+                        setQuestionnaireName("") // Clear questionnaire name for new
+                        setSections([]) // Clear sections for new
+                      }
                     }}
                   >
                     Add Non-negotiable
@@ -1651,7 +1957,16 @@ UI Designer requirements are:
                         return (
                           <div
                             key={step.id}
-                            className="flex items-center justify-between p-3 border rounded-lg bg-white"
+                            className={`flex items-center justify-between p-3 border rounded-lg bg-white ${
+                              stepMoveMode && selectedStepForMove?.stepId !== step.id
+                                ? "cursor-pointer hover:bg-blue-50 border-blue-200"
+                                : ""
+                            } ${selectedStepForMove?.stepId === step.id ? "border-blue-500 bg-blue-50" : ""}`}
+                            onClick={() => {
+                              if (stepMoveMode && selectedStepForMove?.stepId !== step.id) {
+                                handleMoveStep(stage.id, step.id)
+                              }
+                            }}
                           >
                             <div className="flex items-center gap-3">
                               <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
@@ -1666,6 +1981,25 @@ UI Designer requirements are:
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                title="Move Step"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  if (!stepMoveMode) {
+                                    setStepMoveMode(true)
+                                    setSelectedStepForMove({ stageId: stage.id, stepId: step.id })
+                                  } else if (selectedStepForMove?.stepId === step.id) {
+                                    // Cancel move mode if clicking the same step
+                                    setStepMoveMode(false)
+                                    setSelectedStepForMove(null)
+                                  }
+                                }}
+                                className={selectedStepForMove?.stepId === step.id ? "bg-blue-100" : ""}
+                              >
+                                <Move className="w-4 h-4 text-gray-500" />
+                              </Button>
                               <Button variant="ghost" size="sm" onClick={() => editStep(step.id)}>
                                 <Pencil className="w-4 h-4 text-gray-500" />
                               </Button>
@@ -1805,11 +2139,43 @@ UI Designer requirements are:
                       <h4 className="text-base font-medium text-gray-800">
                         Questions for {selectedAssessmentForEdit.title}
                       </h4>
+                      <Button
+                        onClick={() => {
+                          setMoveQuestionModeStep5(!moveQuestionModeStep5)
+                          setSelectedQuestionForMoveStep5(null) // Reset selected question when toggling mode
+                        }}
+                        variant={moveQuestionModeStep5 ? "default" : "outline"}
+                        size="sm"
+                        className={moveQuestionModeStep5 ? "bg-blue-600 text-white" : ""}
+                      >
+                        <Move className="w-4 h-4 mr-1" />
+                        {moveQuestionModeStep5 ? "Exit Move Mode" : "Move Questions"}
+                      </Button>
                     </div>
 
                     <div className="space-y-4">
-                      {assessmentQuestions.map((question, index) => (
-                        <div key={question.id} className="border rounded-lg p-4 bg-gray-50">
+                      {(assessmentQuestions[selectedAssessmentForEdit.id] || []).map((question, index) => (
+                        <div
+                          key={question.id}
+                          className={`border rounded-lg p-4 bg-gray-50 ${
+                            moveQuestionModeStep5
+                              ? selectedQuestionForMoveStep5 === question.id
+                                ? "border-blue-500 bg-blue-100 cursor-grabbing"
+                                : "cursor-pointer hover:bg-blue-50 border-blue-200"
+                              : ""
+                          }`}
+                          onClick={() => {
+                            if (moveQuestionModeStep5) {
+                              if (selectedQuestionForMoveStep5 === null) {
+                                setSelectedQuestionForMoveStep5(question.id)
+                              } else if (selectedQuestionForMoveStep5 === question.id) {
+                                setSelectedQuestionForMoveStep5(null) // Deselect if clicked again
+                              } else {
+                                handleMoveQuestionStep5(question.id)
+                              }
+                            }
+                          }}
+                        >
                           <div className="flex items-center justify-between">
                             <div className="flex-1">
                               <div className="flex items-start gap-3">
@@ -1824,24 +2190,26 @@ UI Designer requirements are:
                                 </div>
                               </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                title="Move Question"
-                                onClick={() => {
-                                  // Move functionality can be implemented here
-                                }}
-                              >
-                                <Move className="w-4 h-4 text-gray-500" />
-                              </Button>
-                              <Button variant="ghost" size="sm" onClick={() => editQuestion(question)}>
-                                <Edit className="w-4 h-4 text-gray-500" />
-                              </Button>
-                              <Button variant="ghost" size="sm" onClick={() => deleteQuestion(question.id)}>
-                                <Trash2 className="w-4 h-4 text-gray-500" />
-                              </Button>
-                            </div>
+                            {!moveQuestionModeStep5 && (
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  title="Edit Question"
+                                  onClick={() => editQuestion(question)}
+                                >
+                                  <Edit className="w-4 h-4 text-gray-500" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  title="Delete Question"
+                                  onClick={() => deleteQuestion(question.id)}
+                                >
+                                  <Trash2 className="w-4 h-4 text-gray-500" />
+                                </Button>
+                              </div>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -1897,24 +2265,39 @@ UI Designer requirements are:
                   )}
                 </div>
 
-                {/* Set Due and Time Limit */}
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Set Due</label>
-                    <div className="relative">
-                      <Input type="date" defaultValue="2021-02-09" className="pr-8" />
-                      <Calendar className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                {/* Assessment Settings - Set Due and Time Limit per assessment */}
+                {selectedAssessmentForEdit && (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Set Due</label>
+                      <div className="relative">
+                        <Input
+                          type="date"
+                          value={assessmentSettings[selectedAssessmentForEdit.id]?.dueDate || "2021-02-09"}
+                          onChange={(e) => handleAssessmentDueDateChange(selectedAssessmentForEdit.id, e.target.value)}
+                          className="pr-8"
+                        />
+                        <Calendar className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      </div>
                     </div>
-                  </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Time Limit</label>
-                    <div className="relative">
-                      <Input type="time" defaultValue="01:00" className="pr-8" />
-                      <Clock className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Time Limit (HH:MM:SS)</label>
+                      <div className="relative">
+                        <Input
+                          type="time"
+                          step="1"
+                          value={assessmentSettings[selectedAssessmentForEdit.id]?.timeLimit || "01:00:00"}
+                          onChange={(e) =>
+                            handleAssessmentTimeLimitChange(selectedAssessmentForEdit.id, e.target.value)
+                          }
+                          className="pr-8"
+                        />
+                        <Clock className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </Card>
@@ -1981,7 +2364,7 @@ UI Designer requirements are:
   // Step 3 Question functions
   const saveQuestionStep3 = () => {
     if (questionFormStep3.question.trim() && currentSectionId) {
-      const newQuestion = {
+      const newQuestion: Question = {
         id: editingQuestionIdStep3 || Date.now(),
         question: questionFormStep3.question,
         description: questionFormStep3.description,
@@ -1990,6 +2373,8 @@ UI Designer requirements are:
         options: questionFormStep3.options,
         parameters: questionFormStep3.parameters,
         nonNegotiableText: questionFormStep3.nonNegotiableText,
+        nonNegotiableOptions: questionFormStep3.nonNegotiableOptions, // Save new field
+        required: questionFormStep3.required,
       }
 
       setSections((prev) =>
@@ -2014,6 +2399,32 @@ UI Designer requirements are:
       setShowAddQuestionModalStep3(false)
       setEditingQuestionIdStep3(null)
       setCurrentSectionId(null)
+    }
+  }
+
+  const handleSaveAsNewTemplate = () => {
+    if (questionnaireName.trim() && sections.length > 0) {
+      const newQuestionnaire: SavedQuestionnaire = {
+        name: questionnaireName,
+        sections: sections,
+      }
+      setSavedQuestionnaires((prev) => [...prev, newQuestionnaire])
+      setSelectedTemplate(questionnaireName) // Automatically select the new template
+      setIsTemplateSelected(true)
+      setShowQuestionnaireModal(false)
+    }
+  }
+
+  const handleUpdateTemplate = () => {
+    if (selectedTemplate && questionnaireName.trim() && sections.length > 0) {
+      setSavedQuestionnaires((prev) =>
+        prev.map((template) =>
+          template.name === selectedTemplate
+            ? { ...template, name: questionnaireName, sections: sections }
+            : template,
+        ),
+      )
+      setShowQuestionnaireModal(false)
     }
   }
 
@@ -2472,46 +2883,45 @@ UI Designer requirements are:
         </div>
       )}
 
-      {/* Assessment Popup Modal */}
+      {/* Assessment Popup Modal with higher z-index */}
       {showAssessmentPopup && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center">
           <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setShowAssessmentPopup(false)} />
-          <div className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b shadow-sm bg-white sticky top-0 z-10">
-              <div className="flex items-center gap-3">
-                <h2 className="text-lg font-semibold text-blue-600">Assessment</h2>
-                <div className="flex-1 h-px bg-blue-600"></div>
+          <div className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-gray-800">
+                  {editingAssessmentId ? "Edit Assessment" : "Add Assessment"}
+                </h3>
+                <Button
+                  onClick={() => setShowAssessmentPopup(false)}
+                  variant="ghost"
+                  size="sm"
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X className="w-5 h-5" />
+                </Button>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowAssessmentPopup(false)}
-                className="hover:bg-gray-100"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
 
-            {/* Content */}
-            <div className="p-6 space-y-6">
               {/* Assessment Type */}
-              <div>
+              <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Assessment Type</label>
                 <select
-                  className="w-full p-2 border border-gray-300 rounded-md text-sm bg-white"
                   value={assessmentForm.type}
                   onChange={(e) => setAssessmentForm((prev) => ({ ...prev, type: e.target.value }))}
+                  className="w-full p-2 border border-gray-300 rounded-md text-sm"
                 >
                   <option value="">Select Assessment Type</option>
-                  <option value="Soft Skill Assessment">Soft Skill Assessment</option>
-                  <option value="Technical Skill Assessment">Technical Skill Assessment</option>
-                  <option value="Core Values Assessment">Core Values Assessment</option>
+                  <option value="Technical Test">Technical Test</option>
+                  <option value="Personality Test">Personality Test</option>
+                  <option value="Skills Assessment">Skills Assessment</option>
+                  <option value="Cognitive Test">Cognitive Test</option>
+                  <option value="Portfolio Review">Portfolio Review</option>
                 </select>
               </div>
 
               {/* Assessment Title */}
-              <div>
+              <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Assessment Title</label>
                 <Input
                   placeholder="Enter assessment title"
@@ -2520,38 +2930,45 @@ UI Designer requirements are:
                 />
               </div>
 
-              {/* Description */}
-              <div>
+              {/* Assessment Description */}
+              <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
                 <textarea
-                  className="w-full p-2 border border-gray-300 rounded-md text-sm h-24 resize-none"
-                  placeholder="Enter description"
+                  placeholder="Enter assessment description"
                   value={assessmentForm.description}
                   onChange={(e) => setAssessmentForm((prev) => ({ ...prev, description: e.target.value }))}
+                  className="w-full p-2 border border-gray-300 rounded-md text-sm h-24 resize-none"
                 />
               </div>
 
-              {/* Required Assessment Checkbox */}
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="requiredAssessment"
-                  checked={assessmentForm.required}
-                  onChange={(e) => setAssessmentForm((prev) => ({ ...prev, required: e.target.checked }))}
-                  className="w-4 h-4 bg-white border-2 border-gray-400 rounded focus:ring-2 focus:ring-blue-500 checked:bg-white checked:border-blue-600 appearance-none relative checked:after:content-['✓'] checked:after:absolute checked:after:inset-0 checked:after:flex checked:after:items-center checked:after:justify-center checked:after:text-blue-600 checked:after:text-xs checked:after:font-bold"
-                />
-                <label htmlFor="requiredAssessment" className="text-sm text-gray-700">
-                  Required Assessment
+              {/* Required Checkbox */}
+              <div className="mb-6">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={assessmentForm.required}
+                    onChange={(e) => setAssessmentForm((prev) => ({ ...prev, required: e.target.checked }))}
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-700">Required Assessment</span>
                 </label>
               </div>
 
-              {/* Save Button */}
-              <div className="flex justify-end pt-4 border-t">
+              {/* Action Buttons */}
+              <div className="flex justify-end gap-3">
+                <Button
+                  onClick={() => setShowAssessmentPopup(false)}
+                  variant="outline"
+                  className="px-4 py-2 border-gray-300"
+                >
+                  Cancel
+                </Button>
                 <Button
                   onClick={handleSaveAssessment}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg"
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white"
+                  disabled={!assessmentForm.title.trim() || !assessmentForm.type}
                 >
-                  Save
+                  {editingAssessmentId ? "Update Assessment" : "Add Assessment"}
                 </Button>
               </div>
             </div>
@@ -2559,776 +2976,258 @@ UI Designer requirements are:
         </div>
       )}
 
-      {/* Add Question Modal for Step 5 */}
+      {/* Question Modal for Step 5 */}
       {showAddQuestionModal && (
         <div className="fixed inset-0 z-60 flex items-center justify-center">
           <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setShowAddQuestionModal(false)} />
           <div className="relative bg-white rounded-lg shadow-xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b shadow-sm bg-white sticky top-0 z-10">
-              <h2 className="text-lg font-semibold text-gray-800">Add Question</h2>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setShowAddQuestionModal(false)
-                  setEditingQuestionId(null)
-                }}
-                className="hover:bg-gray-100"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-
-            {/* Content */}
             <div className="p-6">
-              {/* Question Input */}
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-gray-800">
+                  {editingQuestionId ? "Edit Question" : "Add Question"}
+                </h3>
+                <Button
+                  onClick={() => setShowAddQuestionModal(false)}
+                  variant="ghost"
+                  size="sm"
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
+
+              {/* Question */}
               <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Question</label>
                 <Input
                   placeholder="Enter your question"
                   value={questionForm.question}
-                  onChange={(e) => setQuestionForm({ ...questionForm, question: e.target.value })}
-                  className="w-full"
+                  onChange={(e) => setQuestionForm((prev) => ({ ...prev, question: e.target.value }))}
                 />
               </div>
 
-              {/* Question Description */}
+              {/* Description */}
               <div className="mb-4">
-                <Input
-                  placeholder="Question Description (Optional)"
+                <label className="block text-sm font-medium text-gray-700 mb-2">Description (Optional)</label>
+                <textarea
+                  placeholder="Enter question description"
                   value={questionForm.description}
-                  onChange={(e) => setQuestionForm({ ...questionForm, description: e.target.value })}
-                  className="w-full"
+                  onChange={(e) => setQuestionForm((prev) => ({ ...prev, description: e.target.value }))}
+                  className="w-full p-2 border border-gray-300 rounded-md text-sm h-20 resize-none"
                 />
               </div>
 
-              {/* Dropdown Lists */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Question Type</label>
-                  <select
-                    value={questionForm.type}
-                    onChange={(e) => setQuestionForm({ ...questionForm, type: e.target.value })}
-                    className="w-full p-2 border border-gray-300 rounded-md text-sm bg-white"
-                  >
-                    <option value="Multiple Choice">Multiple Choice</option>
-                    <option value="Checkboxes">Checkboxes</option>
-                    <option value="Text Entry">Text Entry</option>
-                    <option value="Paragraph">Paragraph</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Mode</label>
-                  <select
-                    value={questionForm.mode}
-                    onChange={(e) => setQuestionForm({ ...questionForm, mode: e.target.value })}
-                    className="w-full p-2 border border-gray-300 rounded-md text-sm bg-white"
-                  >
-                    <option value="Non-negotiable">Non-negotiable</option>
-                    <option value="Parameter">Parameter</option>
-                  </select>
-                </div>
-                <div className="flex items-end">
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="questionRequired"
-                      checked={questionForm.required}
-                      onChange={(e) => setQuestionForm({ ...questionForm, required: e.target.checked })}
-                      className="w-4 h-4 bg-white border-2 border-gray-400 rounded focus:ring-2 focus:ring-blue-500 checked:bg-white checked:border-blue-600 appearance-none relative checked:after:content-['✓'] checked:after:absolute checked:after:inset-0 checked:after:flex checked:after:items-center checked:after:justify-center checked:after:text-blue-600 checked:after:text-xs checked:after:font-bold"
-                    />
-                    <label htmlFor="questionRequired" className="text-sm text-gray-700">
-                      Required
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              {/* Dynamic Content Based on Type and Mode */}
-              {(questionForm.type === "Multiple Choice" || questionForm.type === "Checkboxes") && (
-                <div className="mb-6">
-                  <div className="grid grid-cols-2 gap-6">
-                    {/* Left Column - Choices */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-3">Choices</label>
-                      <div className="space-y-3">
-                        {questionForm.options.map((option, index) => (
-                          <div key={index} className="flex items-center gap-3">
-                            {questionForm.mode === "Parameter" && (
-                              <div className="flex gap-1">
-                                <Button
-                                  size="sm"
-                                  variant={questionForm.parameters[index] === 1 ? "default" : "outline"}
-                                  onClick={() => {
-                                    const newParams = [...questionForm.parameters]
-                                    newParams[index] = newParams[index] === 1 ? 0 : 1
-                                    setQuestionForm({ ...questionForm, parameters: newParams })
-                                  }}
-                                  className="w-8 h-8 p-0 text-xs"
-                                >
-                                  +1
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant={questionForm.parameters[index] === -1 ? "default" : "outline"}
-                                  onClick={() => {
-                                    const newParams = [...questionForm.parameters]
-                                    newParams[index] = newParams[index] === -1 ? 0 : -1
-                                    setQuestionForm({ ...questionForm, parameters: newParams })
-                                  }}
-                                  className="w-8 h-8 p-0 text-xs"
-                                >
-                                  -1
-                                </Button>
-                              </div>
-                            )}
-                            <div className="w-6 h-6 flex items-center justify-center">
-                              {questionForm.type === "Multiple Choice" ? (
-                                <div className="w-4 h-4 border-2 border-gray-400 rounded-full"></div>
-                              ) : (
-                                <div className="w-4 h-4 border-2 border-gray-400 rounded"></div>
-                              )}
-                            </div>
-                            <Input
-                              placeholder={`Option ${index + 1}`}
-                              value={option}
-                              onChange={(e) => {
-                                const newOptions = [...questionForm.options]
-                                newOptions[index] = e.target.value
-                                setQuestionForm({ ...questionForm, options: newOptions })
-                              }}
-                              className="flex-1"
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Right Column - Non-negotiable Requirements (only for Non-negotiable mode) */}
-                    {questionForm.mode === "Non-negotiable" && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-3">
-                          Non-negotiable Requirements
-                        </label>
-                        <div className="flex items-center gap-3">
-                          <div className="w-6 h-6 flex items-center justify-center">
-                            {questionForm.type === "Multiple Choice" ? (
-                              <div className="w-4 h-4 border-2 border-gray-400 rounded-full bg-blue-100"></div>
-                            ) : (
-                              <div className="w-4 h-4 border-2 border-gray-400 rounded bg-blue-100"></div>
-                            )}
-                          </div>
-                          <Input
-                            placeholder="Option 1"
-                            value={questionForm.nonNegotiableText}
-                            onChange={(e) => setQuestionForm({ ...questionForm, nonNegotiableText: e.target.value })}
-                            className="flex-1"
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Text Entry and Paragraph Questions */}
-              {(questionForm.type === "Text Entry" || questionForm.type === "Paragraph") && (
-                <div className="mb-6 space-y-4">
-                  {/* Input form for both modes */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {questionForm.mode === "Parameter" ? "Sample Answer" : "Expected Answer"}
-                    </label>
-                    {questionForm.type === "Paragraph" ? (
-                      <textarea
-                        placeholder="Enter sample/expected answer"
-                        className="w-full p-2 border border-gray-300 rounded-md text-sm h-24 resize-none"
-                      />
-                    ) : (
-                      <Input placeholder="Enter sample/expected answer" className="w-full" />
-                    )}
-                  </div>
-
-                  {/* Non-negotiable requirement for Non-negotiable mode */}
-                  {questionForm.mode === "Non-negotiable" && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Non-negotiable Requirement</label>
-                      <Input
-                        placeholder="Enter requirement"
-                        value={questionForm.nonNegotiableText}
-                        onChange={(e) => setQuestionForm({ ...questionForm, nonNegotiableText: e.target.value })}
-                        className="w-full"
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Save Changes Button */}
-              <div className="flex justify-end">
-                <Button onClick={saveQuestion} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2">
-                  Save Changes
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Preview Modal */}
-      {showPreview && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          {/* Overlay */}
-          <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setShowPreview(false)} />
-
-          {/* Modal Content */}
-          <div className="relative bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b shadow-sm bg-white sticky top-0 z-10">
-              <h2 className="text-lg font-semibold text-gray-800">Preview</h2>
-              <Button variant="ghost" size="sm" onClick={() => setShowPreview(false)} className="hover:bg-gray-100">
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-
-            {/* Content */}
-            <div className="p-6">
-              <div className="space-y-6">
-                {/* Job Title and Basic Info */}
-                <div>
-                  <h3 className="text-2xl font-bold text-gray-800 mb-2">{formData.jobTitle || "Job Title"}</h3>
-                  <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-                    <span>{formData.department || "Department"}</span>
-                    <span>•</span>
-                    <span>{formData.employmentType}</span>
-                    <span>•</span>
-                    <span>{formData.workSetup}</span>
-                    <span>•</span>
-                    <span>{formData.experience}</span>
-                  </div>
-                </div>
-
-                {/* Job Description */}
-                {currentStep >= 2 && (
-                  <div>
-                    <h4 className="text-lg font-semibold text-gray-800 mb-3">Job Description</h4>
-                    <div className="prose prose-sm max-w-none">
-                      <pre className="whitespace-pre-wrap text-sm text-gray-700 font-sans">{jobDescription}</pre>
-                    </div>
-                  </div>
-                )}
-
-                {/* Requirements */}
-                <div>
-                  <h4 className="text-lg font-semibold text-gray-800 mb-3">Requirements</h4>
-                  <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
-                    <li>{formData.educationNeeded}</li>
-                    <li>{formData.experience} experience required</li>
-                    <li>Must be willing to work {formData.workSetup.toLowerCase()}</li>
-                  </ul>
-                </div>
-
-                {/* Budget */}
-                {(formData.budgetFrom || formData.budgetTo) && (
-                  <div>
-                    <h4 className="text-lg font-semibold text-gray-800 mb-3">Salary Range</h4>
-                    <p className="text-sm text-gray-700">
-                      {formData.budgetFrom && formData.budgetTo
-                        ? `₱${formData.budgetFrom} - ₱${formData.budgetTo}`
-                        : formData.budgetFrom
-                          ? `From ₱${formData.budgetFrom}`
-                          : formData.budgetTo
-                            ? `Up to ₱${formData.budgetTo}`
-                            : "Competitive salary"}
-                    </p>
-                  </div>
-                )}
-
-                {/* Locations */}
-                {locations.length > 0 && (
-                  <div>
-                    <h4 className="text-lg font-semibold text-gray-800 mb-3">Locations</h4>
-                    <div className="space-y-2">
-                      {locations.map((location) => (
-                        <div key={location.id} className="text-sm text-gray-700">
-                          <span className="font-medium">{location.location}</span>
-                          {location.headcount > 0 && <span> - {location.headcount} positions</span>}
-                          {location.deploymentDate && <span> - Starting {location.deploymentDate}</span>}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Questionnaire Modal for Step 3 */}
-      {showQuestionnaireModal && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setShowQuestionnaireModal(false)} />
-          <div className="relative bg-white rounded-lg shadow-xl max-w-6xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b shadow-sm bg-white sticky top-0 z-10">
-              <div className="flex items-center gap-4">
-                <h2 className="text-lg font-semibold text-gray-800">Add Questionnaire</h2>
-                <Input
-                  placeholder="Questionnaire Name"
-                  value={editingQuestionnaireName}
-                  onChange={(e) => setEditingQuestionnaireName(e.target.value)}
-                  className="w-64"
-                />
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setShowQuestionnaireModal(false)
-                  setEditingQuestionnaireName("")
-                }}
-                className="hover:bg-gray-100"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-
-            {/* Content */}
-            <div className="p-6">
-              {/* Sections */}
-              <div className="space-y-6">
-                {sections.map((section) => (
-                  <div key={section.id} className="border rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-base font-medium text-gray-800">{section.name}</h3>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setCurrentSectionId(section.id)
-                            setQuestionFormStep3({
-                              question: "",
-                              description: "",
-                              type: "Multiple Choice",
-                              mode: "Non-negotiable",
-                              options: ["", "", "", ""],
-                              parameters: [0, 0, 0, 0],
-                              nonNegotiableText: "",
-                            })
-                            setEditingQuestionIdStep3(null)
-                            setShowAddQuestionModalStep3(true)
-                          }}
-                        >
-                          Add Question to Section
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setSections(sections.filter((s) => s.id !== section.id))
-                          }}
-                        >
-                          <Trash2 className="w-4 h-4 text-red-500" />
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* Questions in Section */}
-                    <div className="space-y-3">
-                      {section.questions.map((question, qIndex) => (
-                        <div key={question.id} className="border rounded-lg p-3 bg-gray-50">
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-start gap-3">
-                                <span className="text-sm font-medium text-gray-700">{qIndex + 1}.</span>
-                                <div className="flex-1">
-                                  <p className="text-sm font-medium text-gray-800 mb-1">{question.question}</p>
-                                  <div className="flex items-center gap-4 text-xs text-gray-600">
-                                    <span>{question.type}</span>
-                                    <span>{question.mode}</span>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                title="Move Question"
-                                onClick={() => {
-                                  if (!moveMode) {
-                                    setMoveMode(true)
-                                    setSelectedQuestionForMove({ sectionId: section.id, questionId: question.id })
-                                  } else if (
-                                    selectedQuestionForMove?.sectionId === section.id &&
-                                    selectedQuestionForMove?.questionId === question.id
-                                  ) {
-                                    // Cancel move mode
-                                    setMoveMode(false)
-                                    setSelectedQuestionForMove(null)
-                                  } else {
-                                    // Move to this section
-                                    handleMoveQuestion(section.id, question.id)
-                                  }
-                                }}
-                                className={
-                                  selectedQuestionForMove?.sectionId === section.id &&
-                                  selectedQuestionForMove?.questionId === question.id
-                                    ? "bg-blue-100"
-                                    : ""
-                                }
-                              >
-                                <Move className="w-4 h-4 text-gray-500" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                  // Edit question functionality
-                                  setQuestionFormStep3({
-                                    question: question.question,
-                                    description: question.description,
-                                    type: question.type,
-                                    mode: question.mode,
-                                    options: question.options,
-                                    parameters: question.parameters,
-                                    nonNegotiableText: question.nonNegotiableText || "",
-                                  })
-                                  setCurrentSectionId(section.id)
-                                  setEditingQuestionIdStep3(question.id)
-                                  setShowAddQuestionModalStep3(true)
-                                }}
-                              >
-                                <Edit className="w-4 h-4 text-gray-500" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                  setSections(
-                                    sections.map((s) =>
-                                      s.id === section.id
-                                        ? { ...s, questions: s.questions.filter((q) => q.id !== question.id) }
-                                        : s,
-                                    ),
-                                  )
-                                }}
-                              >
-                                <Trash2 className="w-4 h-4 text-gray-500" />
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-
-                {/* Add Section */}
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
-                  {showSectionInput ? (
-                    <div className="flex items-center gap-3">
-                      <Input
-                        placeholder="Section Name"
-                        value={newSectionName}
-                        onChange={(e) => setNewSectionName(e.target.value)}
-                        className="flex-1"
-                        onKeyPress={(e) => {
-                          if (e.key === "Enter" && newSectionName.trim()) {
-                            setSections([
-                              ...sections,
-                              {
-                                id: Date.now(),
-                                name: newSectionName,
-                                questions: [],
-                              },
-                            ])
-                            setNewSectionName("")
-                            setShowSectionInput(false)
-                          }
-                        }}
-                      />
-                      <Button
-                        onClick={() => {
-                          if (newSectionName.trim()) {
-                            setSections([
-                              ...sections,
-                              {
-                                id: Date.now(),
-                                name: newSectionName,
-                                questions: [],
-                              },
-                            ])
-                            setNewSectionName("")
-                            setShowSectionInput(false)
-                          }
-                        }}
-                        className="bg-blue-600 hover:bg-blue-700 text-white"
-                      >
-                        Add
-                      </Button>
-                      <Button variant="ghost" onClick={() => setShowSectionInput(false)}>
-                        Cancel
-                      </Button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => setShowSectionInput(true)}
-                      className="w-full text-center text-gray-500 hover:text-gray-700 flex items-center justify-center gap-2"
-                    >
-                      <Plus className="w-4 h-4" />
-                      Add Section
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Save Questionnaire */}
-              <div className="flex justify-end mt-6 pt-4 border-t">
-                <Button
-                  onClick={() => {
-                    if (editingQuestionnaireName.trim() && sections.length > 0) {
-                      // Check if questionnaire already exists
-                      const existingIndex = savedQuestionnaires.findIndex((q) => q.name === editingQuestionnaireName)
-                      if (existingIndex >= 0) {
-                        // Update existing questionnaire
-                        const updatedQuestionnaires = [...savedQuestionnaires]
-                        updatedQuestionnaires[existingIndex] = {
-                          name: editingQuestionnaireName,
-                          sections: sections,
-                        }
-                        setSavedQuestionnaires(updatedQuestionnaires)
-                      } else {
-                        // Add new questionnaire
-                        setSavedQuestionnaires([
-                          ...savedQuestionnaires,
-                          {
-                            name: editingQuestionnaireName,
-                            sections: sections,
-                          },
-                        ])
-                      }
-                      setQuestionnaireName(editingQuestionnaireName)
-                      setSelectedTemplate(editingQuestionnaireName)
-                      setShowQuestionnaireModal(false)
-                      setEditingQuestionnaireName("")
-                    }
+              {/* Question Type */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Question Type</label>
+                <select
+                  value={questionForm.type}
+                  onChange={(e) => {
+                    setQuestionForm((prev) => ({
+                      ...prev,
+                      type: e.target.value,
+                      // Reset options/nonNegotiableOptions when type changes
+                      options: ["", "", "", ""],
+                      nonNegotiableOptions: [],
+                      nonNegotiableText: "",
+                    }))
                   }}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2"
-                  disabled={!editingQuestionnaireName.trim() || sections.length === 0}
+                  className="w-full p-2 border border-gray-300 rounded-md text-sm"
                 >
-                  Save Questionnaire
-                </Button>
+                  <option value="Multiple Choice">Multiple Choice</option>
+                  <option value="Checkboxes">Checkboxes</option>
+                  <option value="Text Entry">Text Entry</option>
+                  <option value="Paragraph">Paragraph</option> {/* Added Paragraph type */}
+                  <option value="Number">Number</option>
+                  <option value="Date">Date</option>
+                </select>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* Add Question Modal for Step 3 */}
-      {showAddQuestionModalStep3 && (
-        <div className="fixed inset-0 z-70 flex items-center justify-center">
-          <div
-            className="absolute inset-0 bg-black bg-opacity-50"
-            onClick={() => setShowAddQuestionModalStep3(false)}
-          />
-          <div className="relative bg-white rounded-lg shadow-xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b shadow-sm bg-white sticky top-0 z-10">
-              <h2 className="text-lg font-semibold text-gray-800">Add Question</h2>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setShowAddQuestionModalStep3(false)
-                  setEditingQuestionIdStep3(null)
-                }}
-                className="hover:bg-gray-100"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-
-            {/* Content */}
-            <div className="p-6">
-              {/* Question Input */}
+              {/* Mode */}
               <div className="mb-4">
-                <Input
-                  placeholder="Enter your question"
-                  value={questionFormStep3.question}
-                  onChange={(e) => setQuestionFormStep3({ ...questionFormStep3, question: e.target.value })}
-                  className="w-full"
-                />
+                <label className="block text-sm font-medium text-gray-700 mb-2">Mode</label>
+                <select
+                  value={questionForm.mode}
+                  onChange={(e) => {
+                    setQuestionForm((prev) => ({
+                      ...prev,
+                      mode: e.target.value,
+                      // Reset non-negotiable specific fields if mode changes
+                      nonNegotiableText: "",
+                      nonNegotiableOptions: [],
+                    }))
+                  }}
+                  className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                >
+                  <option value="Non-negotiable">Non-negotiable</option>
+                  <option value="Preferred">Preferred</option>
+                  <option value="Optional">Optional</option>
+                </select>
               </div>
 
-              {/* Question Description */}
-              <div className="mb-4">
-                <Input
-                  placeholder="Question Description (Optional)"
-                  value={questionFormStep3.description}
-                  onChange={(e) => setQuestionFormStep3({ ...questionFormStep3, description: e.target.value })}
-                  className="w-full"
-                />
-              </div>
-
-              {/* Dropdown Lists */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Question Type</label>
-                  <select
-                    value={questionFormStep3.type}
-                    onChange={(e) => setQuestionFormStep3({ ...questionFormStep3, type: e.target.value })}
-                    className="w-full p-2 border border-gray-300 rounded-md text-sm bg-white"
-                  >
-                    <option value="Multiple Choice">Multiple Choice</option>
-                    <option value="Checkboxes">Checkboxes</option>
-                    <option value="Text Entry">Text Entry</option>
-                    <option value="Paragraph">Paragraph</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Mode</label>
-                  <select
-                    value={questionFormStep3.mode}
-                    onChange={(e) => setQuestionFormStep3({ ...questionFormStep3, mode: e.target.value })}
-                    className="w-full p-2 border border-gray-300 rounded-md text-sm bg-white"
-                  >
-                    <option value="Non-negotiable">Non-negotiable</option>
-                    <option value="Parameter">Parameter</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Dynamic Content Based on Type and Mode */}
-              {(questionFormStep3.type === "Multiple Choice" || questionFormStep3.type === "Checkboxes") && (
-                <div className="mb-6">
-                  <div className="grid grid-cols-2 gap-6">
-                    {/* Left Column - Choices */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-3">Choices</label>
-                      <div className="space-y-3">
-                        {questionFormStep3.options.map((option, index) => (
-                          <div key={index} className="flex items-center gap-3">
-                            {questionFormStep3.mode === "Parameter" && (
-                              <div className="flex gap-1">
-                                <Button
-                                  size="sm"
-                                  variant={questionFormStep3.parameters[index] === 1 ? "default" : "outline"}
-                                  onClick={() => {
-                                    const newParams = [...questionFormStep3.parameters]
-                                    newParams[index] = newParams[index] === 1 ? 0 : 1
-                                    setQuestionFormStep3({ ...questionFormStep3, parameters: newParams })
-                                  }}
-                                  className="w-8 h-8 p-0 text-xs"
-                                >
-                                  +1
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant={questionFormStep3.parameters[index] === -1 ? "default" : "outline"}
-                                  onClick={() => {
-                                    const newParams = [...questionFormStep3.parameters]
-                                    newParams[index] = newParams[index] === -1 ? 0 : -1
-                                    setQuestionFormStep3({ ...questionFormStep3, parameters: newParams })
-                                  }}
-                                  className="w-8 h-8 p-0 text-xs"
-                                >
-                                  -1
-                                </Button>
-                              </div>
+              {/* Options for Multiple Choice and Checkboxes */}
+              {(questionForm.type === "Multiple Choice" || questionForm.type === "Checkboxes") && (
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Options</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="col-span-1">Option Value</div>
+                    {questionForm.mode === "Non-negotiable" && (
+                      <div className="col-span-1">Non-negotiable Requirement</div>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    {questionForm.options.map((option, index) => (
+                      <div key={index} className="flex gap-2 items-center">
+                        <Input
+                          placeholder={`Option ${index + 1}`}
+                          value={option}
+                          onChange={(e) => {
+                            const newOptions = [...questionForm.options]
+                            newOptions[index] = e.target.value
+                            // Also update nonNegotiableOptions if this option exists
+                            const newNonNegotiableOptions = [...(questionForm.nonNegotiableOptions || [])]
+                            let nnOption = newNonNegotiableOptions.find((o) => o.option === option)
+                            if (nnOption) {
+                              nnOption.option = e.target.value // Update the option text
+                            } else {
+                              // If option is new, add a placeholder entry
+                              newNonNegotiableOptions.push({ option: e.target.value, required: false, requiredValue: "" })
+                            }
+                            setQuestionForm((prev) => ({
+                              ...prev,
+                              options: newOptions,
+                              nonNegotiableOptions: newNonNegotiableOptions,
+                            }))
+                          }}
+                          className="flex-1"
+                        />
+                        {questionForm.mode === "Non-negotiable" && (
+                          <div className="flex items-center gap-2 flex-1">
+                            {questionForm.type === "Multiple Choice" ? (
+                              <input
+                                type="radio"
+                                name={`non_negotiable_option_${questionForm.id}`}
+                                checked={
+                                  (questionForm.nonNegotiableOptions || []).find((o) => o.option === option)
+                                    ?.required || false
+                                }
+                                onChange={(e) => {
+                                  const newNonNegotiableOptions = (questionForm.nonNegotiableOptions || []).map(
+                                    (o) => ({
+                                      ...o,
+                                      required: o.option === option ? e.target.checked : false, // Only one can be required
+                                    }),
+                                  )
+                                  setQuestionForm((prev) => ({
+                                    ...prev,
+                                    nonNegotiableOptions: newNonNegotiableOptions,
+                                  }))
+                                }}
+                                className="w-4 h-4 text-blue-600"
+                              />
+                            ) : (
+                              <input
+                                type="checkbox"
+                                checked={
+                                  (questionForm.nonNegotiableOptions || []).find((o) => o.option === option)
+                                    ?.required || false
+                                }
+                                onChange={(e) => {
+                                  const newNonNegotiableOptions = (questionForm.nonNegotiableOptions || []).map(
+                                    (o) =>
+                                      o.option === option
+                                        ? { ...o, required: e.target.checked }
+                                        : o,
+                                  )
+                                  setQuestionForm((prev) => ({
+                                    ...prev,
+                                    nonNegotiableOptions: newNonNegotiableOptions,
+                                  }))
+                                }}
+                                className="w-4 h-4 text-blue-600"
+                              />
                             )}
-                            <div className="w-6 h-6 flex items-center justify-center">
-                              {questionFormStep3.type === "Multiple Choice" ? (
-                                <div className="w-4 h-4 border-2 border-gray-400 rounded-full"></div>
-                              ) : (
-                                <div className="w-4 h-4 border-2 border-gray-400 rounded"></div>
-                              )}
-                            </div>
                             <Input
-                              placeholder={`Option ${index + 1}`}
-                              value={option}
+                              placeholder="Required Value"
+                              value={
+                                (questionForm.nonNegotiableOptions || []).find((o) => o.option === option)
+                                  ?.requiredValue || ""
+                              }
                               onChange={(e) => {
-                                const newOptions = [...questionFormStep3.options]
-                                newOptions[index] = e.target.value
-                                setQuestionFormStep3({ ...questionFormStep3, options: newOptions })
+                                const newNonNegotiableOptions = (questionForm.nonNegotiableOptions || []).map(
+                                  (o) =>
+                                    o.option === option
+                                      ? { ...o, requiredValue: e.target.value }
+                                      : o,
+                                )
+                                setQuestionForm((prev) => ({
+                                  ...prev,
+                                  nonNegotiableOptions: newNonNegotiableOptions,
+                                }))
                               }}
                               className="flex-1"
                             />
                           </div>
-                        ))}
+                        )}
                       </div>
-                    </div>
-
-                    {/* Right Column - Non-negotiable Requirements (only for Non-negotiable mode) */}
-                    {questionFormStep3.mode === "Non-negotiable" && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-3">
-                          Non-negotiable Requirements
-                        </label>
-                        <div className="flex items-center gap-3">
-                          <div className="w-6 h-6 flex items-center justify-center">
-                            {questionFormStep3.type === "Multiple Choice" ? (
-                              <div className="w-4 h-4 border-2 border-gray-400 rounded-full bg-blue-100"></div>
-                            ) : (
-                              <div className="w-4 h-4 border-2 border-gray-400 rounded bg-blue-100"></div>
-                            )}
-                          </div>
-                          <Input
-                            placeholder="Option 1"
-                            value={questionFormStep3.nonNegotiableText}
-                            onChange={(e) =>
-                              setQuestionFormStep3({ ...questionFormStep3, nonNegotiableText: e.target.value })
-                            }
-                            className="flex-1"
-                          />
-                        </div>
-                      </div>
-                    )}
+                    ))}
+                    <Button
+                      onClick={() =>
+                        setQuestionForm((prev) => ({ ...prev, options: [...prev.options, ""] }))
+                      }
+                      variant="outline"
+                      size="sm"
+                      className="mt-2"
+                    >
+                      Add Option
+                    </Button>
                   </div>
                 </div>
               )}
 
-              {/* Text Entry and Paragraph Questions */}
-              {(questionFormStep3.type === "Text Entry" || questionFormStep3.type === "Paragraph") && (
-                <div className="mb-6 space-y-4">
-                  {/* Input form for both modes */}
-                  <div>
+              {/* Non-negotiable Text Input for Text Entry and Paragraph */}
+              {(questionForm.type === "Text Entry" || questionForm.type === "Paragraph") &&
+                questionForm.mode === "Non-negotiable" && (
+                  <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {questionFormStep3.mode === "Parameter" ? "Sample Answer" : "Expected Answer"}
+                      Non-negotiable Requirement Text
                     </label>
-                    {questionFormStep3.type === "Paragraph" ? (
-                      <textarea
-                        placeholder="Enter sample/expected answer"
-                        className="w-full p-2 border border-gray-300 rounded-md text-sm h-24 resize-none"
-                      />
-                    ) : (
-                      <Input placeholder="Enter sample/expected answer" className="w-full" />
-                    )}
+                    <Input
+                      placeholder="Enter the exact text required"
+                      value={questionForm.nonNegotiableText || ""}
+                      onChange={(e) => setQuestionForm((prev) => ({ ...prev, nonNegotiableText: e.target.value }))}
+                    />
                   </div>
+                )}
 
-                  {/* Non-negotiable requirement for Non-negotiable mode */}
-                  {questionFormStep3.mode === "Non-negotiable" && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Non-negotiable Requirement</label>
-                      <Input
-                        placeholder="Enter requirement"
-                        value={questionFormStep3.nonNegotiableText}
-                        onChange={(e) =>
-                          setQuestionFormStep3({ ...questionFormStep3, nonNegotiableText: e.target.value })
-                        }
-                        className="w-full"
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
+              {/* Required */}
+              <div className="mb-6">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={questionForm.required}
+                    onChange={(e) => setQuestionForm((prev) => ({ ...prev, required: e.target.checked }))}
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-700">Required Question</span>
+                </label>
+              </div>
 
-              {/* Save Changes Button */}
-              <div className="flex justify-end">
-                <Button onClick={saveQuestionStep3} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2">
-                  Save Changes
+              {/* Action Buttons */}
+              <div className="flex justify-end gap-3">
+                <Button
+                  onClick={() => setShowAddQuestionModal(false)}
+                  variant="outline"
+                  className="px-4 py-2 border-gray-300"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={saveQuestion}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white"
+                  disabled={!questionForm.question.trim()}
+                >
+                  {editingQuestionId ? "Update Question" : "Add Question"}
                 </Button>
               </div>
             </div>
@@ -3336,43 +3235,59 @@ UI Designer requirements are:
         </div>
       )}
 
-      {/* Non-negotiable Requirements Modal */}
+      {/* Non-negotiable Modal */}
       {showNonNegotiableModal && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black bg-opacity-50" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setShowNonNegotiableModal(false)} />
           <div className="relative bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b shadow-sm bg-white sticky top-0 z-10">
-              <h2 className="text-lg font-semibold text-gray-800">Non-negotiable Requirements</h2>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowNonNegotiableModal(false)}
-                className="hover:bg-gray-100"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-
-            {/* Content */}
             <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-gray-800">Set Non-negotiable Values</h3>
+                <Button
+                  onClick={() => setShowNonNegotiableModal(false)}
+                  variant="ghost"
+                  size="sm"
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
+
               <p className="text-sm text-gray-600 mb-6">
-                Please specify the requirements for the non-negotiable fields you've selected.
+                Set the required values for non-negotiable fields. Candidates who don't meet these criteria will be
+                automatically filtered out.
               </p>
 
               <div className="space-y-6">
                 {getNonNegotiableFields().map((field, index) => {
-                  const fieldKey = `${field.category}_${field.field}`
+                  const fieldKey = `${field.category}-${field.field}`
                   return (
                     <div key={index} className="border rounded-lg p-4">
-                      <div className="mb-3">
-                        <h4 className="font-medium text-gray-800">{field.field}</h4>
-                        <p className="text-sm text-gray-500">{field.category}</p>
+                      <div className="mb-2">
+                        <span className="text-xs text-blue-600 font-medium">{field.category}</span>
+                        <h4 className="text-sm font-medium text-gray-800">{field.field}</h4>
                       </div>
 
                       {field.type === "text" && (
                         <Input
-                          placeholder="Enter requirement"
+                          placeholder="Enter required value"
+                          value={nonNegotiableValues[fieldKey] || ""}
+                          onChange={(e) => handleNonNegotiableValueChange(fieldKey, e.target.value)}
+                        />
+                      )}
+
+                      {field.type === "number" && (
+                        <Input
+                          type="number"
+                          placeholder="Enter required value"
+                          value={nonNegotiableValues[fieldKey] || ""}
+                          onChange={(e) => handleNonNegotiableValueChange(fieldKey, e.target.value)}
+                        />
+                      )}
+
+                      {field.type === "date" && (
+                        <Input
+                          type="date"
                           value={nonNegotiableValues[fieldKey] || ""}
                           onChange={(e) => handleNonNegotiableValueChange(fieldKey, e.target.value)}
                         />
@@ -3380,13 +3295,13 @@ UI Designer requirements are:
 
                       {field.type === "select" && field.options && (
                         <select
-                          className="w-full p-2 border border-gray-300 rounded-md text-sm bg-white"
                           value={nonNegotiableValues[fieldKey] || ""}
                           onChange={(e) => handleNonNegotiableValueChange(fieldKey, e.target.value)}
+                          className="w-full p-2 border border-gray-300 rounded-md text-sm"
                         >
-                          <option value="">Select requirement</option>
-                          {field.options.map((option) => (
-                            <option key={option} value={option}>
+                          <option value="">Select required value</option>
+                          {field.options.map((option, optIndex) => (
+                            <option key={optIndex} value={option}>
                               {option}
                             </option>
                           ))}
@@ -3395,15 +3310,15 @@ UI Designer requirements are:
 
                       {field.type === "radio" && field.options && (
                         <div className="space-y-2">
-                          {field.options.map((option) => (
-                            <label key={option} className="flex items-center gap-2">
+                          {field.options.map((option, optIndex) => (
+                            <label key={optIndex} className="flex items-center gap-2">
                               <input
                                 type="radio"
                                 name={fieldKey}
                                 value={option}
                                 checked={nonNegotiableValues[fieldKey] === option}
                                 onChange={(e) => handleNonNegotiableValueChange(fieldKey, e.target.value)}
-                                className="w-4 h-4 bg-white border-2 border-gray-400 rounded-full appearance-none focus:ring-2 focus:ring-blue-500 checked:bg-white checked:border-blue-600 checked:after:content-[''] checked:after:w-2 checked:after:h-2 checked:after:bg-blue-600 checked:after:rounded-full checked:after:absolute checked:after:top-1/2 checked:after:left-1/2 checked:after:transform checked:after:-translate-x-1/2 checked:after:-translate-y-1/2 relative"
+                                className="w-4 h-4 text-blue-600"
                               />
                               <span className="text-sm text-gray-700">{option}</span>
                             </label>
@@ -3413,15 +3328,12 @@ UI Designer requirements are:
 
                       {field.type === "checkbox" && field.options && (
                         <div className="space-y-2">
-                          {field.options.map((option) => (
-                            <label key={option} className="flex items-center gap-2">
+                          {field.options.map((option, optIndex) => (
+                            <label key={optIndex} className="flex items-center gap-2">
                               <input
                                 type="checkbox"
                                 value={option}
-                                checked={
-                                  Array.isArray(nonNegotiableValues[fieldKey]) &&
-                                  nonNegotiableValues[fieldKey].includes(option)
-                                }
+                                checked={(nonNegotiableValues[fieldKey] || []).includes(option)}
                                 onChange={(e) => {
                                   const currentValues = nonNegotiableValues[fieldKey] || []
                                   if (e.target.checked) {
@@ -3433,23 +3345,11 @@ UI Designer requirements are:
                                     )
                                   }
                                 }}
-                                className="w-4 h-4 bg-white border-2 border-gray-400 rounded focus:ring-2 focus:ring-blue-500 checked:bg-white checked:border-blue-600 appearance-none relative checked:after:content-['✓'] checked:after:absolute checked:after:inset-0 checked:after:flex checked:after:items-center checked:after:justify-center checked:after:text-blue-600 checked:after:text-xs checked:after:font-bold"
+                                className="w-4 h-4 text-blue-600"
                               />
                               <span className="text-sm text-gray-700">{option}</span>
                             </label>
                           ))}
-                        </div>
-                      )}
-
-                      {field.type === "file" && (
-                        <div>
-                          <Input type="file" className="mb-2" />
-                          <p className="text-xs text-gray-500">Specify file requirements or format</p>
-                          <Input
-                            placeholder="e.g., PDF format, max 5MB"
-                            value={nonNegotiableValues[fieldKey] || ""}
-                            onChange={(e) => handleNonNegotiableValueChange(fieldKey, e.target.value)}
-                          />
                         </div>
                       )}
                     </div>
@@ -3457,13 +3357,796 @@ UI Designer requirements are:
                 })}
               </div>
 
-              {/* Save Button */}
-              <div className="flex justify-end mt-6 pt-4 border-t">
+              <div className="flex justify-end gap-3 mt-6">
+                <Button
+                  onClick={() => setShowNonNegotiableModal(false)}
+                  variant="outline"
+                  className="px-4 py-2 border-gray-300"
+                >
+                  Cancel
+                </Button>
                 <Button
                   onClick={handleSaveNonNegotiables}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2"
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white"
                 >
                   Save and Continue
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Template Confirmation Modal */}
+      {showTemplateConfirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black bg-opacity-50" onClick={handleTemplateCancel} />
+          <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-800">Replace Questions?</h3>
+                <Button
+                  onClick={handleTemplateCancel}
+                  variant="ghost"
+                  size="sm"
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
+
+              <p className="text-sm text-gray-600 mb-6">
+                This assessment already has questions. Applying the template will replace all existing questions. Do you
+                want to continue?
+              </p>
+
+              <div className="flex justify-end gap-3">
+                <Button
+                  onClick={handleTemplateCancel}
+                  variant="outline"
+                  className="px-4 py-2 border-gray-300 bg-transparent"
+                >
+                  Cancel
+                </Button>
+                <Button onClick={handleTemplateConfirm} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white">
+                  Replace Questions
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Step 3 Questionnaire Modal */}
+      {showQuestionnaireModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setShowQuestionnaireModal(false)} />
+          <div className="relative bg-white rounded-lg shadow-xl max-w-6xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-gray-800">Add Questionnaire</h3> {/* Changed title */}
+                <Button
+                  onClick={() => setShowQuestionnaireModal(false)}
+                  variant="ghost"
+                  size="sm"
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
+
+              {/* Questionnaire Name */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Questionnaire Name</label>
+                <Input
+                  placeholder="Enter questionnaire name"
+                  value={questionnaireName}
+                  onChange={(e) => setQuestionnaireName(e.target.value)}
+                />
+              </div>
+
+              {/* Sections */}
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-lg font-medium text-gray-800">Sections</h4>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => {
+                        setMoveMode(!moveMode)
+                        setSelectedQuestionForMove(null)
+                      }}
+                      variant={moveMode ? "default" : "outline"}
+                      size="sm"
+                      className={moveMode ? "bg-blue-600 text-white" : ""}
+                    >
+                      <Move className="w-4 h-4 mr-1" />
+                      {moveMode ? "Exit Move" : "Move Questions"}
+                    </Button>
+                    <Button
+                      onClick={() => setShowSectionInput(true)}
+                      className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1"
+                    >
+                      + Add Section
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Add Section Input */}
+                {showSectionInput && (
+                  <div className="mb-4 p-4 border rounded-lg bg-gray-50">
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Section name"
+                        value={newSectionName}
+                        onChange={(e) => setNewSectionName(e.target.value)}
+                      />
+                      <Button
+                        onClick={() => {
+                          if (newSectionName.trim()) {
+                            const newSection = {
+                              id: Date.now(),
+                              name: newSectionName,
+                              questions: [],
+                            }
+                            setSections([...sections, newSection])
+                            setNewSectionName("")
+                            setShowSectionInput(false)
+                          }
+                        }}
+                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                      >
+                        Add
+                      </Button>
+                      <Button onClick={() => setShowSectionInput(false)} variant="outline">
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Sections List */}
+                <div className="space-y-4">
+                  {sections.map((section) => (
+                    <div key={section.id} className="border rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-4">
+                        {editingSectionId === section.id ? (
+                          <Input
+                            value={editingSectionName}
+                            onChange={(e) => setEditingSectionName(e.target.value)}
+                            className="text-lg font-medium text-gray-800 max-w-xs"
+                          />
+                        ) : (
+                          <h5 className="font-medium text-gray-800">{section.name}</h5>
+                        )}
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => {
+                              if (editingSectionId === section.id) {
+                                // Confirm rename
+                                if (editingSectionName.trim()) {
+                                  setSections((prev) =>
+                                    prev.map((s) =>
+                                      s.id === section.id ? { ...s, name: editingSectionName } : s,
+                                    ),
+                                  )
+                                  setEditingSectionId(null)
+                                  setEditingSectionName("")
+                                }
+                              } else {
+                                // Start rename
+                                setEditingSectionId(section.id)
+                                setEditingSectionName(section.name)
+                              }
+                            }}
+                            className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1"
+                          >
+                            {editingSectionId === section.id ? "Confirm" : "Option"}
+                          </Button>
+                          <Button
+                            onClick={() => {
+                              setCurrentSectionId(section.id)
+                              setShowAddQuestionModalStep3(true)
+                            }}
+                            className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1"
+                          >
+                            + Add Question
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSections(sections.filter((s) => s.id !== section.id))
+                            }}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Questions in this section */}
+                      <div className="space-y-2">
+                        {section.questions.map((question, qIndex) => (
+                          <div
+                            key={question.id}
+                            className={`border rounded-lg p-3 transition-all ${
+                              moveMode
+                                ? selectedQuestionForMove?.questionId === question.id
+                                  ? "border-blue-500 bg-blue-50 cursor-grabbing"
+                                  : "hover:border-gray-400 cursor-pointer"
+                                : "hover:shadow-sm"
+                            }`}
+                            onClick={() => {
+                              if (moveMode) {
+                                if (selectedQuestionForMove?.questionId === question.id) {
+                                  setSelectedQuestionForMove(null) // Deselect
+                                } else if (selectedQuestionForMove) {
+                                  handleMoveQuestion(section.id, question.id)
+                                } else {
+                                  setSelectedQuestionForMove({
+                                    sectionId: section.id,
+                                    questionId: question.id,
+                                  })
+                                }
+                              }
+                            }}
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-sm font-medium text-gray-800">
+                                    Q{qIndex + 1}: {question.question}
+                                  </span>
+                                  <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded">
+                                    {question.type}
+                                  </span>
+                                  <span
+                                    className={`text-xs px-2 py-1 rounded ${
+                                      question.mode === "Non-negotiable"
+                                        ? "bg-red-100 text-red-800"
+                                        : "bg-gray-100 text-gray-800"
+                                    }`}
+                                  >
+                                    {question.mode}
+                                  </span>
+                                </div>
+                                {question.description && (
+                                  <p className="text-sm text-gray-600 mb-1">{question.description}</p>
+                                )}
+                                {question.type === "Multiple Choice" && (
+                                  <div className="text-sm text-gray-600">
+                                    Options: {question.options.filter((opt) => opt.trim() !== "").join(", ")}
+                                  </div>
+                                )}
+                              </div>
+                              {!moveMode && (
+                                <div className="flex gap-1 ml-4">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      setCurrentSectionId(section.id)
+                                      setQuestionFormStep3({
+                                        id: question.id, // Pass existing ID for edit
+                                        question: question.question,
+                                        description: question.description,
+                                        type: question.type,
+                                        mode: question.mode,
+                                        options: question.options,
+                                        parameters: question.parameters,
+                                        nonNegotiableText: question.nonNegotiableText || "",
+                                        nonNegotiableOptions: question.nonNegotiableOptions || [],
+                                        required: question.required,
+                                      })
+                                      setEditingQuestionIdStep3(question.id)
+                                      setShowAddQuestionModalStep3(true)
+                                    }}
+                                    className="p-1 h-6 w-6"
+                                  >
+                                    <Edit className="w-3 h-3" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      setSections(
+                                        sections.map((s) =>
+                                          s.id === section.id
+                                            ? {
+                                                ...s,
+                                                questions: s.questions.filter((q) => q.id !== question.id),
+                                              }
+                                            : s,
+                                        ),
+                                      )
+                                    }}
+                                    className="p-1 h-6 w-6 text-red-600 hover:text-red-700"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-between mt-6">
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleSaveAsNewTemplate}
+                    variant="outline"
+                    className="px-4 py-2 border-gray-300"
+                    disabled={!questionnaireName.trim() || sections.length === 0}
+                  >
+                    Save as New Template
+                  </Button>
+                  <Button
+                    onClick={handleUpdateTemplate}
+                    variant="outline"
+                    className="px-4 py-2 border-gray-300"
+                    disabled={!isTemplateSelected || !questionnaireName.trim()}
+                  >
+                    Update Template
+                  </Button>
+                </div>
+                <div className="flex gap-3">
+                  <Button
+                    onClick={() => setShowQuestionnaireModal(false)}
+                    variant="outline"
+                    className="px-4 py-2 border-gray-300"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={() => setShowQuestionnaireModal(false)}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white"
+                    disabled={!questionnaireName.trim()}
+                  >
+                    Save Questionnaire
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Step 3 Add Question Modal */}
+      {showAddQuestionModalStep3 && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black bg-opacity-50"
+            onClick={() => setShowAddQuestionModalStep3(false)}
+          />
+          <div className="relative bg-white rounded-lg shadow-xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-gray-800">
+                  {editingQuestionIdStep3 ? "Edit Question" : "Add Question"}
+                </h3>
+                <Button
+                  onClick={() => {
+                    setShowAddQuestionModalStep3(false)
+                    setEditingQuestionIdStep3(null)
+                    setQuestionFormStep3({
+                      id: 0,
+                      question: "",
+                      description: "",
+                      type: "Multiple Choice",
+                      mode: "Non-negotiable",
+                      options: ["", "", "", ""],
+                      parameters: [0, 0, 0, 0],
+                      nonNegotiableText: "",
+                      nonNegotiableOptions: [],
+                      required: false,
+                    })
+                  }}
+                  variant="ghost"
+                  size="sm"
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
+
+              {/* Question */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Question</label>
+                <Input
+                  placeholder="Enter your question"
+                  value={questionFormStep3.question}
+                  onChange={(e) => setQuestionFormStep3((prev) => ({ ...prev, question: e.target.value }))}
+                />
+              </div>
+
+              {/* Description */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Description (Optional)</label>
+                <textarea
+                  placeholder="Enter question description"
+                  value={questionFormStep3.description}
+                  onChange={(e) => setQuestionFormStep3((prev) => ({ ...prev, description: e.target.value }))}
+                  className="w-full p-2 border border-gray-300 rounded-md text-sm h-20 resize-none"
+                />
+              </div>
+
+              {/* Question Type */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Question Type</label>
+                <select
+                  value={questionFormStep3.type}
+                  onChange={(e) => {
+                    setQuestionFormStep3((prev) => ({
+                      ...prev,
+                      type: e.target.value,
+                      options: ["", "", "", ""], // Reset options when type changes
+                      nonNegotiableOptions: [],
+                      nonNegotiableText: "",
+                    }))
+                  }}
+                  className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                >
+                  <option value="Multiple Choice">Multiple Choice</option>
+                  <option value="Checkboxes">Checkboxes</option>
+                  <option value="Text Entry">Text Entry</option>
+                  <option value="Paragraph">Paragraph</option> {/* Added Paragraph type */}
+                  <option value="Number">Number</option>
+                  <option value="Date">Date</option>
+                </select>
+              </div>
+
+              {/* Mode */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Mode</label>
+                <select
+                  value={questionFormStep3.mode}
+                  onChange={(e) => {
+                    setQuestionFormStep3((prev) => ({
+                      ...prev,
+                      mode: e.target.value,
+                      nonNegotiableText: "",
+                      nonNegotiableOptions: [],
+                    }))
+                  }}
+                  className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                >
+                  <option value="Non-negotiable">Non-negotiable</option>
+                  <option value="Preferred">Preferred</option>
+                  <option value="Optional">Optional</option>
+                </select>
+              </div>
+
+              {/* Options for Multiple Choice and Checkboxes */}
+              {(questionFormStep3.type === "Multiple Choice" || questionFormStep3.type === "Checkboxes") && (
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Options</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="col-span-1">Option Value</div>
+                    {questionFormStep3.mode === "Non-negotiable" && (
+                      <div className="col-span-1">Non-negotiable Requirement</div>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    {questionFormStep3.options.map((option, index) => (
+                      <div key={index} className="flex gap-2 items-center">
+                        <Input
+                          placeholder={`Option ${index + 1}`}
+                          value={option}
+                          onChange={(e) => {
+                            const newOptions = [...questionFormStep3.options]
+                            newOptions[index] = e.target.value
+                            const newNonNegotiableOptions = [...(questionFormStep3.nonNegotiableOptions || [])]
+                            let nnOption = newNonNegotiableOptions.find((o) => o.option === option)
+                            if (nnOption) {
+                              nnOption.option = e.target.value
+                            } else {
+                              newNonNegotiableOptions.push({ option: e.target.value, required: false, requiredValue: "" })
+                            }
+                            setQuestionFormStep3((prev) => ({
+                              ...prev,
+                              options: newOptions,
+                              nonNegotiableOptions: newNonNegotiableOptions,
+                            }))
+                          }}
+                          className="flex-1"
+                        />
+                        {questionFormStep3.mode === "Non-negotiable" && (
+                          <div className="flex items-center gap-2 flex-1">
+                            {questionFormStep3.type === "Multiple Choice" ? (
+                              <input
+                                type="radio"
+                                name={`non_negotiable_option_step3_${questionFormStep3.id}`}
+                                checked={
+                                  (questionFormStep3.nonNegotiableOptions || []).find((o) => o.option === option)
+                                    ?.required || false
+                                }
+                                onChange={(e) => {
+                                  const newNonNegotiableOptions = (
+                                    questionFormStep3.nonNegotiableOptions || []
+                                  ).map((o) => ({
+                                    ...o,
+                                    required: o.option === option ? e.target.checked : false,
+                                  }))
+                                  setQuestionFormStep3((prev) => ({
+                                    ...prev,
+                                    nonNegotiableOptions: newNonNegotiableOptions,
+                                  }))
+                                }}
+                                className="w-4 h-4 text-blue-600"
+                              />
+                            ) : (
+                              <input
+                                type="checkbox"
+                                checked={
+                                  (questionFormStep3.nonNegotiableOptions || []).find((o) => o.option === option)
+                                    ?.required || false
+                                }
+                                onChange={(e) => {
+                                  const newNonNegotiableOptions = (
+                                    questionFormStep3.nonNegotiableOptions || []
+                                  ).map((o) =>
+                                    o.option === option
+                                      ? { ...o, required: e.target.checked }
+                                      : o,
+                                  )
+                                  setQuestionFormStep3((prev) => ({
+                                    ...prev,
+                                    nonNegotiableOptions: newNonNegotiableOptions,
+                                  }))
+                                }}
+                                className="w-4 h-4 text-blue-600"
+                              />
+                            )}
+                            <Input
+                              placeholder="Required Value"
+                              value={
+                                (questionFormStep3.nonNegotiableOptions || []).find((o) => o.option === option)
+                                  ?.requiredValue || ""
+                              }
+                              onChange={(e) => {
+                                const newNonNegotiableOptions = (
+                                  questionFormStep3.nonNegotiableOptions || []
+                                ).map((o) =>
+                                  o.option === option
+                                    ? { ...o, requiredValue: e.target.value }
+                                    : o,
+                                )
+                                setQuestionFormStep3((prev) => ({
+                                  ...prev,
+                                  nonNegotiableOptions: newNonNegotiableOptions,
+                                }))
+                              }}
+                              className="flex-1"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    <Button
+                      onClick={() =>
+                        setQuestionFormStep3((prev) => ({ ...prev, options: [...prev.options, ""] }))
+                      }
+                      variant="outline"
+                      size="sm"
+                      className="mt-2"
+                    >
+                      Add Option
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Non-negotiable Text Input for Text Entry and Paragraph */}
+              {(questionFormStep3.type === "Text Entry" || questionFormStep3.type === "Paragraph") &&
+                questionFormStep3.mode === "Non-negotiable" && (
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Non-negotiable Requirement Text
+                    </label>
+                    <Input
+                      placeholder="Enter the exact text required"
+                      value={questionFormStep3.nonNegotiableText || ""}
+                      onChange={(e) =>
+                        setQuestionFormStep3((prev) => ({ ...prev, nonNegotiableText: e.target.value }))
+                      }
+                    />
+                  </div>
+                )}
+
+              {/* Action Buttons */}
+              <div className="flex justify-end gap-3">
+                <Button
+                  onClick={() => {
+                    setShowAddQuestionModalStep3(false)
+                    setEditingQuestionIdStep3(null)
+                    setQuestionFormStep3({
+                      id: 0,
+                      question: "",
+                      description: "",
+                      type: "Multiple Choice",
+                      mode: "Non-negotiable",
+                      options: ["", "", "", ""],
+                      parameters: [0, 0, 0, 0],
+                      nonNegotiableText: "",
+                      nonNegotiableOptions: [],
+                      required: false,
+                    })
+                  }}
+                  variant="outline"
+                  className="px-4 py-2 border-gray-300"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={saveQuestionStep3}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white"
+                  disabled={!questionFormStep3.question.trim()}
+                >
+                  {editingQuestionIdStep3 ? "Update Question" : "Add Question"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Preview Modal */}
+      {showPreview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setShowPreview(false)} />
+          <div className="relative bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-gray-800">Preview</h3>
+                <Button
+                  onClick={() => setShowPreview(false)}
+                  variant="ghost"
+                  size="sm"
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
+
+              {currentStep === 1 && (
+                <div className="space-y-6">
+                  <h4 className="text-lg font-medium text-gray-800">Position Details</h4>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="font-medium">Job Title:</span> {formData.jobTitle || "Not specified"}
+                    </div>
+                    <div>
+                      <span className="font-medium">Department:</span> {formData.department || "Not specified"}
+                    </div>
+                    <div>
+                      <span className="font-medium">Employment Type:</span> {formData.employmentType}
+                    </div>
+                    <div>
+                      <span className="font-medium">Education Needed:</span> {formData.educationNeeded}
+                    </div>
+                    <div>
+                      <span className="font-medium">Work Setup:</span> {formData.workSetup}
+                    </div>
+                    <div>
+                      <span className="font-medium">Experience:</span> {formData.experience}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {currentStep === 2 && (
+                <div className="space-y-6">
+                  <h4 className="text-lg font-medium text-gray-800">Job Description</h4>
+                  <div className="text-sm whitespace-pre-wrap border rounded-lg p-4 bg-gray-50">
+                    {jobDescription || "No description provided"}
+                  </div>
+                </div>
+              )}
+
+              {currentStep === 3 && (
+                <div className="space-y-6">
+                  <h4 className="text-lg font-medium text-gray-800">Application Form Preview</h4>
+                  {sections.length > 0 ? (
+                    <div className="space-y-6">
+                      <h5 className="font-medium text-gray-800">{questionnaireName || "Untitled Questionnaire"}</h5>
+                      {sections.map((section, sectionIndex) => (
+                        <div key={section.id} className="border rounded-lg p-4">
+                          <h6 className="font-medium text-gray-800 mb-4">{section.name}</h6>
+                          <div className="space-y-4">
+                            {section.questions.map((question, questionIndex) => (
+                              <div key={question.id} className="border-l-4 border-blue-500 pl-4">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <span className="text-sm font-medium text-gray-800">
+                                    {sectionIndex + 1}.{questionIndex + 1} {question.question}
+                                  </span>
+                                  <span
+                                    className={`text-xs px-2 py-1 rounded ${
+                                      question.mode === "Non-negotiable"
+                                        ? "bg-red-100 text-red-800"
+                                        : "bg-gray-100 text-gray-800"
+                                    }`}
+                                  >
+                                    {question.mode}
+                                  </span>
+                                </div>
+                                {question.description && (
+                                  <p className="text-sm text-gray-600 mb-2">{question.description}</p>
+                                )}
+
+                                {/* Render question based on type */}
+                                {question.type === "Multiple Choice" && (
+                                  <div className="space-y-1">
+                                    {question.options
+                                      .filter((opt) => opt.trim() !== "")
+                                      .map((option, optIndex) => (
+                                        <label key={optIndex} className="flex items-center gap-2">
+                                          <input type="radio" name={`q_${question.id}`} className="w-4 h-4" disabled />
+                                          <span className="text-sm text-gray-700">{option}</span>
+                                        </label>
+                                      ))}
+                                  </div>
+                                )}
+
+                                {question.type === "Checkboxes" && (
+                                  <div className="space-y-1">
+                                    {question.options
+                                      .filter((opt) => opt.trim() !== "")
+                                      .map((option, optIndex) => (
+                                        <label key={optIndex} className="flex items-center gap-2">
+                                          <input type="checkbox" className="w-4 h-4" disabled />
+                                          <span className="text-sm text-gray-700">{option}</span>
+                                        </label>
+                                      ))}
+                                  </div>
+                                )}
+
+                                {question.type === "Text Entry" || question.type === "Paragraph" ? (
+                                  <input
+                                    type="text"
+                                    className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                                    placeholder="Text input"
+                                    disabled
+                                  />
+                                ) : question.type === "Number" ? (
+                                  <input
+                                    type="number"
+                                    className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                                    placeholder="Number input"
+                                    disabled
+                                  />
+                                ) : question.type === "Date" ? (
+                                  <input
+                                    type="date"
+                                    className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                                    disabled
+                                  />
+                                ) : null}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500">No questionnaire created yet.</p>
+                  )}
+                </div>
+              )}
+
+              <div className="flex justify-end mt-6">
+                <Button
+                  onClick={() => setShowPreview(false)}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  Close Preview
                 </Button>
               </div>
             </div>
