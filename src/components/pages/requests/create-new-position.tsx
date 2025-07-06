@@ -5,6 +5,9 @@ import { useEffect, useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group" // Added import
+import { Label } from "@/components/ui/label" // Added import
+import { Checkbox } from "@/components/ui/checkbox" // Added import
 import {
   Trash2,
   Plus,
@@ -117,6 +120,13 @@ interface StagePopupData {
   teamMembers: TeamMember[]
   templateType: string
   reminderTime: string
+}
+
+// Define an interface for the form field configuration items
+interface FormFieldConfigItem {
+  field: string
+  defaultValue: string
+  nonNegotiable: boolean
 }
 
 export default function CreateNewPosition() {
@@ -331,7 +341,12 @@ UI Designer requirements are:
 • Experience of working in an Agile/Scrum development process
 • BS or MS degree in Human-Computer Interaction, Interaction Design, or other related area`)
 
-  const [formFieldConfig] = useState({
+  const [formFieldConfig] = useState<{
+    personal: FormFieldConfigItem[]
+    job: FormFieldConfigItem[]
+    education: FormFieldConfigItem[]
+    acknowledgement: FormFieldConfigItem[]
+  }>({
     personal: [
       { field: "Name", defaultValue: "required", nonNegotiable: false },
       { field: "Birth Date", defaultValue: "required", nonNegotiable: false },
@@ -770,7 +785,7 @@ UI Designer requirements are:
       // Add assessments to global assessments with stage information
       const assessmentsWithStage = stagePopupData.assessments.map((assessment) => ({
         ...assessment,
-        stage: `Stage ${currentStageId < 10 ? `0${currentStageId}` : currentStageId}`,
+        stage: `Stage ${currentStageId && currentStageId < 10 ? `0${currentStageId}` : currentStageId}`,
       }))
 
       setGlobalAssessments((prev) => {
@@ -1613,16 +1628,7 @@ UI Designer requirements are:
                       </tr>
                     </thead>
                     <tbody>
-                      {[
-                        { field: "Name", defaultValue: "required" },
-                        { field: "Birth Date", defaultValue: "required" },
-                        { field: "Gender", defaultValue: "required" },
-                        { field: "Primary Contact Number", defaultValue: "required" },
-                        { field: "Secondary Contact Number", defaultValue: "required" },
-                        { field: "Email Address", defaultValue: "required" },
-                        { field: "LinkedIn Profile", defaultValue: "optional" },
-                        { field: "Address", defaultValue: "required" },
-                      ].map((item, index) => (
+                      {formFieldConfig.personal.map((item, index) => (
                         <tr key={index} className="border-b">
                           <td className="p-4 font-medium text-gray-800 w-2/5">{item.field}</td>
                           <td className="p-4 text-center w-1/6">
@@ -1630,6 +1636,7 @@ UI Designer requirements are:
                               type="checkbox"
                               name={`personal_${index}_non_negotiable`}
                               value="non-negotiable"
+                              defaultChecked={item.nonNegotiable}
                               className="w-4 h-4 bg-white border-2 border-gray-400 rounded focus:ring-2 focus:ring-blue-500 checked:bg-white checked:border-blue-600 appearance-none relative checked:after:content-['✓'] checked:after:absolute checked:after:inset-0 checked:after:flex checked:after:items-center checked:after:justify-center checked:after:text-blue-600 checked:after:text-xs checked:after:font-bold"
                             />
                           </td>
@@ -1638,7 +1645,7 @@ UI Designer requirements are:
                               type="radio"
                               name={`personal_${index}_status`}
                               value="required"
-                              defaultChecked={item.defaultValue === "required"}
+                              defaultChecked={!item.nonNegotiable && item.defaultValue === "required"}
                               className="w-4 h-4 bg-white border-2 border-gray-400 rounded-full appearance-none focus:ring-2 focus:ring-blue-500 checked:bg-white checked:border-blue-600 checked:after:content-[''] checked:after:w-2 checked:after:h-2 checked:after:bg-blue-600 checked:after:rounded-full checked:after:absolute checked:after:top-1/2 checked:after:left-1/2 checked:after:transform checked:after:-translate-x-1/2 checked:after:-translate-y-1/2 relative"
                             />
                           </td>
@@ -1647,7 +1654,7 @@ UI Designer requirements are:
                               type="radio"
                               name={`personal_${index}_status`}
                               value="optional"
-                              defaultChecked={item.defaultValue === "optional"}
+                              defaultChecked={!item.nonNegotiable && item.defaultValue === "optional"}
                               className="w-4 h-4 bg-white border-2 border-gray-400 rounded-full appearance-none focus:ring-2 focus:ring-blue-500 checked:bg-white checked:border-blue-600 checked:after:content-[''] checked:after:w-2 checked:after:h-2 checked:after:bg-blue-600 checked:after:rounded-full checked:after:absolute checked:after:top-1/2 checked:after:left-1/2 checked:after:transform checked:after:-translate-x-1/2 checked:after:-translate-y-1/2 relative"
                             />
                           </td>
@@ -1681,25 +1688,7 @@ UI Designer requirements are:
                       </tr>
                     </thead>
                     <tbody>
-                      {[
-                        { field: "Job Title", defaultValue: "required", nonNegotiable: false },
-                        { field: "Company Name", defaultValue: "required", nonNegotiable: false },
-                        { field: "Years of Experience", defaultValue: "required", nonNegotiable: true },
-                        { field: "Position Applying for", defaultValue: "required", nonNegotiable: false },
-                        { field: "Expected Salary", defaultValue: "required", nonNegotiable: true },
-                        { field: "Are you willing to work onsite?", defaultValue: "required", nonNegotiable: true },
-                        { field: "Upload 2×2 photo", defaultValue: "required", nonNegotiable: false },
-                        {
-                          field: "Upload medical certificate for at least 6 months",
-                          defaultValue: "required",
-                          nonNegotiable: false,
-                        },
-                        {
-                          field: "Preferred interview schedule (3 dates eg February 20)",
-                          defaultValue: "required",
-                          nonNegotiable: false,
-                        },
-                      ].map((item, index) => (
+                      {formFieldConfig.job.map((item, index) => (
                         <tr key={index} className="border-b">
                           <td className="p-4 font-medium text-gray-800 w-2/5">{item.field}</td>
                           <td className="p-4 text-center w-1/6">
@@ -1758,14 +1747,7 @@ UI Designer requirements are:
                       </tr>
                     </thead>
                     <tbody>
-                      {[
-                        { field: "Highest Educational Attained", defaultValue: "required", nonNegotiable: true },
-                        { field: "Year Graduated", defaultValue: "required", nonNegotiable: false },
-                        { field: "University / Institution Name", defaultValue: "required", nonNegotiable: false },
-                        { field: "Program / Course", defaultValue: "required", nonNegotiable: false },
-                        { field: "Work Experience", defaultValue: "required", nonNegotiable: true },
-                        { field: "Job Title", defaultValue: "required", nonNegotiable: false },
-                      ].map((item, index) => (
+                      {formFieldConfig.education.map((item, index) => (
                         <tr key={index} className="border-b">
                           <td className="p-4 font-medium text-gray-800 w-2/5">{item.field}</td>
                           <td className="p-4 text-center w-1/6">
@@ -1824,11 +1806,7 @@ UI Designer requirements are:
                       </tr>
                     </thead>
                     <tbody>
-                      {[
-                        { field: "How did you learn about this job opportunity?", defaultValue: "required" },
-                        { field: "Agreement", defaultValue: "required" },
-                        { field: "Signature", defaultValue: "required" },
-                      ].map((item, index) => (
+                      {formFieldConfig.acknowledgement.map((item, index) => (
                         <tr key={index} className="border-b">
                           <td className="p-4 font-medium text-gray-800 w-2/5">{item.field}</td>
                           <td className="p-4 text-center w-1/6">
@@ -1836,6 +1814,7 @@ UI Designer requirements are:
                               type="checkbox"
                               name={`acknowledgement_${index}_non_negotiable`}
                               value="non-negotiable"
+                              defaultChecked={item.nonNegotiable}
                               className="w-4 h-4 bg-white border-2 border-gray-400 rounded focus:ring-2 focus:ring-blue-500 checked:bg-white checked:border-blue-600 appearance-none relative checked:after:content-['✓'] checked:after:absolute checked:after:inset-0 checked:after:flex checked:after:items-center checked:after:justify-center checked:after:text-blue-600 checked:after:text-xs checked:after:font-bold"
                             />
                           </td>
@@ -1844,7 +1823,7 @@ UI Designer requirements are:
                               type="radio"
                               name={`acknowledgement_${index}_status`}
                               value="required"
-                              defaultChecked={item.defaultValue === "required"}
+                              defaultChecked={!item.nonNegotiable && item.defaultValue === "required"}
                               className="w-4 h-4 bg-white border-2 border-gray-400 rounded-full appearance-none focus:ring-2 focus:ring-blue-500 checked:bg-white checked:border-blue-600 checked:after:content-[''] checked:after:w-2 checked:after:h-2 checked:after:bg-blue-600 checked:after:rounded-full checked:after:absolute checked:after:top-1/2 checked:after:left-1/2 checked:after:transform checked:after:-translate-x-1/2 checked:after:-translate-y-1/2 relative"
                             />
                           </td>
@@ -4018,27 +3997,111 @@ UI Designer requirements are:
 
               {currentStep === 1 && (
                 <div className="space-y-6">
-                  <h4 className="text-lg font-medium text-gray-800">Position Details</h4>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="font-medium">Job Title:</span> {formData.jobTitle || "Not specified"}
+                  <h4 className="text-lg font-medium text-gray-800 mb-4">Position Details</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div className="flex flex-col">
+                      <span className="font-medium text-gray-700">Job Title:</span>
+                      <span className="text-gray-900">{formData.jobTitle || "Not specified"}</span>
                     </div>
-                    <div>
-                      <span className="font-medium">Department:</span> {formData.department || "Not specified"}
+                    <div className="flex flex-col">
+                      <span className="font-medium text-gray-700">Department:</span>
+                      <span className="text-gray-900">{formData.department || "Not specified"}</span>
                     </div>
-                    <div>
-                      <span className="font-medium">Employment Type:</span> {formData.employmentType}
+                    <div className="flex flex-col">
+                      <span className="font-medium text-gray-700">Employment Type:</span>
+                      <span className="text-gray-900">{formData.employmentType}</span>
                     </div>
-                    <div>
-                      <span className="font-medium">Education Needed:</span> {formData.educationNeeded}
+                    <div className="flex flex-col">
+                      <span className="font-medium text-gray-700">Education Needed:</span>
+                      <span className="text-gray-900">{formData.educationNeeded}</span>
                     </div>
-                    <div>
-                      <span className="font-medium">Work Setup:</span> {formData.workSetup}
+                    <div className="flex flex-col">
+                      <span className="font-medium text-gray-700">Work Setup:</span>
+                      <span className="text-gray-900">{formData.workSetup}</span>
                     </div>
-                    <div>
-                      <span className="font-medium">Experience:</span> {formData.experience}
+                    <div className="flex flex-col">
+                      <span className="font-medium text-gray-700">Experience:</span>
+                      <span className="text-gray-900">{formData.experience}</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-medium text-gray-700">No. of headcounts needed:</span>
+                      <span className="text-gray-900">{formData.headcountsNeeded || "Not specified"}</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-medium text-gray-700">Date Needed:</span>
+                      <span className="text-gray-900">{formData.dateNeeded || "Not specified"}</span>
+                    </div>
+                    <div className="flex flex-col col-span-full">
+                      <span className="font-medium text-gray-700">Reason for Hire:</span>
+                      <span className="text-gray-900">
+                        {formData.reasonForHire === "Others, Please Specify"
+                          ? `Others: ${formData.reasonSpecify}`
+                          : formData.reasonForHire}
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-medium text-gray-700">Budget From:</span>
+                      <span className="text-gray-900">{formData.budgetFrom || "Not specified"}</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-medium text-gray-700">Budget To:</span>
+                      <span className="text-gray-900">{formData.budgetTo || "Not specified"}</span>
                     </div>
                   </div>
+
+                  <h4 className="text-lg font-medium text-gray-800 mt-8 mb-4">Locations</h4>
+                  {locations.length > 0 ? (
+                    <div className="overflow-x-auto border rounded-lg">
+                      <table className="min-w-full bg-white text-sm">
+                        <thead className="bg-gray-100 border-b">
+                          <tr>
+                            <th className="px-4 py-3 text-left font-medium text-gray-700">Location</th>
+                            <th className="px-4 py-3 text-left font-medium text-gray-700">Headcount</th>
+                            <th className="px-4 py-3 text-left font-medium text-gray-700">Deployment Date</th>
+                            <th className="px-4 py-3 text-left font-medium text-gray-700">With Batch?</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {locations.map((loc) => (
+                            <tr key={loc.id} className="border-t">
+                              <td className="px-4 py-3 text-gray-900">{loc.location}</td>
+                              <td className="px-4 py-3 text-gray-900">{loc.headcount}</td>
+                              <td className="px-4 py-3 text-gray-900">{loc.deploymentDate}</td>
+                              <td className="px-4 py-3 text-gray-900">{loc.withBatch ? "Yes" : "No"}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <p className="text-gray-500">No locations added.</p>
+                  )}
+
+                  <h4 className="text-lg font-medium text-gray-800 mt-8 mb-4">Batch Details</h4>
+                  {batches.length > 0 ? (
+                    <div className="overflow-x-auto border rounded-lg">
+                      <table className="min-w-full bg-white text-sm">
+                        <thead className="bg-gray-100 border-b">
+                          <tr>
+                            <th className="px-4 py-3 text-left font-medium text-gray-700">Batch</th>
+                            <th className="px-4 py-3 text-left font-medium text-gray-700">Headcount</th>
+                            <th className="px-4 py-3 text-left font-medium text-gray-700">Deployment Date</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {batches.map((batch) => (
+                            <tr key={batch.id} className="border-t">
+                              <td className="px-4 py-3 text-gray-900">{batch.batch}</td>
+                              <td className="px-4 py-3 text-gray-900">{batch.headcount}</td>
+                              <td className="px-4 py-3 text-gray-900">{batch.deploymentDate}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <p className="text-gray-500">No batches added.</p>
+                  )}
                 </div>
               )}
 
@@ -4056,81 +4119,115 @@ UI Designer requirements are:
                   <h4 className="text-lg font-medium text-gray-800">Application Form Preview</h4>
                   {sections.length > 0 ? (
                     <div className="space-y-6">
-                      <h5 className="font-medium text-gray-800">{questionnaireName || "Untitled Questionnaire"}</h5>
+                      <h5 className="font-bold text-gray-800 text-xl mb-4">
+                        {questionnaireName || "Untitled Questionnaire"}
+                      </h5>
                       {sections.map((section, sectionIndex) => (
-                        <div key={section.id} className="border rounded-lg p-4">
-                          <h6 className="font-medium text-gray-800 mb-4">{section.name}</h6>
-                          <div className="space-y-4">
-                            {section.questions.map((question, questionIndex) => (
-                              <div key={question.id} className="border-l-4 border-blue-500 pl-4">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <span className="text-sm font-medium text-gray-800">
-                                    {sectionIndex + 1}.{questionIndex + 1} {question.question}
-                                  </span>
-                                  <span
-                                    className={`text-xs px-2 py-1 rounded ${
-                                      question.mode === "Non-negotiable"
-                                        ? "bg-red-100 text-red-800"
-                                        : "bg-gray-100 text-gray-800"
-                                    }`}
-                                  >
-                                    {question.mode}
-                                  </span>
+                        <div key={section.id} className="space-y-6 mb-8">
+                          <h6 className="font-semibold text-gray-900 text-lg">{section.name}</h6>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {section.questions.map((question, questionIndex) => {
+                              // Determine if the field should be displayed
+                              const formFieldStatus = formFieldConfig.personal
+                                .concat(formFieldConfig.job)
+                                .concat(formFieldConfig.education)
+                                .concat(formFieldConfig.acknowledgement)
+                                .find(
+                                  (item) =>
+                                    item.field === question.question &&
+                                    (item.defaultValue === "disabled" || item.nonNegotiable),
+                                )
+
+                              // If it's explicitly disabled or non-negotiable from the main form config, hide it.
+                              // Note: This logic might need refinement if 'mode' in question itself overrides
+                              // the global formFieldConfig 'defaultValue' status. For now, prioritizing 'disabled'.
+                              if (formFieldStatus && formFieldStatus.defaultValue === "disabled") {
+                                return null // Do not render if disabled
+                              }
+                              // If question.mode is "Non-negotiable" and nonNegotiableText is empty, don't show.
+                              if (question.mode === "Non-negotiable" && !question.nonNegotiableText &&
+                                (question.type === "Text Entry" || question.type === "Paragraph")) {
+                                return null;
+                              }
+                              // If question.mode is "Non-negotiable" and no nonNegotiableOptions are set for MC/Checkbox, don't show.
+                              if (question.mode === "Non-negotiable" &&
+                                (question.type === "Multiple Choice" || question.type === "Checkboxes") &&
+                                (!question.nonNegotiableOptions || question.nonNegotiableOptions.every(opt => !opt.required))) {
+                                return null;
+                              }
+
+
+                              const isRequired = question.required || question.mode === "Non-negotiable"
+                              const isOptional = question.mode === "Optional"
+
+                              return (
+                                <div key={question.id} className="flex flex-col">
+                                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    {question.question}
+                                    {isRequired && <span className="text-red-500 ml-1">*</span>}
+                                    {isOptional && <span className="text-gray-500 ml-1">(Optional)</span>}
+                                  </label>
+                                  {question.description && (
+                                    <p className="text-xs text-gray-500 mb-2">{question.description}</p>
+                                  )}
+
+                                  {/* Render input based on type, always disabled for preview */}
+                                  {question.type === "Multiple Choice" && (
+                                    <RadioGroup className="space-y-2">
+                                      {question.options
+                                        .filter((opt) => opt.trim() !== "")
+                                        .map((option, optIndex) => (
+                                          <div key={optIndex} className="flex items-center space-x-2">
+                                            <RadioGroupItem value={option} id={`q${question.id}-opt${optIndex}`} disabled />
+                                            <Label htmlFor={`q${question.id}-opt${optIndex}`} className="text-sm font-normal">
+                                              {option}
+                                            </Label>
+                                          </div>
+                                        ))}
+                                    </RadioGroup>
+                                  )}
+
+                                  {question.type === "Checkboxes" && (
+                                    <div className="space-y-2">
+                                      {question.options
+                                        .filter((opt) => opt.trim() !== "")
+                                        .map((option, optIndex) => (
+                                          <div key={optIndex} className="flex items-center space-x-2">
+                                            <Checkbox id={`q${question.id}-cb${optIndex}`} disabled />
+                                            <Label htmlFor={`q${question.id}-cb${optIndex}`} className="text-sm font-normal">
+                                              {option}
+                                            </Label>
+                                          </div>
+                                        ))}
+                                    </div>
+                                  )}
+
+                                  {question.type === "Text Entry" || question.type === "Paragraph" ? (
+                                    <Input
+                                      type="text"
+                                      placeholder={
+                                        question.type === "Text Entry" ? "Short answer" : "Long answer"
+                                      }
+                                      disabled
+                                      className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                                    />
+                                  ) : question.type === "Number" ? (
+                                    <Input
+                                      type="number"
+                                      placeholder="Number input"
+                                      disabled
+                                      className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                                    />
+                                  ) : question.type === "Date" ? (
+                                    <Input
+                                      type="date"
+                                      disabled
+                                      className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                                    />
+                                  ) : null}
                                 </div>
-                                {question.description && (
-                                  <p className="text-sm text-gray-600 mb-2">{question.description}</p>
-                                )}
-
-                                {/* Render question based on type */}
-                                {question.type === "Multiple Choice" && (
-                                  <div className="space-y-1">
-                                    {question.options
-                                      .filter((opt) => opt.trim() !== "")
-                                      .map((option, optIndex) => (
-                                        <label key={optIndex} className="flex items-center gap-2">
-                                          <input type="radio" name={`q_${question.id}`} className="w-4 h-4" disabled />
-                                          <span className="text-sm text-gray-700">{option}</span>
-                                        </label>
-                                      ))}
-                                  </div>
-                                )}
-
-                                {question.type === "Checkboxes" && (
-                                  <div className="space-y-1">
-                                    {question.options
-                                      .filter((opt) => opt.trim() !== "")
-                                      .map((option, optIndex) => (
-                                        <label key={optIndex} className="flex items-center gap-2">
-                                          <input type="checkbox" className="w-4 h-4" disabled />
-                                          <span className="text-sm text-gray-700">{option}</span>
-                                        </label>
-                                      ))}
-                                  </div>
-                                )}
-
-                                {question.type === "Text Entry" || question.type === "Paragraph" ? (
-                                  <input
-                                    type="text"
-                                    className="w-full p-2 border border-gray-300 rounded-md text-sm"
-                                    placeholder="Text input"
-                                    disabled
-                                  />
-                                ) : question.type === "Number" ? (
-                                  <input
-                                    type="number"
-                                    className="w-full p-2 border border-gray-300 rounded-md text-sm"
-                                    placeholder="Number input"
-                                    disabled
-                                  />
-                                ) : question.type === "Date" ? (
-                                  <input
-                                    type="date"
-                                    className="w-full p-2 border border-gray-300 rounded-md text-sm"
-                                    disabled
-                                  />
-                                ) : null}
-                              </div>
-                            ))}
+                              )
+                            })}
                           </div>
                         </div>
                       ))}
