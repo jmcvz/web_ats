@@ -1,13 +1,13 @@
 "use client"
 
 import { Navbar } from "@/components/reusables/Navbar"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react" // Import useRef
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group" // Added import
-import { Label } from "@/components/ui/label" // Added import
-import { Checkbox } from "@/components/ui/checkbox" // Added import
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Label } from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Trash2,
   Plus,
@@ -21,6 +21,8 @@ import {
   List,
   Link,
   AlignLeft,
+  AlignCenter, // Import AlignCenter for the button
+  AlignRight, // Import AlignRight for the button
   Phone,
   FileText,
   Users,
@@ -30,7 +32,13 @@ import {
   Search,
   Clock,
   Move,
+  Mail, // Added for email icon
+  Linkedin, // Added for LinkedIn icon
+  Cake, // Added for birthday icon
+  Upload, // Added for upload icon
+  Check
 } from "lucide-react"
+
 
 interface LocationEntry {
   id: number
@@ -122,12 +130,7 @@ interface StagePopupData {
   reminderTime: string
 }
 
-// Define an interface for the form field configuration items
-interface FormFieldConfigItem {
-  field: string
-  defaultValue: string
-  nonNegotiable: boolean
-}
+
 
 export default function CreateNewPosition() {
   useEffect(() => {
@@ -175,6 +178,12 @@ export default function CreateNewPosition() {
       deploymentDate: "Jul 08, 2022",
     },
   ])
+
+  // State to manage which location row is being edited
+  const [editingLocationId, setEditingLocationId] = useState<number | null>(null);
+  // State to manage which batch row is being edited
+  const [editingBatchId, setEditingBatchId] = useState<number | null>(null);
+
 
   const [pipelineStages, setPipelineStages] = useState<PipelineStage[]>([
     {
@@ -299,7 +308,7 @@ export default function CreateNewPosition() {
     parameters: [0, 0, 0, 0],
     nonNegotiableText: "",
     nonNegotiableOptions: [], // Initialize new field
-    required: false,
+    required: false, // General question required status
   })
 
   // Step move mode (for pipeline steps)
@@ -313,83 +322,106 @@ export default function CreateNewPosition() {
   const [showTemplateConfirmModal, setShowTemplateConfirmModal] = useState(false)
   const [pendingTemplate, setPendingTemplate] = useState<string>("")
 
+  // Use useRef to get a direct reference to the content editable div
+  const jobDescriptionRef = useRef<HTMLDivElement>(null);
+
+  // Initialize jobDescription with some HTML content
   const [jobDescription, setJobDescription] = useState(`About the UI Designer position
+<br/>We are looking for an experienced UI Designer to create amazing user experiences, helping our products to be highly attractive and competitive.
+<br/>You should be keen in clean and artful design and be able to translate high-level requirements into interaction flows and artifacts, creating beautiful, intuitive, and functional user interfaces.
+<br/>UI Designer responsibilities are:
+<br/>• Work together with product management and engineering to build innovative solutions for the product direction, visuals and experience
+<br/>• Participate in all visual design stages from concept to final hand-off to engineering
+<br/>• Develop original ideas that bring simplicity and user friendliness to complex design roadblocks
+<br/>• Prepare wireframes, storyboards, user flows, process flows and site maps to effectively communicate interaction and design ideas
+<br/>• Discuss designs and key milestone deliverables with peers and executive level stakeholders
+<br/>• Perform user research and evaluate user feedback
+<br/>• Set design guidelines, best practices and standards
+<br/>• Stay up-to-date with the latest UI trends, techniques, and technologies
+<br/>UI Designer requirements are:
+<br/>• 2+ years' experience of working on a UI Designer position
+<br/>• Profound UI design skills with a solid portfolio of design projects
+<br/>• Significant experience in creating wireframes, storyboards, user flows, process flows and site maps
+<br/>• Significant experience with Photoshop, Illustrator, OmniGraffle, or other visual design and wire-framing tools
+<br/>• Good practical experience with HTML, CSS, and JavaScript for rapid prototyping
+<br/>• Strong visual design skills with good understanding of user-system interaction
+<br/>• Strong presentational and team player abilities
+<br/>• Strong problem-solving skills with creative approach
+<br/>• Experience of working in an Agile/Scrum development process
+<br/>• BS or MS degree in Human-Computer Interaction, Interaction Design, or other related area`);
 
-We are looking for an experienced UI Designer to create amazing user experiences, helping our products to be highly attractive and competitive.
 
-You should be keen in clean and artful design and be able to translate high-level requirements into interaction flows and artifacts, creating beautiful, intuitive, and functional user interfaces.
-
-UI Designer responsibilities are:
-• Work together with product management and engineering to build innovative solutions for the product direction, visuals and experience
-• Participate in all visual design stages from concept to final hand-off to engineering
-• Develop original ideas that bring simplicity and user friendliness to complex design roadblocks
-• Prepare wireframes, storyboards, user flows, process flows and site maps to effectively communicate interaction and design ideas
-• Discuss designs and key milestone deliverables with peers and executive level stakeholders
-• Perform user research and evaluate user feedback
-• Set design guidelines, best practices and standards
-• Stay up-to-date with the latest UI trends, techniques, and technologies
-
-UI Designer requirements are:
-• 2+ years' experience of working on a UI Designer position
-• Profound UI design skills with a solid portfolio of design projects
-• Significant experience in creating wireframes, storyboards, user flows, process flows and site maps
-• Significant experience with Photoshop, Illustrator, OmniGraffle, or other visual design and wire-framing tools
-• Good practical experience with HTML, CSS, and JavaScript for rapid prototyping
-• Strong visual design skills with good understanding of user-system interaction
-• Strong presentational and team player abilities
-• Strong problem-solving skills with creative approach
-• Experience of working in an Agile/Scrum development process
-• BS or MS degree in Human-Computer Interaction, Interaction Design, or other related area`)
-
-  const [formFieldConfig] = useState<{
-    personal: FormFieldConfigItem[]
-    job: FormFieldConfigItem[]
-    education: FormFieldConfigItem[]
-    acknowledgement: FormFieldConfigItem[]
+  // State to manage the status of each form field in Step 3
+  const [formFieldStatuses, setFormFieldStatuses] = useState<{
+    personal: { field: string; status: 'required' | 'optional' | 'disabled'; nonNegotiable: boolean }[];
+    job: { field: string; status: 'required' | 'optional' | 'disabled'; nonNegotiable: boolean }[];
+    education: { field: string; status: 'required' | 'optional' | 'disabled'; nonNegotiable: boolean }[];
+    acknowledgement: { field: string; status: 'required' | 'optional' | 'disabled'; nonNegotiable: boolean }[];
   }>({
     personal: [
-      { field: "Name", defaultValue: "required", nonNegotiable: false },
-      { field: "Birth Date", defaultValue: "required", nonNegotiable: false },
-      { field: "Gender", defaultValue: "required", nonNegotiable: false },
-      { field: "Primary Contact Number", defaultValue: "required", nonNegotiable: false },
-      { field: "Secondary Contact Number", defaultValue: "required", nonNegotiable: false },
-      { field: "Email Address", defaultValue: "required", nonNegotiable: false },
-      { field: "LinkedIn Profile", defaultValue: "optional", nonNegotiable: false },
-      { field: "Address", defaultValue: "required", nonNegotiable: false },
+      { field: "Name", status: "required", nonNegotiable: false },
+      { field: "Birth Date", status: "required", nonNegotiable: false },
+      { field: "Gender", status: "required", nonNegotiable: false },
+      { field: "Primary Contact Number", status: "required", nonNegotiable: false },
+      { field: "Secondary Contact Number", status: "required", nonNegotiable: false },
+      { field: "Email Address", status: "required", nonNegotiable: false },
+      { field: "LinkedIn Profile", status: "optional", nonNegotiable: false },
+      { field: "Address", status: "required", nonNegotiable: false },
     ],
     job: [
-      { field: "Job Title", defaultValue: "required", nonNegotiable: false },
-      { field: "Company Name", defaultValue: "required", nonNegotiable: false },
-      { field: "Years of Experience", defaultValue: "required", nonNegotiable: true },
-      { field: "Position Applying for", defaultValue: "required", nonNegotiable: false },
-      { field: "Expected Salary", defaultValue: "required", nonNegotiable: true },
-      { field: "Are you willing to work onsite?", defaultValue: "required", nonNegotiable: true },
-      { field: "Upload 2×2 photo", defaultValue: "required", nonNegotiable: false },
-      {
-        field: "Upload medical certificate for at least 6 months",
-        defaultValue: "required",
-        nonNegotiable: false,
-      },
-      {
-        field: "Preferred interview schedule (3 dates eg February 20)",
-        defaultValue: "required",
-        nonNegotiable: false,
-      },
+      { field: "Job Title", status: "required", nonNegotiable: false },
+      { field: "Company Name", status: "required", nonNegotiable: false },
+      { field: "Years of Experience", status: "required", nonNegotiable: true },
+      { field: "Position Applying for", status: "required", nonNegotiable: false },
+      { field: "Expected Salary", status: "required", nonNegotiable: true },
+      { field: "Are you willing to work onsite?", status: "required", nonNegotiable: true },
+      { field: "Upload 2×2 photo", status: "required", nonNegotiable: false },
+      { field: "Upload medical certificate for at least 6 months", status: "required", nonNegotiable: false },
+      { field: "Preferred interview schedule (3 dates eg February 20)", status: "required", nonNegotiable: false },
     ],
     education: [
-      { field: "Highest Educational Attained", defaultValue: "required", nonNegotiable: true },
-      { field: "Year Graduated", defaultValue: "required", nonNegotiable: false },
-      { field: "University / Institution Name", defaultValue: "required", nonNegotiable: false },
-      { field: "Program / Course", defaultValue: "required", nonNegotiable: false },
-      { field: "Work Experience", defaultValue: "required", nonNegotiable: true },
-      { field: "Job Title", defaultValue: "required", nonNegotiable: false },
+      { field: "Highest Educational Attained", status: "required", nonNegotiable: true },
+      { field: "Year Graduated", status: "required", nonNegotiable: false },
+      { field: "University / Institution Name", status: "required", nonNegotiable: false },
+      { field: "Program / Course", status: "required", nonNegotiable: false },
+      { field: "Work Experience", status: "required", nonNegotiable: true },
+      { field: "Job Title", status: "required", nonNegotiable: false },
     ],
     acknowledgement: [
-      { field: "How did you learn about this job opportunity?", defaultValue: "required", nonNegotiable: false },
-      { field: "Agreement", defaultValue: "required", nonNegotiable: false },
-      { field: "Signature", defaultValue: "required", nonNegotiable: false },
+      { field: "How did you learn about this job opportunity?", status: "required", nonNegotiable: false },
+      { field: "Agreement", status: "required", nonNegotiable: false },
+      { field: "Signature", status: "required", nonNegotiable: false },
     ],
-  })
+  });
+
+  // Handler to update the status of a form field
+  const handleFormFieldStatusChange = (
+    category: 'personal' | 'job' | 'education' | 'acknowledgement',
+    index: number,
+    status: 'required' | 'optional' | 'disabled'
+  ) => {
+    setFormFieldStatuses(prevStatuses => ({
+      ...prevStatuses,
+      [category]: prevStatuses[category].map((item, idx) =>
+        idx === index ? { ...item, status: status } : item
+      ),
+    }));
+  };
+
+  // Handler to update the nonNegotiable status of a form field
+  const handleFormFieldNonNegotiableChange = (
+    category: 'personal' | 'job' | 'education' | 'acknowledgement',
+    index: number,
+    nonNegotiable: boolean
+  ) => {
+    setFormFieldStatuses(prevStatuses => ({
+      ...prevStatuses,
+      [category]: prevStatuses[category].map((item, idx) =>
+        idx === index ? { ...item, nonNegotiable: nonNegotiable } : item
+      ),
+    }));
+  };
+
 
   const steps = [
     { number: 1, title: "Details", active: currentStep === 1 },
@@ -812,7 +844,7 @@ UI Designer requirements are:
         ...prev,
         [assessment.id]: {
           dueDate: assessment.dueDate || "2021-02-09",
-          timeLimit: assessment.timeLimit || "01:00:00",
+          timeLimit: "01:00:00", // Default time limit
         },
       }))
     }
@@ -1123,7 +1155,7 @@ UI Designer requirements are:
     }> = []
 
     // Check Personal Information
-    formFieldConfig.personal.forEach((item) => {
+    formFieldStatuses.personal.forEach((item) => {
       if (item.nonNegotiable) {
         nonNegotiableFields.push({
           category: "Personal Information",
@@ -1134,7 +1166,7 @@ UI Designer requirements are:
     })
 
     // Check Job Details
-    formFieldConfig.job.forEach((item) => {
+    formFieldStatuses.job.forEach((item) => {
       if (item.nonNegotiable) {
         let fieldType: "text" | "select" | "radio" | "checkbox" | "file" | "date" | "number" = "text"
 
@@ -1158,7 +1190,7 @@ UI Designer requirements are:
     })
 
     // Check Work and Education
-    formFieldConfig.education.forEach((item) => {
+    formFieldStatuses.education.forEach((item) => {
       if (item.nonNegotiable) {
         let fieldType: "text" | "select" | "radio" | "checkbox" | "file" | "date" | "number" = "text"
 
@@ -1222,6 +1254,125 @@ UI Designer requirements are:
     setShowNonNegotiableModal(false)
     setCurrentStep(4) // Proceed to step 4
   }
+
+  // Function to handle editing a location row
+  const handleEditLocation = (id: number) => {
+    setEditingLocationId(id);
+  };
+
+  // Function to handle changes in location input fields
+  const handleLocationChange = (id: number, field: keyof LocationEntry, value: any) => {
+    setLocations((prevLocations) =>
+      prevLocations.map((loc) =>
+        loc.id === id ? { ...loc, [field]: value } : loc
+      )
+    );
+  };
+
+  // Function to handle editing a batch row
+  const handleEditBatch = (id: number) => {
+    setEditingBatchId(id);
+  };
+
+  // Function to handle changes in batch input fields
+  const handleBatchChange = (id: number, field: keyof BatchEntry, value: any) => {
+    setBatches((prevBatches) =>
+      prevBatches.map((batch) =>
+        batch.id === id ? { ...batch, [field]: value } : batch
+      )
+    );
+  };
+
+  // Function to handle rich text formatting
+  const handleFormat = (command: string, value?: string) => {
+    if (jobDescriptionRef.current) {
+      jobDescriptionRef.current.focus(); // Ensure the div is focused
+      document.execCommand(command, false, value);
+      // Manually update the state after execCommand
+      setJobDescription(jobDescriptionRef.current.innerHTML);
+    }
+  };
+
+  // State for alignment options visibility
+  const [showAlignmentOptions, setShowAlignmentOptions] = useState(false);
+
+  // Function to handle alignment
+  const handleAlignment = (alignment: 'Left' | 'Center' | 'Right') => {
+    if (jobDescriptionRef.current) {
+      jobDescriptionRef.current.focus();
+      document.execCommand(`justify${alignment}`, false, undefined);
+      setJobDescription(jobDescriptionRef.current.innerHTML);
+      setShowAlignmentOptions(false); // Hide options after selection
+    }
+  };
+
+  // Function to handle list (unordered list)
+  const handleList = () => {
+    if (jobDescriptionRef.current) {
+      jobDescriptionRef.current.focus();
+      const selection = window.getSelection();
+      if (!selection || selection.rangeCount === 0) return;
+
+      const range = selection.getRangeAt(0);
+      const commonAncestor = range.commonAncestorContainer;
+
+      let isAlreadyList = false;
+      let listItem: HTMLElement | null = null;
+
+      let currentElement: HTMLElement | null = commonAncestor.nodeType === Node.ELEMENT_NODE ? commonAncestor as HTMLElement : commonAncestor.parentElement;
+
+      // Traverse up to find if already in a list item or list
+      while (currentElement && jobDescriptionRef.current.contains(currentElement)) {
+        if (currentElement.tagName === 'LI') {
+          listItem = currentElement;
+          isAlreadyList = true;
+          break; // Found an LI, so it's part of a list
+        }
+        currentElement = currentElement.parentElement;
+      }
+
+      if (isAlreadyList && listItem) {
+        // If already a list item, unlist it by replacing the LI with its content
+        const textContent = listItem.innerHTML.replace(/^- /, ''); // Remove leading hyphen
+        const newParagraph = document.createElement('p');
+        newParagraph.innerHTML = textContent;
+        listItem.replaceWith(newParagraph); // Replace the LI with a paragraph
+      } else {
+        // If not a list, wrap the current line/selection in an LI with a hyphen
+        const selectedText = selection.toString().trim();
+        if (selectedText) {
+          // If text is selected, wrap each line in an LI
+          const lines = selectedText.split('\n');
+          const fragment = document.createDocumentFragment();
+          lines.forEach(line => {
+            const li = document.createElement('li');
+            li.textContent = `- ${line.trim()}`;
+            fragment.appendChild(li);
+          });
+          range.deleteContents(); // Remove selected content
+          range.insertNode(fragment); // Insert new list items
+        } else {
+          // If no text selected, insert a new list item at the cursor
+          document.execCommand('insertHTML', false, '<li>- </li>');
+        }
+      }
+      // Manually update the state after DOM manipulation
+      setJobDescription(jobDescriptionRef.current.innerHTML);
+    }
+  };
+
+
+  // Function to handle link
+  const handleLink = () => {
+    if (jobDescriptionRef.current) {
+      const url = prompt("Enter the URL:");
+      if (url) {
+        document.execCommand('createLink', false, url);
+        setJobDescription(jobDescriptionRef.current.innerHTML);
+      }
+    }
+  };
+
 
   const renderStepContent = () => {
     switch (currentStep) {
@@ -1428,20 +1579,63 @@ UI Designer requirements are:
                     {locations.map((location) => (
                       <tr key={location.id} className="border-t">
                         <td className="px-4 py-3">
-                          <select className="w-full p-1 border rounded text-sm">
-                            <option value="Makati City">Makati City</option>
-                            <option value="Manila">Manila</option>
-                            <option value="Quezon City">Quezon City</option>
-                          </select>
+                          {editingLocationId === location.id ? (
+                            <select
+                              className="w-full p-1 border rounded text-sm"
+                              value={location.location}
+                              onChange={(e) => handleLocationChange(location.id, "location", e.target.value)}
+                            >
+                              <option value="Makati City">Makati City</option>
+                              <option value="Manila">Manila</option>
+                              <option value="Quezon City">Quezon City</option>
+                            </select>
+                          ) : (
+                            location.location
+                          )}
                         </td>
-                        <td className="px-4 py-3">{location.headcount}</td>
-                        <td className="px-4 py-3">{location.deploymentDate}</td>
                         <td className="px-4 py-3">
-                          <span className="text-green-600 font-medium">{location.withBatch ? "Yes" : "No"}</span>
+                          {editingLocationId === location.id ? (
+                            <Input
+                              type="number"
+                              value={location.headcount}
+                              onChange={(e) => handleLocationChange(location.id, "headcount", parseInt(e.target.value))}
+                              className="w-full p-1 border rounded text-sm"
+                            />
+                          ) : (
+                            location.headcount
+                          )}
                         </td>
                         <td className="px-4 py-3">
-                          <Button variant="ghost" size="sm">
-                            <Edit className="w-4 h-4" />
+                          {editingLocationId === location.id ? (
+                            <Input
+                              type="date"
+                              value={location.deploymentDate}
+                              onChange={(e) => handleLocationChange(location.id, "deploymentDate", e.target.value)}
+                              className="w-full p-1 border rounded text-sm"
+                            />
+                          ) : (
+                            location.deploymentDate
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          {editingLocationId === location.id ? (
+                            <Checkbox
+                              checked={location.withBatch}
+                              onCheckedChange={(checked) => handleLocationChange(location.id, "withBatch", checked)}
+                            />
+                          ) : (
+                            <span className="text-green-600 font-medium">{location.withBatch ? "Yes" : "No"}</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <Button variant="ghost" size="sm" onClick={() => {
+                            if (editingLocationId === location.id) {
+                              setEditingLocationId(null); // Save/Exit edit mode
+                            } else {
+                              handleEditLocation(location.id); // Enter edit mode
+                            }
+                          }}>
+                            {editingLocationId === location.id ? <Check className="w-4 h-4 text-green-500" /> : <Edit className="w-4 h-4" />}
                           </Button>
                         </td>
                         <td className="px-4 py-3">
@@ -1486,17 +1680,56 @@ UI Designer requirements are:
                   <tbody>
                     {batches.map((batch) => (
                       <tr key={batch.id} className="border-t">
-                        <td className="px-4 py-3 font-medium">{batch.batch}</td>
-                        <td className="px-4 py-3">{batch.headcount}</td>
-                        <td className="px-4 py-3">{batch.deploymentDate}</td>
+                        <td className="px-4 py-3 font-medium">
+                          {editingBatchId === batch.id ? (
+                            <Input
+                              type="number"
+                              value={batch.batch}
+                              onChange={(e) => handleBatchChange(batch.id, "batch", parseInt(e.target.value))}
+                              className="w-full p-1 border rounded text-sm"
+                            />
+                          ) : (
+                            batch.batch
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          {editingBatchId === batch.id ? (
+                            <Input
+                              type="number"
+                              value={batch.headcount}
+                              onChange={(e) => handleBatchChange(batch.id, "headcount", parseInt(e.target.value))}
+                              className="w-full p-1 border rounded text-sm"
+                            />
+                          ) : (
+                            batch.headcount
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          {editingBatchId === batch.id ? (
+                            <Input
+                              type="date"
+                              value={batch.deploymentDate}
+                              onChange={(e) => handleBatchChange(batch.id, "deploymentDate", e.target.value)}
+                              className="w-full p-1 border rounded text-sm"
+                            />
+                          ) : (
+                            batch.deploymentDate
+                          )}
+                        </td>
                         <td className="px-4 py-3">
                           <Button variant="ghost" size="sm" onClick={() => deleteBatch(batch.id)}>
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </td>
                         <td className="px-4 py-3">
-                          <Button variant="ghost" size="sm">
-                            <Edit className="w-4 h-4" />
+                          <Button variant="ghost" size="sm" onClick={() => {
+                            if (editingBatchId === batch.id) {
+                              setEditingBatchId(null); // Save/Exit edit mode
+                            } else {
+                              handleEditBatch(batch.id); // Enter edit mode
+                            }
+                          }}>
+                            {editingBatchId === batch.id ? <Check className="w-4 h-4 text-green-500" /> : <Edit className="w-4 h-4" />}
                           </Button>
                         </td>
                       </tr>
@@ -1528,25 +1761,61 @@ UI Designer requirements are:
             {/* Text Editor Toolbar */}
             <div className="border rounded-lg">
               <div className="flex items-center gap-2 p-3 border-b bg-gray-50">
-                <Button variant="ghost" size="sm" className="p-1 h-8 w-8">
-                  <AlignLeft className="w-4 h-4" />
-                </Button>
-                <Button variant="ghost" size="sm" className="p-1 h-8 w-8">
+                {/* Alignment Dropdown */}
+                <div
+                  className="relative"
+                  onMouseEnter={() => setShowAlignmentOptions(true)}
+                  onMouseLeave={() => setShowAlignmentOptions(false)}
+                >
+                  <Button variant="ghost" size="sm" className="p-1 h-8 w-8">
+                    <AlignLeft className="w-4 h-4" />
+                  </Button>
+                  {showAlignmentOptions && (
+                    <div className="absolute top-full left-0 mt-1 w-32 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start px-3 py-2 text-sm hover:bg-gray-100"
+                        onClick={() => handleAlignment('Left')}
+                      >
+                        <AlignLeft className="w-4 h-4 mr-2" /> Left
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start px-3 py-2 text-sm hover:bg-gray-100"
+                        onClick={() => handleAlignment('Center')}
+                      >
+                        <AlignCenter className="w-4 h-4 mr-2" /> Center
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start px-3 py-2 text-sm hover:bg-gray-100"
+                        onClick={() => handleAlignment('Right')}
+                      >
+                        <AlignRight className="w-4 h-4 mr-2" /> Right
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
+                <Button variant="ghost" size="sm" className="p-1 h-8 w-8" onClick={() => handleFormat('bold')}>
                   <Bold className="w-4 h-4" />
                 </Button>
-                <Button variant="ghost" size="sm" className="p-1 h-8 w-8">
+                <Button variant="ghost" size="sm" className="p-1 h-8 w-8" onClick={() => handleFormat('italic')}>
                   <Italic className="w-4 h-4" />
                 </Button>
-                <Button variant="ghost" size="sm" className="p-1 h-8 w-8">
+                <Button variant="ghost" size="sm" className="p-1 h-8 w-8" onClick={() => handleFormat('underline')}>
                   <Underline className="w-4 h-4" />
                 </Button>
-                <Button variant="ghost" size="sm" className="p-1 h-8 w-8">
+                <Button variant="ghost" size="sm" className="p-1 h-8 w-8" onClick={() => handleFormat('strikeThrough')}>
                   <Strikethrough className="w-4 h-4" />
                 </Button>
-                <Button variant="ghost" size="sm" className="p-1 h-8 w-8">
+                <Button variant="ghost" size="sm" className="p-1 h-8 w-8" onClick={handleList}>
                   <List className="w-4 h-4" />
                 </Button>
-                <Button variant="ghost" size="sm" className="p-1 h-8 w-8">
+                <Button variant="ghost" size="sm" className="p-1 h-8 w-8" onClick={handleLink}>
                   <Link className="w-4 h-4" />
                 </Button>
 
@@ -1562,11 +1831,12 @@ UI Designer requirements are:
 
               {/* Text Editor Content */}
               <div className="p-4">
-                <textarea
-                  className="w-full h-96 border-none outline-none resize-none text-sm leading-relaxed"
-                  value={jobDescription}
-                  onChange={(e) => setJobDescription(e.target.value)}
-                  placeholder="Enter job description..."
+                <div
+                  ref={jobDescriptionRef}
+                  contentEditable
+                  className="w-full min-h-[24rem] border-none outline-none resize-none text-sm leading-relaxed focus:ring-0 focus:outline-none overflow-y-auto"
+                  dangerouslySetInnerHTML={{ __html: jobDescription }}
+                  onInput={(e) => setJobDescription(e.currentTarget.innerHTML)}
                 />
               </div>
             </div>
@@ -1628,7 +1898,7 @@ UI Designer requirements are:
                       </tr>
                     </thead>
                     <tbody>
-                      {formFieldConfig.personal.map((item, index) => (
+                      {formFieldStatuses.personal.map((item, index) => (
                         <tr key={index} className="border-b">
                           <td className="p-4 font-medium text-gray-800 w-2/5">{item.field}</td>
                           <td className="p-4 text-center w-1/6">
@@ -1636,7 +1906,8 @@ UI Designer requirements are:
                               type="checkbox"
                               name={`personal_${index}_non_negotiable`}
                               value="non-negotiable"
-                              defaultChecked={item.nonNegotiable}
+                              checked={item.nonNegotiable}
+                              onChange={(e) => handleFormFieldNonNegotiableChange('personal', index, e.target.checked)}
                               className="w-4 h-4 bg-white border-2 border-gray-400 rounded focus:ring-2 focus:ring-blue-500 checked:bg-white checked:border-blue-600 appearance-none relative checked:after:content-['✓'] checked:after:absolute checked:after:inset-0 checked:after:flex checked:after:items-center checked:after:justify-center checked:after:text-blue-600 checked:after:text-xs checked:after:font-bold"
                             />
                           </td>
@@ -1645,7 +1916,8 @@ UI Designer requirements are:
                               type="radio"
                               name={`personal_${index}_status`}
                               value="required"
-                              defaultChecked={!item.nonNegotiable && item.defaultValue === "required"}
+                              checked={item.status === "required"}
+                              onChange={(e) => handleFormFieldStatusChange('personal', index, e.target.value as 'required' | 'optional' | 'disabled')}
                               className="w-4 h-4 bg-white border-2 border-gray-400 rounded-full appearance-none focus:ring-2 focus:ring-blue-500 checked:bg-white checked:border-blue-600 checked:after:content-[''] checked:after:w-2 checked:after:h-2 checked:after:bg-blue-600 checked:after:rounded-full checked:after:absolute checked:after:top-1/2 checked:after:left-1/2 checked:after:transform checked:after:-translate-x-1/2 checked:after:-translate-y-1/2 relative"
                             />
                           </td>
@@ -1654,7 +1926,8 @@ UI Designer requirements are:
                               type="radio"
                               name={`personal_${index}_status`}
                               value="optional"
-                              defaultChecked={!item.nonNegotiable && item.defaultValue === "optional"}
+                              checked={item.status === "optional"}
+                              onChange={(e) => handleFormFieldStatusChange('personal', index, e.target.value as 'required' | 'optional' | 'disabled')}
                               className="w-4 h-4 bg-white border-2 border-gray-400 rounded-full appearance-none focus:ring-2 focus:ring-blue-500 checked:bg-white checked:border-blue-600 checked:after:content-[''] checked:after:w-2 checked:after:h-2 checked:after:bg-blue-600 checked:after:rounded-full checked:after:absolute checked:after:top-1/2 checked:after:left-1/2 checked:after:transform checked:after:-translate-x-1/2 checked:after:-translate-y-1/2 relative"
                             />
                           </td>
@@ -1663,6 +1936,8 @@ UI Designer requirements are:
                               type="radio"
                               name={`personal_${index}_status`}
                               value="disabled"
+                              checked={item.status === "disabled"}
+                              onChange={(e) => handleFormFieldStatusChange('personal', index, e.target.value as 'required' | 'optional' | 'disabled')}
                               className="w-4 h-4 bg-white border-2 border-gray-400 rounded-full appearance-none focus:ring-2 focus:ring-blue-500 checked:bg-white checked:border-blue-600 checked:after:content-[''] checke:after:w-2 checked:after:h-2 checked:after:bg-blue-600 checked:after:rounded-full checked:after:absolute checked:after:top-1/2 checked:after:left-1/2 checked:after:transform checked:after:-translate-x-1/2 checked:after:-translate-y-1/2 relative"
                             />
                           </td>
@@ -1688,7 +1963,7 @@ UI Designer requirements are:
                       </tr>
                     </thead>
                     <tbody>
-                      {formFieldConfig.job.map((item, index) => (
+                      {formFieldStatuses.job.map((item, index) => (
                         <tr key={index} className="border-b">
                           <td className="p-4 font-medium text-gray-800 w-2/5">{item.field}</td>
                           <td className="p-4 text-center w-1/6">
@@ -1696,7 +1971,8 @@ UI Designer requirements are:
                               type="checkbox"
                               name={`job_${index}_non_negotiable`}
                               value="non-negotiable"
-                              defaultChecked={item.nonNegotiable}
+                              checked={item.nonNegotiable}
+                              onChange={(e) => handleFormFieldNonNegotiableChange('job', index, e.target.checked)}
                               className="w-4 h-4 bg-white border-2 border-gray-400 rounded focus:ring-2 focus:ring-blue-500 checked:bg-white checked:border-blue-600 appearance-none relative checked:after:content-['✓'] checked:after:absolute checked:after:inset-0 checked:after:flex checked:after:items-center checked:after:justify-center checked:after:text-blue-600 checked:after:text-xs checked:after:font-bold"
                             />
                           </td>
@@ -1705,7 +1981,8 @@ UI Designer requirements are:
                               type="radio"
                               name={`job_${index}_status`}
                               value="required"
-                              defaultChecked={!item.nonNegotiable && item.defaultValue === "required"}
+                              checked={item.status === "required"}
+                              onChange={(e) => handleFormFieldStatusChange('job', index, e.target.value as 'required' | 'optional' | 'disabled')}
                               className="w-4 h-4 bg-white border-2 border-gray-400 rounded-full appearance-none focus:ring-2 focus:ring-blue-500 checked:bg-white checked:border-blue-600 checked:after:content-[''] checked:after:w-2 checked:after:h-2 checked:after:bg-blue-600 checked:after:rounded-full checked:after:absolute checked:after:top-1/2 checked:after:left-1/2 checked:after:transform checked:after:-translate-x-1/2 checked:after:-translate-y-1/2 relative"
                             />
                           </td>
@@ -1714,6 +1991,8 @@ UI Designer requirements are:
                               type="radio"
                               name={`job_${index}_status`}
                               value="optional"
+                              checked={item.status === "optional"}
+                              onChange={(e) => handleFormFieldStatusChange('job', index, e.target.value as 'required' | 'optional' | 'disabled')}
                               className="w-4 h-4 bg-white border-2 border-gray-400 rounded-full appearance-none focus:ring-2 focus:ring-blue-500 checked:bg-white checked:border-blue-600 checked:after:content-[''] checked:after:w-2 checked:after:h-2 checked:after:bg-blue-600 checked:after:rounded-full checked:after:absolute checked:after:top-1/2 checked:after:left-1/2 checked:after:transform checked:after:-translate-x-1/2 checked:after:-translate-y-1/2 relative"
                             />
                           </td>
@@ -1722,6 +2001,8 @@ UI Designer requirements are:
                               type="radio"
                               name={`job_${index}_status`}
                               value="disabled"
+                              checked={item.status === "disabled"}
+                              onChange={(e) => handleFormFieldStatusChange('job', index, e.target.value as 'required' | 'optional' | 'disabled')}
                               className="w-4 h-4 bg-white border-2 border-gray-400 rounded-full appearance-none focus:ring-2 focus:ring-blue-500 checked:bg-white checked:border-blue-600 checked:after:content-[''] checked:after:w-2 checked:after:h-2 checked:after:bg-blue-600 checked:after:rounded-full checked:after:absolute checked:after:top-1/2 checked:after:left-1/2 checked:after:transform checked:after:-translate-x-1/2 checked:after:-translate-y-1/2 relative"
                             />
                           </td>
@@ -1747,7 +2028,7 @@ UI Designer requirements are:
                       </tr>
                     </thead>
                     <tbody>
-                      {formFieldConfig.education.map((item, index) => (
+                      {formFieldStatuses.education.map((item, index) => (
                         <tr key={index} className="border-b">
                           <td className="p-4 font-medium text-gray-800 w-2/5">{item.field}</td>
                           <td className="p-4 text-center w-1/6">
@@ -1755,7 +2036,8 @@ UI Designer requirements are:
                               type="checkbox"
                               name={`education_${index}_non_negotiable`}
                               value="non-negotiable"
-                              defaultChecked={item.nonNegotiable}
+                              checked={item.nonNegotiable}
+                              onChange={(e) => handleFormFieldNonNegotiableChange('education', index, e.target.checked)}
                               className="w-4 h-4 bg-white border-2 border-gray-400 rounded focus:ring-2 focus:ring-blue-500 checked:bg-white checked:border-blue-600 appearance-none relative checked:after:content-['✓'] checked:after:absolute checked:after:inset-0 checked:after:flex checked:after:items-center checked:after:justify-center checked:after:text-blue-600 checked:after:text-xs checked:after:font-bold"
                             />
                           </td>
@@ -1764,7 +2046,8 @@ UI Designer requirements are:
                               type="radio"
                               name={`education_${index}_status`}
                               value="required"
-                              defaultChecked={!item.nonNegotiable && item.defaultValue === "required"}
+                              checked={item.status === "required"}
+                              onChange={(e) => handleFormFieldStatusChange('education', index, e.target.value as 'required' | 'optional' | 'disabled')}
                               className="w-4 h-4 bg-white border-2 border-gray-400 rounded-full appearance-none focus:ring-2 focus:ring-blue-500 checked:bg-white checked:border-blue-600 checked:after:content-[''] checked:after:w-2 checked:after:h-2 checked:after:bg-blue-600 checked:after:rounded-full checked:after:absolute checked:after:top-1/2 checked:after:left-1/2 checked:after:transform checked:after:-translate-x-1/2 checked:after:-translate-y-1/2 relative"
                             />
                           </td>
@@ -1773,6 +2056,8 @@ UI Designer requirements are:
                               type="radio"
                               name={`education_${index}_status`}
                               value="optional"
+                              checked={item.status === "optional"}
+                              onChange={(e) => handleFormFieldStatusChange('education', index, e.target.value as 'required' | 'optional' | 'disabled')}
                               className="w-4 h-4 bg-white border-2 border-gray-400 rounded-full appearance-none focus:ring-2 focus:ring-blue-500 checked:bg-white checked:border-blue-600 checked:after:content-[''] checked:after:w-2 checked:after:h-2 checked:after:bg-blue-600 checked:after:rounded-full checked:after:absolute checked:after:top-1/2 checked:after:left-1/2 checked:after:transform checked:after:-translate-x-1/2 checked:after:-translate-y-1/2 relative"
                             />
                           </td>
@@ -1781,6 +2066,8 @@ UI Designer requirements are:
                               type="radio"
                               name={`education_${index}_status`}
                               value="disabled"
+                              checked={item.status === "disabled"}
+                              onChange={(e) => handleFormFieldStatusChange('education', index, e.target.value as 'required' | 'optional' | 'disabled')}
                               className="w-4 h-4 bg-white border-2 border-gray-400 rounded-full appearance-none focus:ring-2 focus:ring-blue-500 checked:bg-white checked:border-blue-600 checked:after:content-[''] checked:after:w-2 checked:after:h-2 checked:after:bg-blue-600 checked:after:rounded-full checked:after:absolute checked:after:top-1/2 checked:after:left-1/2 checked:after:transform checked:after:-translate-x-1/2 checked:after:-translate-y-1/2 relative"
                             />
                           </td>
@@ -1806,7 +2093,7 @@ UI Designer requirements are:
                       </tr>
                     </thead>
                     <tbody>
-                      {formFieldConfig.acknowledgement.map((item, index) => (
+                      {formFieldStatuses.acknowledgement.map((item, index) => (
                         <tr key={index} className="border-b">
                           <td className="p-4 font-medium text-gray-800 w-2/5">{item.field}</td>
                           <td className="p-4 text-center w-1/6">
@@ -1814,7 +2101,8 @@ UI Designer requirements are:
                               type="checkbox"
                               name={`acknowledgement_${index}_non_negotiable`}
                               value="non-negotiable"
-                              defaultChecked={item.nonNegotiable}
+                              checked={item.nonNegotiable}
+                              onChange={(e) => handleFormFieldNonNegotiableChange('acknowledgement', index, e.target.checked)}
                               className="w-4 h-4 bg-white border-2 border-gray-400 rounded focus:ring-2 focus:ring-blue-500 checked:bg-white checked:border-blue-600 appearance-none relative checked:after:content-['✓'] checked:after:absolute checked:after:inset-0 checked:after:flex checked:after:items-center checked:after:justify-center checked:after:text-blue-600 checked:after:text-xs checked:after:font-bold"
                             />
                           </td>
@@ -1823,7 +2111,8 @@ UI Designer requirements are:
                               type="radio"
                               name={`acknowledgement_${index}_status`}
                               value="required"
-                              defaultChecked={!item.nonNegotiable && item.defaultValue === "required"}
+                              checked={item.status === "required"}
+                              onChange={(e) => handleFormFieldStatusChange('acknowledgement', index, e.target.value as 'required' | 'optional' | 'disabled')}
                               className="w-4 h-4 bg-white border-2 border-gray-400 rounded-full appearance-none focus:ring-2 focus:ring-blue-500 checked:bg-white checked:border-blue-600 checked:after:content-[''] checked:after:w-2 checked:after:h-2 checked:after:bg-blue-600 checked:after:rounded-full checked:after:absolute checked:after:top-1/2 checked:after:left-1/2 checked:after:transform checked:after:-translate-x-1/2 checked:after:-translate-y-1/2 relative"
                             />
                           </td>
@@ -1832,7 +2121,9 @@ UI Designer requirements are:
                               type="radio"
                               name={`acknowledgement_${index}_status`}
                               value="optional"
-                              className="w-4 h-4 bg-white border-2 border-gray-400 rounded-full appearance-none focus:ring-2 focus:ring-2 focus:ring-blue-500 checked:bg-white checked:border-blue-600 checked:after:content-[''] checked:after:w-2 checked:after:h-2 checked:after:bg-blue-600 checked:after:rounded-full checked:after:absolute checked:after:top-1/2 checked:after:left-1/2 checked:after:transform checked:after:-translate-x-1/2 checked:after:-translate-y-1/2 relative"
+                              checked={item.status === "optional"}
+                              onChange={(e) => handleFormFieldStatusChange('acknowledgement', index, e.target.value as 'required' | 'optional' | 'disabled')}
+                              className="w-4 h-4 bg-white border-2 border-gray-400 rounded-full appearance-none focus:ring-2 focus:ring-blue-500 checked:bg-white checked:border-blue-600 checked:after:content-[''] checked:after:w-2 checked:after:h-2 checked:after:bg-blue-600 checked:after:rounded-full checked:after:absolute checked:after:top-1/2 checked:after:left-1/2 checked:after:transform checked:after:-translate-x-1/2 checked:after:-translate-y-1/2 relative"
                             />
                           </td>
                           <td className="p-4 text-center w-1/6">
@@ -1840,6 +2131,8 @@ UI Designer requirements are:
                               type="radio"
                               name={`acknowledgement_${index}_status`}
                               value="disabled"
+                              checked={item.status === "disabled"}
+                              onChange={(e) => handleFormFieldStatusChange('acknowledgement', index, e.target.value as 'required' | 'optional' | 'disabled')}
                               className="w-4 h-4 bg-white border-2 border-gray-400 rounded-full appearance-none focus:ring-2 focus:ring-blue-500 checked:bg-white checked:border-blue-600 checked:after:content-[''] checked:after:w-2 checked:after:h-2 checked:after:bg-blue-600 checked:after:rounded-full checked:after:absolute checked:after:top-1/2 checked:after:left-1/2 checked:after:transform checked:after:-translate-x-1/2 checked:after:-translate-y-1/2 relative"
                             />
                           </td>
@@ -2038,7 +2331,6 @@ UI Designer requirements are:
                           <tr key={member.id} className="border-b">
                             <td className="p-4 text-gray-800">{member.name}</td>
                             <td className="p-4 text-gray-600">{member.position}</td>
-                            <td className="p-4 text-gray-600">{member.department}</td>
                             <td className="p-4 text-gray-600">{member.process}</td>
                           </tr>
                         ))}
@@ -3657,41 +3949,22 @@ UI Designer requirements are:
               </div>
 
               {/* Action Buttons */}
-              <div className="flex justify-between mt-6">
-                <div className="flex gap-2">
-                  <Button
-                    onClick={handleSaveAsNewTemplate}
-                    variant="outline"
-                    className="px-4 py-2 border-gray-300"
-                    disabled={!questionnaireName.trim() || sections.length === 0}
-                  >
-                    Save as New Template
-                  </Button>
-                  <Button
-                    onClick={handleUpdateTemplate}
-                    variant="outline"
-                    className="px-4 py-2 border-gray-300"
-                    disabled={!isTemplateSelected || !questionnaireName.trim()}
-                  >
-                    Update Template
-                  </Button>
-                </div>
-                <div className="flex gap-3">
-                  <Button
-                    onClick={() => setShowQuestionnaireModal(false)}
-                    variant="outline"
-                    className="px-4 py-2 border-gray-300"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={() => setShowQuestionnaireModal(false)}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white"
-                    disabled={!questionnaireName.trim()}
-                  >
-                    Save Questionnaire
-                  </Button>
-                </div>
+              <div className="flex justify-end mt-6 gap-3">
+                <Button
+                  onClick={handleUpdateTemplate}
+                  variant="outline"
+                  className="px-4 py-2 border-gray-300"
+                  disabled={!isTemplateSelected || !questionnaireName.trim()}
+                >
+                  Update Template
+                </Button>
+                <Button
+                  onClick={handleSaveAsNewTemplate}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white"
+                  disabled={!questionnaireName.trim() || sections.length === 0}
+                >
+                  Save as New Template
+                </Button>
               </div>
             </div>
           </div>
@@ -3997,16 +4270,29 @@ UI Designer requirements are:
 
               {currentStep === 1 && (
                 <div className="space-y-6">
-                  <h4 className="text-lg font-medium text-gray-800 mb-4">Position Details</h4>
+                  {/* Job Title and Department at the top left */}
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="h-8 w-1 bg-blue-600 rounded-full"></div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-blue-600">
+                        {formData.jobTitle || "Not specified"}
+                      </h2>
+                      <span className="inline-block px-3 py-1 mt-1 rounded-md bg-yellow-100 text-yellow-800 text-sm font-medium">
+                        {formData.department || "Not specified"}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3 mb-6">
+                  <div className="h-8 w-1 bg-blue-600 rounded-full"></div>
+                    <div>
+                      <h4 className="text-xl font-bold text-blue-600">
+                        Job Title
+                      </h4>
+                      </div>
+                    </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div className="flex flex-col">
-                      <span className="font-medium text-gray-700">Job Title:</span>
-                      <span className="text-gray-900">{formData.jobTitle || "Not specified"}</span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="font-medium text-gray-700">Department:</span>
-                      <span className="text-gray-900">{formData.department || "Not specified"}</span>
-                    </div>
+                    {/* Removed Job Title and Department from here */}
                     <div className="flex flex-col">
                       <span className="font-medium text-gray-700">Employment Type:</span>
                       <span className="text-gray-900">{formData.employmentType}</span>
@@ -4053,12 +4339,12 @@ UI Designer requirements are:
                   {locations.length > 0 ? (
                     <div className="overflow-x-auto border rounded-lg">
                       <table className="min-w-full bg-white text-sm">
-                        <thead className="bg-gray-100 border-b">
+                        <thead className="bg-blue-600 border-b">
                           <tr>
-                            <th className="px-4 py-3 text-left font-medium text-gray-700">Location</th>
-                            <th className="px-4 py-3 text-left font-medium text-gray-700">Headcount</th>
-                            <th className="px-4 py-3 text-left font-medium text-gray-700">Deployment Date</th>
-                            <th className="px-4 py-3 text-left font-medium text-gray-700">With Batch?</th>
+                            <th className="px-4 py-3 text-left font-medium text-white">Location</th>
+                            <th className="px-4 py-3 text-left font-medium text-white">Headcount</th>
+                            <th className="px-4 py-3 text-left font-medium text-white">Deployment Date</th>
+                            <th className="px-4 py-3 text-left font-medium text-white">With Batch?</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -4081,11 +4367,11 @@ UI Designer requirements are:
                   {batches.length > 0 ? (
                     <div className="overflow-x-auto border rounded-lg">
                       <table className="min-w-full bg-white text-sm">
-                        <thead className="bg-gray-100 border-b">
+                        <thead className="bg-blue-600 border-b">
                           <tr>
-                            <th className="px-4 py-3 text-left font-medium text-gray-700">Batch</th>
-                            <th className="px-4 py-3 text-left font-medium text-gray-700">Headcount</th>
-                            <th className="px-4 py-3 text-left font-medium text-gray-700">Deployment Date</th>
+                            <th className="px-4 py-3 text-left font-medium text-white">Batch</th>
+                            <th className="px-4 py-3 text-left font-medium text-white">Headcount</th>
+                            <th className="px-4 py-3 text-left font-medium text-white">Deployment Date</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -4108,54 +4394,292 @@ UI Designer requirements are:
               {currentStep === 2 && (
                 <div className="space-y-6">
                   <h4 className="text-lg font-medium text-gray-800">Job Description</h4>
-                  <div className="text-sm whitespace-pre-wrap border rounded-lg p-4 bg-gray-50">
-                    {jobDescription || "No description provided"}
-                  </div>
+                  <div className="text-sm whitespace-pre-wrap border rounded-lg p-4 bg-gray-50"
+                       dangerouslySetInnerHTML={{ __html: jobDescription || "No description provided" }}
+                  />
                 </div>
               )}
 
               {currentStep === 3 && (
-                <div className="space-y-6">
+                <div className="space-y-8">
                   <h4 className="text-lg font-medium text-gray-800">Application Form Preview</h4>
-                  {sections.length > 0 ? (
+
+                  {/* Personal Information Section */}
+                  <div className="bg-white rounded-lg shadow-sm p-6">
+                    <div className="flex items-center gap-3 mb-6">
+                      <h2 className="text-lg font-semibold text-blue-600">Personal Information</h2>
+                      <div className="flex-1 h-px bg-blue-600"></div>
+                    </div>
+
                     <div className="space-y-6">
-                      <h5 className="font-bold text-gray-800 text-xl mb-4">
+                      {formFieldStatuses.personal.map((item, index) => {
+                        // Do not render if disabled
+                        if (item.status === "disabled") return null;
+
+                        const isRequired = item.status === "required" || item.nonNegotiable;
+                        const isOptional = item.status === "optional";
+
+                        return (
+                          <div key={index}>
+                            <Label className="text-sm font-medium text-gray-700">
+                              {item.field}{" "}
+                              {isRequired && <span className="text-red-500">*</span>}
+                              {isOptional && <span className="text-gray-500 ml-1">(Optional)</span>}
+                            </Label>
+                            {item.field === "Gender" ? (
+                              <RadioGroup className="flex flex-wrap gap-6 mt-1" disabled>
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="male" id={`preview-gender-male-${index}`} />
+                                  <Label htmlFor={`preview-gender-male-${index}`}>Male</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="female" id={`preview-gender-female-${index}`} />
+                                  <Label htmlFor={`preview-gender-female-${index}`}>Female</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="prefer-not-to-say" id={`preview-gender-not-say-${index}`} />
+                                  <Label htmlFor={`preview-gender-not-say-${index}`}>I prefer not to say</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="other" id={`preview-gender-other-${index}`} />
+                                  <Label htmlFor={`preview-gender-other-${index}`}>Other</Label>
+                                </div>
+                              </RadioGroup>
+                            ) : item.field.includes("Contact Number") ? (
+                              <div className="relative mt-1">
+                                <Input  className="pl-10" type="text" placeholder="e.g., +63 912 345 6789" disabled />
+                                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                              </div>
+                            ) : item.field === "Email Address" ? (
+                              <div className="relative mt-1">
+                                <Input  className="pl-10" type="email" placeholder="e.g., email@example.com" disabled />
+                                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                              </div>
+                            ) : item.field === "LinkedIn Profile" ? (
+                              <div className="relative mt-1">
+                                <Input  className="pl-10" type="url" placeholder="e.g., https://linkedin.com/in/yourprofile" disabled />
+                                <Linkedin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                              </div>
+                            ) : item.field === "Birth Date" ? (
+                              <div className="relative mt-1">
+                                <Input className="pl-10" type="text" placeholder="DD-MMM-YYYY" disabled />
+                                <Cake className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                              </div>
+                            ) : item.field === "Address" ? (
+                              <div className="space-y-4 mt-1">
+                                <Input placeholder="Address Line 1" disabled />
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  <Input placeholder="City" disabled />
+                                  <Input placeholder="District" disabled />
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  <Input placeholder="Postal Code" disabled />
+                                  <Input placeholder="Country" disabled />
+                                </div>
+                              </div>
+                            ) : (
+                              <Input type="text" placeholder="Input text" disabled className="mt-1" />
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Job Details Section */}
+                  <div className="bg-white rounded-lg shadow-sm p-6">
+                    <div className="flex items-center gap-3 mb-6">
+                      <h2 className="text-lg font-semibold text-blue-600">Job Details</h2>
+                      <div className="flex-1 h-px bg-blue-600"></div>
+                    </div>
+
+                    <div className="space-y-6">
+                      {formFieldStatuses.job.map((item, index) => {
+                        // Do not render if disabled
+                        if (item.status === "disabled") return null;
+
+                        // Skip Job Title and Department as they are moved
+                        if (item.field === "Job Title" || item.field === "Company Name") return null;
+
+                        const isRequired = item.status === "required" || item.nonNegotiable;
+                        const isOptional = item.status === "optional";
+
+                        return (
+                          <div key={index}>
+                            <Label className="text-sm font-medium text-gray-700">
+                              {item.field}{" "}
+                              {isRequired && <span className="text-red-500">*</span>}
+                              {isOptional && <span className="text-gray-500 ml-1">(Optional)</span>}
+                            </Label>
+                            {item.field === "Are you willing to work onsite?" ? (
+                              <RadioGroup className="flex flex-wrap gap-6 mt-1" disabled>
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="yes" id={`preview-onsite-yes-${index}`} />
+                                  <Label htmlFor={`preview-onsite-yes-${index}`}>Yes</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="no" id={`preview-onsite-no-${index}`} />
+                                  <Label htmlFor={`preview-onsite-no-${index}`}>No</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="flexible" id={`preview-onsite-flexible-${index}`} />
+                                  <Label htmlFor={`preview-onsite-flexible-${index}`}>Flexible</Label>
+                                </div>
+                              </RadioGroup>
+                            ) : item.field.includes("Upload") ? (
+                              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center mt-1">
+                                <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                                <span className="text-sm text-gray-600">Click to upload file</span>
+                              </div>
+                            ) : item.field === "Expected Salary" ? (
+                              <Input type="number" placeholder="e.g., 50000" disabled className="mt-1" />
+                            ) : item.field.includes("date") ? (
+                              <Input type="date" disabled className="mt-1" />
+                            ) : (
+                              <Input type="text" placeholder="Input text" disabled className="mt-1" />
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Work and Education Section */}
+                  <div className="bg-white rounded-lg shadow-sm p-6">
+                    <div className="flex items-center gap-3 mb-6">
+                      <h2 className="text-lg font-semibold text-blue-600">Work and Education</h2>
+                      <div className="flex-1 h-px bg-blue-600"></div>
+                    </div>
+
+                    <div className="space-y-6">
+                      {formFieldStatuses.education.map((item, index) => {
+                        // Do not render if disabled
+                        if (item.status === "disabled") return null;
+
+                        const isRequired = item.status === "required" || item.nonNegotiable;
+                        const isOptional = item.status === "optional";
+
+                        return (
+                          <div key={index}>
+                            <Label className="text-sm font-medium text-gray-700">
+                              {item.field}{" "}
+                              {isRequired && <span className="text-red-500">*</span>}
+                              {isOptional && <span className="text-gray-500 ml-1">(Optional)</span>}
+                            </Label>
+                            {item.field === "Highest Educational Attained" ? (
+                              <select
+                                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                disabled
+                              >
+                                <option value="">Select education level</option>
+                                <option value="High School">High School</option>
+                                <option value="Associate Degree">Associate Degree</option>
+                                <option value="Bachelor's Degree">Bachelor's Degree</option>
+                                <option value="Master's Degree">Master's Degree</option>
+                                <option value="Doctorate">Doctorate</option>
+                              </select>
+                            ) : item.field === "Work Experience" ? (
+                              <RadioGroup className="flex flex-wrap gap-6 mt-1" disabled>
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="yes" id={`preview-work-yes-${index}`} />
+                                  <Label htmlFor={`preview-work-yes-${index}`}>Yes</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="no" id={`preview-work-no-${index}`} />
+                                  <Label htmlFor={`preview-work-no-${index}`}>No</Label>
+                                </div>
+                              </RadioGroup>
+                            ) : (
+                              <Input type="text" placeholder="Input text" disabled className="mt-1" />
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Acknowledgement Section */}
+                  <div className="bg-white rounded-lg shadow-sm p-6">
+                    <div className="flex items-center gap-3 mb-6">
+                      <h2 className="text-lg font-semibold text-blue-600">Acknowledgement</h2>
+                      <div className="flex-1 h-px bg-blue-600"></div>
+                    </div>
+
+                    <div className="space-y-6">
+                      {formFieldStatuses.acknowledgement.map((item, index) => {
+                        // Do not render if disabled
+                        if (item.status === "disabled") return null;
+
+                        const isRequired = item.status === "required" || item.nonNegotiable;
+                        const isOptional = item.status === "optional";
+
+                        return (
+                          <div key={index}>
+                            <Label className="text-sm font-medium text-gray-700">
+                              {item.field}{" "}
+                              {isRequired && <span className="text-red-500">*</span>}
+                              {isOptional && <span className="text-gray-500 ml-1">(Optional)</span>}
+                            </Label>
+                            {item.field === "How did you learn about this job opportunity?" ? (
+                              <RadioGroup className="space-y-3 mt-1" disabled>
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="jobstreet" id={`preview-learn-jobstreet-${index}`} />
+                                  <Label htmlFor={`preview-learn-jobstreet-${index}`}>JobStreet</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="indeed" id={`preview-learn-indeed-${index}`} />
+                                  <Label htmlFor={`preview-learn-indeed-${index}`}>Indeed</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="facebook" id={`preview-learn-facebook-${index}`} />
+                                  <Label htmlFor={`preview-learn-facebook-${index}`}>Facebook</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="referral" id={`preview-learn-referral-${index}`} />
+                                  <Label htmlFor={`preview-learn-referral-${index}`}>Referral</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="other" id={`preview-learn-other-${index}`} />
+                                  <Label htmlFor={`preview-learn-other-${index}`}>Other</Label>
+                                </div>
+                              </RadioGroup>
+                            ) : item.field === "Agreement" ? (
+                              <div className="flex items-center space-x-2 mt-1">
+                                <Checkbox id={`preview-agreement-${index}`} disabled />
+                                <Label htmlFor={`preview-agreement-${index}`} className="text-sm text-gray-700">
+                                  I accept the terms and conditions
+                                </Label>
+                              </div>
+                            ) : item.field === "Signature" ? (
+                              <div className="flex flex-col md:flex-row gap-4 mt-1">
+                                <div className="flex-1 h-[150px] border border-gray-300 rounded-md flex items-center justify-center text-gray-500">
+                                  Signature Pad (Preview)
+                                </div>
+                                <div className="flex-1 h-[150px] border-2 border-dashed border-gray-300 rounded-lg p-4 text-center flex items-center justify-center text-gray-500">
+                                  Upload Signature (Preview)
+                                </div>
+                              </div>
+                            ) : (
+                              <Input type="text" placeholder="Input text" disabled className="mt-1" />
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {sections.length > 0 && (
+                    <div className="space-y-6">
+                      <h5 className="font-bold text-gray-800 text-xl mb-4 mt-8">
                         {questionnaireName || "Untitled Questionnaire"}
                       </h5>
-                      {sections.map((section, sectionIndex) => (
+                      {sections.map((section, _sectionIndex) => (
                         <div key={section.id} className="space-y-6 mb-8">
                           <h6 className="font-semibold text-gray-900 text-lg">{section.name}</h6>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {section.questions.map((question, questionIndex) => {
-                              // Determine if the field should be displayed
-                              const formFieldStatus = formFieldConfig.personal
-                                .concat(formFieldConfig.job)
-                                .concat(formFieldConfig.education)
-                                .concat(formFieldConfig.acknowledgement)
-                                .find(
-                                  (item) =>
-                                    item.field === question.question &&
-                                    (item.defaultValue === "disabled" || item.nonNegotiable),
-                                )
-
-                              // If it's explicitly disabled or non-negotiable from the main form config, hide it.
-                              // Note: This logic might need refinement if 'mode' in question itself overrides
-                              // the global formFieldConfig 'defaultValue' status. For now, prioritizing 'disabled'.
-                              if (formFieldStatus && formFieldStatus.defaultValue === "disabled") {
-                                return null // Do not render if disabled
-                              }
-                              // If question.mode is "Non-negotiable" and nonNegotiableText is empty, don't show.
-                              if (question.mode === "Non-negotiable" && !question.nonNegotiableText &&
-                                (question.type === "Text Entry" || question.type === "Paragraph")) {
-                                return null;
-                              }
-                              // If question.mode is "Non-negotiable" and no nonNegotiableOptions are set for MC/Checkbox, don't show.
-                              if (question.mode === "Non-negotiable" &&
-                                (question.type === "Multiple Choice" || question.type === "Checkboxes") &&
-                                (!question.nonNegotiableOptions || question.nonNegotiableOptions.every(opt => !opt.required))) {
-                                return null;
-                              }
-
+                            {section.questions.map((question, _questionIndex) => {
+                              // Only render if not disabled
+                              if (question.mode === "Disabled") return null;
 
                               const isRequired = question.required || question.mode === "Non-negotiable"
                               const isOptional = question.mode === "Optional"
@@ -4173,12 +4697,12 @@ UI Designer requirements are:
 
                                   {/* Render input based on type, always disabled for preview */}
                                   {question.type === "Multiple Choice" && (
-                                    <RadioGroup className="space-y-2">
+                                    <RadioGroup className="space-y-2" disabled>
                                       {question.options
                                         .filter((opt) => opt.trim() !== "")
                                         .map((option, optIndex) => (
                                           <div key={optIndex} className="flex items-center space-x-2">
-                                            <RadioGroupItem value={option} id={`q${question.id}-opt${optIndex}`} disabled />
+                                            <RadioGroupItem value={option} id={`q${question.id}-opt${optIndex}`} />
                                             <Label htmlFor={`q${question.id}-opt${optIndex}`} className="text-sm font-normal">
                                               {option}
                                             </Label>
@@ -4232,8 +4756,6 @@ UI Designer requirements are:
                         </div>
                       ))}
                     </div>
-                  ) : (
-                    <p className="text-gray-500">No questionnaire created yet.</p>
                   )}
                 </div>
               )}
