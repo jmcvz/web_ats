@@ -5,7 +5,7 @@ import Login from "@/components/pages/Login"
 import Page from "@/app/DashboardCall"
 import Applicants from '@/components/pages/applicants/Applicants'
 import Positions from '@/components/pages/positions/Positions'
-import Library from '@/components/pages/Library'
+import Library from '@/components/pages/library/Library'
 import Requests from '@/components/pages/requests/Requests'
 
 import JobDetails from '@/components/pages/applicants/Job'
@@ -22,6 +22,9 @@ import CustomStages from '@/components/pages/applicants/CustomStages'
 import ExamForm from '@/components/pages/Exam-Form'
 
 import ApplicantMainPage from '@/components/pages/applicantview/ApplicantMainPage'
+
+import PRF from './components/pages/positions/PRF'
+import PoolApplicants from './components/pages/applicants/PoolApplicants'
 
 
 export default function App() {
@@ -57,8 +60,9 @@ export default function App() {
 
       <Route path="/applicantlandingpage"  element={<ApplicantMainPage/>} />
 
-      
+      <Route path="/prf"  element={<PRF/>} />
 
+      <Route path="/applicants/pool"  element={<PoolApplicants/>} />
 
       </Routes>
     </BrowserRouter>
