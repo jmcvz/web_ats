@@ -33,6 +33,11 @@ import CustomStages from '@/pages/applicants/CustomStages'
 import ExamForm from '@/pages/Exam-Form'
 import PoolApplicants from './pages/applicants/PoolApplicants'
 import PRF from './pages/positions/PRF'
+import ApplicantLandingPage from '@/pages/applicantview/applicantslandingpage'
+import JobDescription from '@/pages/applicantview/jobdescription'
+import ApplicationProcess from '@/pages/applicantview/applicationprocess'
+import Tracker from '@/pages/applicantview/tracker'
+import Documents from './pages/applicantview/Documents'
 
 
 export default function App() {
@@ -82,6 +87,14 @@ export default function App() {
       <Route path="/applicants/job/:customStage" element={ <CustomStages/>} />
       <Route path="/applicants/job/:jobtitle/exam-form/:applicantId" element={<ExamForm />} />
       <Route path="/prf" element={<PRF />} />
+      <Route path="/test" element={ <ApplicantLandingPage />} />
+      <Route path="/test2" element={<JobDescription />} />
+      <Route path="/test3" element={<ApplicationProcess />} />
+      <Route path="/track-application" element={<Tracker />} />
+      <Route path='/documents' element={<Documents/>} />
+
+      
+
 
       </Routes>
     </BrowserRouter>

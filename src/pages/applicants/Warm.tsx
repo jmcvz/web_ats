@@ -84,9 +84,16 @@ export default function Warm() {
 
   const navigate = useNavigate()
 
-  const handleStageChange = (value: string) => {
-    navigate(`/applicants/job/${value}`)
-  }
+const handleStageChange = (value: string) => {
+  navigate(`/applicants/job/${slugify(value)}`, {
+    state: {
+      jobTitle: location.state?.jobTitle,
+      jobData: location.state?.jobData,
+      from: location.pathname, // helpful for back button logic
+    },
+  });
+};
+
 
   const filterApplicants = (applicants: any[]) => {
     return applicants.filter((applicant) => {
@@ -106,9 +113,28 @@ export default function Warm() {
 
   const filteredApplicants = useMemo(() => filterApplicants(applicants), [searchTerm, positionFilter, departmentFilter])
 
-  const handlePassFail = (applicant: any, status: "pass" | "fail") => {
-    console.log(`${applicant.name} marked as ${status}`)
+  const handlePassFail = (status: "pass" | "fail") => {
+  const jobTitle = location.state?.jobTitle;
+  const slug = slugify(jobTitle || "");
+
+  if (status === "pass") {
+    navigate(`/applicants/job/${slug}/forjoboffer`, {
+      state: {
+        jobTitle,
+        from: location.pathname,
+      },
+    });
+  } else {
+    navigate(`/applicants/job/failed`, {
+      state: {
+        jobTitle,
+        from: location.pathname,
+      },
+    });
   }
+};
+
+
 
   const renderSearchAndFilters = () => (
     <div className="flex flex-col gap-4 mb-4">
@@ -165,9 +191,14 @@ export default function Warm() {
 const jobTitleFromState = location.state?.jobTitle
 const from = location.state?.from
 
+const slugify = (str: string) =>
+  str.toLowerCase().replace(/\s+/g, "").replace(/[^\w]+/g, "");
+
+
 const backPath = from?.includes("/weekly")
-  ? `/applicants/job/${jobTitleFromState}/weekly`
-  : `/applicants/job/${jobTitleFromState}`
+  ? `/applicants/job/${slugify(jobTitleFromState)}\/weekly`
+  : `/applicants/job/${slugify(jobTitleFromState)}`
+
 
   return (
     <>
@@ -269,7 +300,8 @@ const backPath = from?.includes("/weekly")
                       <TableCell className="border border-gray-200 py-3 px-2 min-h-[80px] align-middle">
                         <div className="flex justify-center">
                           <Button
-                            onClick={() => handlePassFail(applicant, "pass")}
+                            onClick={() => handlePassFail("pass")}
+
                             className="bg-white text-green-600 border border-green-600 hover:bg-green-600 hover:text-white rounded text-xs px-3 py-1"
                           >
                             Pass
@@ -279,7 +311,7 @@ const backPath = from?.includes("/weekly")
                       <TableCell className="border border-gray-200 py-3 px-2 min-h-[80px] align-middle">
                         <div className="flex justify-center">
                           <Button
-                            onClick={() => handlePassFail(applicant, "fail")}
+                            onClick={() => handlePassFail("fail")}
                             className="bg-white text-red-600 border border-red-600 hover:bg-red-600 hover:text-white rounded text-xs px-3 py-1"
                           >
                             Fail
