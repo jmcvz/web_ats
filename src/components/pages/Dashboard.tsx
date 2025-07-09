@@ -272,14 +272,6 @@ const getBorderColor = (color: string) => {
                 </CardContent>
               </Card>
 
-
-
-
-
-          
-
-
-
     {/* Recruitment Process */}
     <Card>
       <CardHeader>
@@ -396,9 +388,6 @@ const getBorderColor = (color: string) => {
       </Card>
     ))}
   </div>
-
-
-
 
               {/* Interviews */}
                 <Card>
