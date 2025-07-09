@@ -78,8 +78,8 @@ interface TeamMember {
   id: number
   name: string
   position: string
-  department: string
-  process: string
+  department: string // Added department field
+  process: string // This will be the process type from the step
 }
 
 interface Assessment {
@@ -93,15 +93,17 @@ interface Assessment {
   timeLimit?: string
 }
 
-// Updated Question Interface to include nonNegotiableOptions
+// Updated Question Interface to include nonNegotiableOptions and parameter changes
 interface Question {
   id: number
   question: string
   description: string
-  type: string // "Multiple Choice", "Checkboxes", "Text Entry", "Paragraph", "Number", "Date"
-  mode: string // "Non-negotiable", "Preferred", "Optional"
+  type: string // "Multiple Choice", "Checkboxes", "Text Entry", "Paragraph"
+  mode: string // "Non-negotiable", "Parameter", "Optional"
   options: string[] // For Multiple Choice and Checkboxes
-  parameters: number[] // For scores, if applicable (e.g., Multiple Choice)
+  // New: For Parameter mode
+  scorePerOption?: Array<{ option: string; score: number }> // For Multiple Choice/Checkboxes
+  parameterValue?: string // For Text Entry/Paragraph
   nonNegotiableText?: string // For Text Entry/Paragraph (exact required text)
   // New: For Multiple Choice/Checkboxes non-negotiable requirements
   nonNegotiableOptions?: Array<{ option: string; required: boolean; requiredValue?: string }>
@@ -208,33 +210,34 @@ export default function CreateNewPosition() {
     },
   ])
 
+  // Updated teamMembers to include department for accurate display in the success page
   const [teamMembers] = useState<TeamMember[]>([
     {
       id: 1,
       name: "Sif Daae",
       position: "Hiring Managers",
-      department: "CI Department",
+      department: "CI Department", // Corrected department
       process: "Hiring Manager Interview",
     },
     {
       id: 2,
       name: "Kanye West",
       position: "Human Resource",
-      department: "HR Department",
+      department: "HR Department", // Corrected department
       process: "Phone Call Interview",
     },
     {
       id: 3,
       name: "Mark Josephs",
       position: "Lead Developer",
-      department: "CI Department",
+      department: "CI Department", // Corrected department
       process: "Panel Interview",
     },
     {
       id: 4,
       name: "Virla Eliza",
       position: "Supervisor",
-      department: "CI Department",
+      department: "CI Department", // Corrected department
       process: "Panel Interview",
     },
   ])
@@ -303,11 +306,12 @@ export default function CreateNewPosition() {
     question: "",
     description: "",
     type: "Multiple Choice",
-    mode: "Non-negotiable",
+    mode: "Parameter", // Changed from "Non-negotiable" to "Parameter"
     options: ["", "", "", ""],
-    parameters: [0, 0, 0, 0],
+    scorePerOption: [], // Initialize new field
+    parameterValue: "", // Initialize new field
     nonNegotiableText: "",
-    nonNegotiableOptions: [], // Initialize new field
+    nonNegotiableOptions: [],
     required: false, // General question required status
   })
 
@@ -461,6 +465,11 @@ export default function CreateNewPosition() {
   }
 
   const [showPreview, setShowPreview] = useState(false)
+  // State for the new "Pool Applicants Before Publishing" popup
+  const [showPoolApplicantsPopup, setShowPoolApplicantsPopup] = useState(false);
+  const [showSuccessPage, setShowSuccessPage] = useState(false); // State for the new success page
+  const [selectedPoolingOption, setSelectedPoolingOption] = useState("All Previous Applicants"); // State for radio buttons in popup
+
 
   const deleteBatch = (id: number) => {
     setBatches(batches.filter((batch) => batch.id !== id))
@@ -473,7 +482,11 @@ export default function CreateNewPosition() {
     if (currentStep === 3) {
       // Show non-negotiable modal before going to step 4
       setShowNonNegotiableModal(true)
-    } else if (currentStep < 5) {
+    } else if (currentStep === 5) {
+      // Show the new popup when "Next Step" is clicked on Step 5
+      setShowPoolApplicantsPopup(true);
+    }
+    else if (currentStep < 5) {
       setCurrentStep(currentStep + 1)
     }
   }
@@ -884,11 +897,12 @@ export default function CreateNewPosition() {
       question: "",
       description: "",
       type: "Multiple Choice",
-      mode: "Non-negotiable",
+      mode: "Parameter", // Changed from "Non-negotiable" to "Parameter"
       options: ["", "", "", ""],
-      parameters: [0, 0, 0, 0],
+      scorePerOption: [], // Reset new field
+      parameterValue: "", // Reset new field
       nonNegotiableText: "",
-      nonNegotiableOptions: [], // Reset new field
+      nonNegotiableOptions: [],
       required: false,
     })
     setEditingQuestionId(null)
@@ -903,9 +917,10 @@ export default function CreateNewPosition() {
       type: question.type,
       mode: question.mode,
       options: question.options,
-      parameters: question.parameters,
+      scorePerOption: question.scorePerOption || [], // Load new field
+      parameterValue: question.parameterValue || "", // Load new field
       nonNegotiableText: question.nonNegotiableText || "",
-      nonNegotiableOptions: question.nonNegotiableOptions || [], // Load new field
+      nonNegotiableOptions: question.nonNegotiableOptions || [],
       required: question.required,
     })
     setEditingQuestionId(question.id)
@@ -930,9 +945,10 @@ export default function CreateNewPosition() {
         type: questionForm.type,
         mode: questionForm.mode,
         options: questionForm.options,
-        parameters: questionForm.parameters,
+        scorePerOption: questionForm.scorePerOption, // Save new field
+        parameterValue: questionForm.parameterValue, // Save new field
         nonNegotiableText: questionForm.nonNegotiableText,
-        nonNegotiableOptions: questionForm.nonNegotiableOptions, // Save new field
+        nonNegotiableOptions: questionForm.nonNegotiableOptions,
         required: questionForm.required,
       }
 
@@ -995,11 +1011,12 @@ export default function CreateNewPosition() {
     question: "",
     description: "",
     type: "Multiple Choice",
-    mode: "Non-negotiable",
+    mode: "Parameter", // Changed from "Non-negotiable" to "Parameter"
     options: ["", "", "", ""],
-    parameters: [0, 0, 0, 0],
+    scorePerOption: [], // Initialize new field
+    parameterValue: "", // Initialize new field
     nonNegotiableText: "",
-    nonNegotiableOptions: [], // Initialize new field
+    nonNegotiableOptions: [],
     required: false, // Default to false for questionnaire questions
   })
 
@@ -1121,9 +1138,10 @@ export default function CreateNewPosition() {
             type: q.type,
             mode: q.mode,
             options: q.options,
-            parameters: q.parameters,
+            scorePerOption: q.scorePerOption || [], // Apply new field
+            parameterValue: q.parameterValue || "", // Apply new field
             nonNegotiableText: q.nonNegotiableText,
-            nonNegotiableOptions: q.nonNegotiableOptions || [], // Apply new field
+            nonNegotiableOptions: q.nonNegotiableOptions || [],
             required: false, // Default to not required for assessment questions
           })
         })
@@ -1226,11 +1244,11 @@ export default function CreateNewPosition() {
                 ? "radio"
                 : question.type === "Checkboxes"
                   ? "checkbox"
-                  : question.type === "Text Entry" || question.type === "Paragraph"
+                  : question.type === "Text Entry"
                     ? "text"
-                    : question.type === "Number"
-                      ? "number"
-                      : "date", // Assuming Date for other types
+                    : question.type === "Paragraph"
+                      ? "text" // Keep as text for now, but will use textarea in render
+                      : "text", // Number and Date removed, default to text
             options:
               question.type === "Multiple Choice" || question.type === "Checkboxes"
                 ? question.options.filter((opt) => opt.trim() !== "")
@@ -1338,23 +1356,8 @@ export default function CreateNewPosition() {
         newParagraph.innerHTML = textContent;
         listItem.replaceWith(newParagraph); // Replace the LI with a paragraph
       } else {
-        // If not a list, wrap the current line/selection in an LI with a hyphen
-        const selectedText = selection.toString().trim();
-        if (selectedText) {
-          // If text is selected, wrap each line in an LI
-          const lines = selectedText.split('\n');
-          const fragment = document.createDocumentFragment();
-          lines.forEach(line => {
-            const li = document.createElement('li');
-            li.textContent = `- ${line.trim()}`;
-            fragment.appendChild(li);
-          });
-          range.deleteContents(); // Remove selected content
-          range.insertNode(fragment); // Insert new list items
-        } else {
-          // If no text selected, insert a new list item at the cursor
-          document.execCommand('insertHTML', false, '<li>- </li>');
-        }
+        // If no text selected, insert a new list item at the cursor
+        document.execCommand('insertHTML', false, '<li>- </li>');
       }
       // Manually update the state after DOM manipulation
       setJobDescription(jobDescriptionRef.current.innerHTML);
@@ -1477,11 +1480,12 @@ export default function CreateNewPosition() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Date Needed</label>
                 <div className="relative">
                   <Input
+                    type="date" // Changed to date type
                     placeholder="Input text"
                     value={formData.dateNeeded}
                     onChange={(e) => handleInputChange("dateNeeded", e.target.value)}
                   />
-                  <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  
                 </div>
               </div>
             </div>
@@ -1758,76 +1762,82 @@ export default function CreateNewPosition() {
               </p>
             </div>
 
-            {/* Text Editor Toolbar */}
-            <div className="border rounded-lg">
-              <div className="flex items-center gap-2 p-3 border-b bg-gray-50">
-                {/* Alignment Dropdown */}
-                <div
-                  className="relative"
-                  onMouseEnter={() => setShowAlignmentOptions(true)}
-                  onMouseLeave={() => setShowAlignmentOptions(false)}
-                >
-                  <Button variant="ghost" size="sm" className="p-1 h-8 w-8">
-                    <AlignLeft className="w-4 h-4" />
-                  </Button>
-                  {showAlignmentOptions && (
-                    <div className="absolute top-full left-0 mt-1 w-32 bg-white border border-gray-200 rounded-md shadow-lg z-10">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full justify-start px-3 py-2 text-sm hover:bg-gray-100"
-                        onClick={() => handleAlignment('Left')}
-                      >
-                        <AlignLeft className="w-4 h-4 mr-2" /> Left
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full justify-start px-3 py-2 text-sm hover:bg-gray-100"
-                        onClick={() => handleAlignment('Center')}
-                      >
-                        <AlignCenter className="w-4 h-4 mr-2" /> Center
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full justify-start px-3 py-2 text-sm hover:bg-gray-100"
-                        onClick={() => handleAlignment('Right')}
-                      >
-                        <AlignRight className="w-4 h-4 mr-2" /> Right
-                      </Button>
-                    </div>
-                  )}
-                </div>
+           {/* Text Editor Toolbar */}
+<div className="border rounded-lg">
+  <div className="flex flex-col sm:flex-row sm:items-center gap-2 p-3 border-b bg-gray-50">
+    {/* Toolbar Buttons */}
+    <div className="flex flex-wrap items-center gap-2">
+      {/* Alignment Dropdown */}
+      <div
+        className="relative"
+        onMouseEnter={() => setShowAlignmentOptions(true)}
+        onMouseLeave={() => setShowAlignmentOptions(false)}
+      >
+        <Button variant="ghost" size="sm" className="p-1 h-8 w-8">
+          <AlignLeft className="w-4 h-4" />
+        </Button>
+        {showAlignmentOptions && (
+          <div className="absolute top-full left-0 mt-1 w-32 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start px-3 py-2 text-sm hover:bg-gray-100"
+              onClick={() => handleAlignment('Left')}
+            >
+              <AlignLeft className="w-4 h-4 mr-2" /> Left
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start px-3 py-2 text-sm hover:bg-gray-100"
+              onClick={() => handleAlignment('Center')}
+            >
+              <AlignCenter className="w-4 h-4 mr-2" /> Center
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start px-3 py-2 text-sm hover:bg-gray-100"
+              onClick={() => handleAlignment('Right')}
+            >
+              <AlignRight className="w-4 h-4 mr-2" /> Right
+            </Button>
+          </div>
+        )}
+      </div>
 
-                <Button variant="ghost" size="sm" className="p-1 h-8 w-8" onClick={() => handleFormat('bold')}>
-                  <Bold className="w-4 h-4" />
-                </Button>
-                <Button variant="ghost" size="sm" className="p-1 h-8 w-8" onClick={() => handleFormat('italic')}>
-                  <Italic className="w-4 h-4" />
-                </Button>
-                <Button variant="ghost" size="sm" className="p-1 h-8 w-8" onClick={() => handleFormat('underline')}>
-                  <Underline className="w-4 h-4" />
-                </Button>
-                <Button variant="ghost" size="sm" className="p-1 h-8 w-8" onClick={() => handleFormat('strikeThrough')}>
-                  <Strikethrough className="w-4 h-4" />
-                </Button>
-                <Button variant="ghost" size="sm" className="p-1 h-8 w-8" onClick={handleList}>
-                  <List className="w-4 h-4" />
-                </Button>
-                <Button variant="ghost" size="sm" className="p-1 h-8 w-8" onClick={handleLink}>
-                  <Link className="w-4 h-4" />
-                </Button>
+      <Button variant="ghost" size="sm" className="p-1 h-8 w-8" onClick={() => handleFormat('bold')}>
+        <Bold className="w-4 h-4" />
+      </Button>
+      <Button variant="ghost" size="sm" className="p-1 h-8 w-8" onClick={() => handleFormat('italic')}>
+        <Italic className="w-4 h-4" />
+      </Button>
+      <Button variant="ghost" size="sm" className="p-1 h-8 w-8" onClick={() => handleFormat('underline')}>
+        <Underline className="w-4 h-4" />
+      </Button>
+      <Button variant="ghost" size="sm" className="p-1 h-8 w-8" onClick={() => handleFormat('strikeThrough')}>
+        <Strikethrough className="w-4 h-4" />
+      </Button>
+      <Button variant="ghost" size="sm" className="p-1 h-8 w-8" onClick={handleList}>
+        <List className="w-4 h-4" />
+      </Button>
+      <Button variant="ghost" size="sm" className="p-1 h-8 w-8" onClick={handleLink}>
+        <Link className="w-4 h-4" />
+      </Button>
+    </div>
 
-                <div className="ml-auto">
-                  <select className="text-sm border rounded px-3 py-1 bg-white">
-                    <option>Find a job description...</option>
-                    <option>UI Designer</option>
-                    <option>Frontend Developer</option>
-                    <option>Product Manager</option>
-                  </select>
-                </div>
-              </div>
+    {/* Dropdown below on mobile */}
+    <div className="w-full sm:w-auto sm:ml-auto">
+      <select className="text-sm border rounded px-3 py-1 bg-white w-full sm:w-auto">
+        <option>Find a job description...</option>
+        <option>UI Designer</option>
+        <option>Frontend Developer</option>
+        <option>Product Manager</option>
+      </select>
+    </div>
+  </div>
+
+
 
               {/* Text Editor Content */}
               <div className="p-4">
@@ -1886,8 +1896,8 @@ export default function CreateNewPosition() {
               {/* Personal Information */}
               <div className="mb-8">
                 <h4 className="text-base font-medium text-gray-800 mb-4">Personal Information</h4>
-                <div className="border rounded-lg overflow-hidden">
-                  <table className="w-full text-sm">
+                <div className="border rounded-lg overflow-x-auto w-full">
+  <table className="min-w-[600px] text-sm">
                     <thead className="bg-gray-50 border-b">
                       <tr>
                         <th className="text-left p-4 font-medium text-gray-700 w-2/5">Field</th>
@@ -1951,8 +1961,8 @@ export default function CreateNewPosition() {
               {/* Job Details */}
               <div className="mb-8">
                 <h4 className="text-base font-medium text-gray-800 mb-4">Job Details</h4>
-                <div className="border rounded-lg overflow-hidden">
-                  <table className="w-full text-sm">
+                <div className="border rounded-lg overflow-x-auto w-full">
+  <table className="min-w-[600px] text-sm">
                     <thead className="bg-gray-50 border-b">
                       <tr>
                         <th className="text-left p-4 font-medium text-gray-700 w-2/5">Field</th>
@@ -2003,7 +2013,7 @@ export default function CreateNewPosition() {
                               value="disabled"
                               checked={item.status === "disabled"}
                               onChange={(e) => handleFormFieldStatusChange('job', index, e.target.value as 'required' | 'optional' | 'disabled')}
-                              className="w-4 h-4 bg-white border-2 border-gray-400 rounded-full appearance-none focus:ring-2 focus:ring-blue-500 checked:bg-white checked:border-blue-600 checked:after:content-[''] checked:after:w-2 checked:after:h-2 checked:after:bg-blue-600 checked:after:rounded-full checked:after:absolute checked:after:top-1/2 checked:after:left-1/2 checked:after:transform checked:after:-translate-x-1/2 checked:after:-translate-y-1/2 relative"
+                              className="w-4 h-4 bg-white border-2 border-gray-400 rounded-full appearance-none focus:ring-2 focus:ring-blue-500 checked:bg-white checked:border-blue-600 checked:after:content-[''] checke:after:w-2 checked:after:h-2 checked:after:bg-blue-600 checked:after:rounded-full checked:after:absolute checked:after:top-1/2 checked:after:left-1/2 checked:after:transform checked:after:-translate-x-1/2 checked:after:-translate-y-1/2 relative"
                             />
                           </td>
                         </tr>
@@ -2016,8 +2026,8 @@ export default function CreateNewPosition() {
               {/* Work and Education */}
               <div className="mb-8">
                 <h4 className="text-base font-medium text-gray-800 mb-4">Work and Education</h4>
-                <div className="border rounded-lg overflow-hidden">
-                  <table className="w-full text-sm">
+                <div className="border rounded-lg overflow-x-auto w-full">
+  <table className="min-w-[600px] text-sm">
                     <thead className="bg-gray-50 border-b">
                       <tr>
                         <th className="text-left p-4 font-medium text-gray-700 w-2/5">Field</th>
@@ -2068,7 +2078,7 @@ export default function CreateNewPosition() {
                               value="disabled"
                               checked={item.status === "disabled"}
                               onChange={(e) => handleFormFieldStatusChange('education', index, e.target.value as 'required' | 'optional' | 'disabled')}
-                              className="w-4 h-4 bg-white border-2 border-gray-400 rounded-full appearance-none focus:ring-2 focus:ring-blue-500 checked:bg-white checked:border-blue-600 checked:after:content-[''] checked:after:w-2 checked:after:h-2 checked:after:bg-blue-600 checked:after:rounded-full checked:after:absolute checked:after:top-1/2 checked:after:left-1/2 checked:after:transform checked:after:-translate-x-1/2 checked:after:-translate-y-1/2 relative"
+                              className="w-4 h-4 bg-white border-2 border-gray-400 rounded-full appearance-none focus:ring-2 focus:ring-blue-500 checked:bg-white checked:border-blue-600 checked:after:content-[''] checke:after:w-2 checked:after:h-2 checked:after:bg-blue-600 checked:after:rounded-full checked:after:absolute checked:after:top-1/2 checked:after:left-1/2 checked:after:transform checked:after:-translate-x-1/2 checked:after:-translate-y-1/2 relative"
                             />
                           </td>
                         </tr>
@@ -2081,8 +2091,8 @@ export default function CreateNewPosition() {
               {/* Acknowledgement */}
               <div className="mb-8">
                 <h4 className="text-base font-medium text-gray-800 mb-4">Acknowledgement</h4>
-                <div className="border rounded-lg overflow-hidden">
-                  <table className="w-full text-sm">
+                <div className="border rounded-lg overflow-x-auto w-full">
+  <table className="min-w-[600px] text-sm">
                     <thead className="bg-gray-50 border-b">
                       <tr>
                         <th className="text-left p-4 font-medium text-gray-700 w-2/5">Field</th>
@@ -2133,7 +2143,7 @@ export default function CreateNewPosition() {
                               value="disabled"
                               checked={item.status === "disabled"}
                               onChange={(e) => handleFormFieldStatusChange('acknowledgement', index, e.target.value as 'required' | 'optional' | 'disabled')}
-                              className="w-4 h-4 bg-white border-2 border-gray-400 rounded-full appearance-none focus:ring-2 focus:ring-blue-500 checked:bg-white checked:border-blue-600 checked:after:content-[''] checked:after:w-2 checked:after:h-2 checked:after:bg-blue-600 checked:after:rounded-full checked:after:absolute checked:after:top-1/2 checked:after:left-1/2 checked:after:transform checked:after:-translate-x-1/2 checked:after:-translate-y-1/2 relative"
+                              className="w-4 h-4 bg-white border-2 border-gray-400 rounded-full appearance-none focus:ring-2 focus:ring-blue-500 checked:bg-white checked:border-blue-600 checked:after:content-[''] checke:after:w-2 checked:after:h-2 checked:after:bg-blue-600 checked:after:rounded-full checked:after:absolute checked:after:top-1/2 checked:after:left-1/2 checked:after:transform checked:after:-translate-x-1/2 checked:after:-translate-y-1/2 relative"
                             />
                           </td>
                         </tr>
@@ -2144,59 +2154,59 @@ export default function CreateNewPosition() {
               </div>
 
               {/* Non-negotiable Templates */}
-              <div className="mb-6">
-                <h4 className="text-base font-medium text-gray-800 mb-4">Non-negotiable Templates</h4>
-                <div className="flex items-center gap-3">
-                  <select
-                    className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white min-w-[200px]"
-                    onChange={(e) => {
-                      const selected = e.target.value
-                      setSelectedTemplate(selected)
-                      if (selected !== "") {
-                        const template = savedQuestionnaires.find((q) => q.name === selected)
-                        if (template) {
-                          setSections(template.sections)
-                          setQuestionnaireName(template.name)
-                          setIsTemplateSelected(true) // A template is selected
-                        } else {
-                          setSections([])
-                          setQuestionnaireName("")
-                          setIsTemplateSelected(false)
-                        }
-                      } else {
-                        setSections([])
-                        setQuestionnaireName("")
-                        setIsTemplateSelected(false)
-                      }
-                    }}
-                    value={selectedTemplate}
-                  >
-                    <option value="">Select Templates</option>
-                    {savedQuestionnaires.map((template) => (
-                      <option key={template.name} value={template.name}>
-                        {template.name}
-                      </option>
-                    ))}
-                    {questionnaireName && !savedQuestionnaires.find((q) => q.name === questionnaireName) && (
-                      <option>{questionnaireName}</option>
-                    )}
-                  </select>
-                  <Button
-                    className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2"
-                    onClick={() => {
-                      setShowQuestionnaireModal(true)
-                      // If a template is selected, do NOT clear the questionnaireName and sections.
-                      // Otherwise, clear them for a new questionnaire.
-                      if (!isTemplateSelected) {
-                        setQuestionnaireName("") // Clear questionnaire name for new
-                        setSections([]) // Clear sections for new
-                      }
-                    }}
-                  >
-                    Add Non-negotiable
-                  </Button>
-                </div>
-              </div>
+<div className="mb-6">
+  <h4 className="text-base font-medium text-gray-800 mb-4">Non-negotiable Templates</h4>
+  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+    <select
+      className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white min-w-[200px] w-full sm:w-auto"
+      onChange={(e) => {
+        const selected = e.target.value
+        setSelectedTemplate(selected)
+        if (selected !== "") {
+          const template = savedQuestionnaires.find((q) => q.name === selected)
+          if (template) {
+            setSections(template.sections)
+            setQuestionnaireName(template.name)
+            setIsTemplateSelected(true)
+          } else {
+            setSections([])
+            setQuestionnaireName("")
+            setIsTemplateSelected(false)
+          }
+        } else {
+          setSections([])
+          setQuestionnaireName("")
+          setIsTemplateSelected(false)
+        }
+      }}
+      value={selectedTemplate}
+    >
+      <option value="">Select Templates</option>
+      {savedQuestionnaires.map((template) => (
+        <option key={template.name} value={template.name}>
+          {template.name}
+        </option>
+      ))}
+      {questionnaireName && !savedQuestionnaires.find((q) => q.name === questionnaireName) && (
+        <option>{questionnaireName}</option>
+      )}
+    </select>
+
+    <Button
+      className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 w-full sm:w-auto"
+      onClick={() => {
+        setShowQuestionnaireModal(true)
+        if (!isTemplateSelected) {
+          setQuestionnaireName("")
+          setSections([])
+        }
+      }}
+    >
+      Add Non-negotiable
+    </Button>
+  </div>
+</div>
+
             </div>
           </Card>
         )
@@ -2331,6 +2341,7 @@ export default function CreateNewPosition() {
                           <tr key={member.id} className="border-b">
                             <td className="p-4 text-gray-800">{member.name}</td>
                             <td className="p-4 text-gray-600">{member.position}</td>
+                            <td className="p-4 text-gray-600">{member.department}</td> {/* Corrected to show department */}
                             <td className="p-4 text-gray-600">{member.process}</td>
                           </tr>
                         ))}
@@ -2458,6 +2469,16 @@ export default function CreateNewPosition() {
                                     <span>{question.mode}</span>
                                     {question.required && <span className="text-red-600">Required</span>}
                                   </div>
+                                  {question.mode === "Parameter" && (question.type === "Multiple Choice" || question.type === "Checkboxes") && (
+                                    <div className="mt-2 text-xs text-gray-500">
+                                      Scores: {question.scorePerOption?.map(s => `${s.option}: ${s.score}`).join(', ')}
+                                    </div>
+                                  )}
+                                  {question.mode === "Parameter" && (question.type === "Text Entry" || question.type === "Paragraph") && (
+                                    <div className="mt-2 text-xs text-gray-500">
+                                      Parameter Value: {question.parameterValue}
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             </div>
@@ -2642,9 +2663,10 @@ export default function CreateNewPosition() {
         type: questionFormStep3.type,
         mode: questionFormStep3.mode,
         options: questionFormStep3.options,
-        parameters: questionFormStep3.parameters,
+        scorePerOption: questionFormStep3.scorePerOption, // Save new field
+        parameterValue: questionFormStep3.parameterValue, // Save new field
         nonNegotiableText: questionFormStep3.nonNegotiableText,
-        nonNegotiableOptions: questionFormStep3.nonNegotiableOptions, // Save new field
+        nonNegotiableOptions: questionFormStep3.nonNegotiableOptions,
         required: questionFormStep3.required,
       }
 
@@ -2699,6 +2721,575 @@ export default function CreateNewPosition() {
     }
   }
 
+  // Render the success page if showSuccessPage is true
+  if (showSuccessPage) {
+    return (
+      <>
+        <Navbar />
+        <div className="min-h-screen bg-gray-50 p-6 pt-[100px]">
+          <div className="mx-auto max-w-7xl space-y-6">
+            {/* Success Message Box */}
+            <div className="flex items-center bg-green-100 rounded-lg overflow-hidden shadow-sm">
+              <div className="w-[5%] bg-green-700 h-full flex items-center justify-center p-4">
+                <div className="w-8 h-8 rounded-full bg-green-700 flex items-center justify-center">
+                  <Check className="w-5 h-5 text-white" />
+                </div>
+              </div>
+              <div className="flex-1 p-4">
+                <p className="text-green-700 font-semibold text-lg">You're all set! The position has been created</p>
+              </div>
+            </div>
+
+            {/* Step 1 Preview */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="h-8 w-1 bg-blue-600 rounded-full"></div>
+                <div>
+                  <h2 className="text-2xl font-bold text-blue-600">
+                    {formData.jobTitle || "Not specified"}
+                  </h2>
+                  <span className="inline-block px-3 py-1 mt-1 rounded-md bg-yellow-100 text-yellow-800 text-sm font-medium">
+                    {formData.department || "Not specified"}
+                  </span>
+                </div>
+              </div>
+
+              <h4 className="text-lg font-medium text-gray-800 mb-4">Position Details</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div className="flex flex-col">
+                  <span className="font-medium text-gray-700">Employment Type:</span>
+                  <span className="text-gray-900">{formData.employmentType}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-medium text-gray-700">Education Needed:</span>
+                  <span className="text-gray-900">{formData.educationNeeded}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-medium text-gray-700">Work Setup:</span>
+                  <span className="text-gray-900">{formData.workSetup}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-medium text-gray-700">Experience:</span>
+                  <span className="text-gray-900">{formData.experience}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-medium text-gray-700">No. of headcounts needed:</span>
+                  <span className="text-gray-900">{formData.headcountsNeeded || "Not specified"}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-medium text-gray-700">Date Needed:</span>
+                  <span className="text-gray-900">{formData.dateNeeded || "Not specified"}</span>
+                </div>
+                <div className="flex flex-col col-span-full">
+                  <span className="font-medium text-gray-700">Reason for Hire:</span>
+                  <span className="text-gray-900">
+                    {formData.reasonForHire === "Others, Please Specify"
+                      ? `Others: ${formData.reasonSpecify}`
+                      : formData.reasonForHire}
+                  </span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-medium text-gray-700">Budget From:</span>
+                  <span className="text-gray-900">{formData.budgetFrom || "Not specified"}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-medium text-gray-700">Budget To:</span>
+                  <span className="text-gray-900">{formData.budgetTo || "Not specified"}</span>
+                </div>
+              </div>
+
+              <h4 className="text-lg font-medium text-gray-800 mt-8 mb-4">Locations</h4>
+              {locations.length > 0 ? (
+                <div className="overflow-x-auto border rounded-lg">
+                  <table className="min-w-full bg-white text-sm">
+                    <thead className="bg-blue-600 border-b">
+                      <tr>
+                        <th className="px-4 py-3 text-left font-medium text-white">Location</th>
+                        <th className="px-4 py-3 text-left font-medium text-white">Headcount</th>
+                        <th className="px-4 py-3 text-left font-medium text-white">Deployment Date</th>
+                        <th className="px-4 py-3 text-left font-medium text-white">With Batch?</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {locations.map((loc) => (
+                        <tr key={loc.id} className="border-t">
+                          <td className="px-4 py-3 text-gray-900">{loc.location}</td>
+                          <td className="px-4 py-3 text-gray-900">{loc.headcount}</td>
+                          <td className="px-4 py-3 text-gray-900">{loc.deploymentDate}</td>
+                          <td className="px-4 py-3 text-gray-900">{loc.withBatch ? "Yes" : "No"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="text-gray-500">No locations added.</p>
+              )}
+
+              <h4 className="text-lg font-medium text-gray-800 mt-8 mb-4">Batch Details</h4>
+              {batches.length > 0 ? (
+                <div className="overflow-x-auto border rounded-lg">
+                  <table className="min-w-full bg-white text-sm">
+                    <thead className="bg-blue-600 border-b">
+                      <tr>
+                        <th className="px-4 py-3 text-left font-medium text-white">Batch</th>
+                        <th className="px-4 py-3 text-left font-medium text-white">Headcount</th>
+                        <th className="px-4 py-3 text-left font-medium text-white">Deployment Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {batches.map((batch) => (
+                        <tr key={batch.id} className="border-t">
+                          <td className="px-4 py-3 text-gray-900">{batch.batch}</td>
+                          <td className="px-4 py-3 text-gray-900">{batch.headcount}</td>
+                          <td className="px-4 py-3 text-gray-900">{batch.deploymentDate}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="text-gray-500">No batches added.</p>
+              )}
+            </div>
+
+            {/* Step 2 Preview */}
+            <div className="space-y-6 mt-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="h-8 w-1 bg-blue-600 rounded-full"></div>
+                <h2 className="text-2xl font-bold text-blue-600">Position Description</h2>
+              </div>
+              <div className="text-sm whitespace-pre-wrap border rounded-lg p-4 bg-gray-50"
+                   dangerouslySetInnerHTML={{ __html: jobDescription || "No description provided" }}
+              />
+            </div>
+
+            {/* Step 3 Preview */}
+            <div className="space-y-8 mt-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="h-8 w-1 bg-blue-600 rounded-full"></div>
+                <h2 className="text-2xl font-bold text-blue-600">Application Form Preview</h2>
+              </div>
+
+              {/* Personal Information Section */}
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <h2 className="text-lg font-semibold text-blue-600">Personal Information</h2>
+                  <div className="flex-1 h-px bg-blue-600"></div>
+                </div>
+
+                <div className="space-y-6">
+                  {formFieldStatuses.personal.map((item, index) => {
+                    // Do not render if disabled
+                    if (item.status === "disabled") return null;
+
+                    const isRequired = item.status === "required" || item.nonNegotiable;
+                    const isOptional = item.status === "optional";
+
+                    return (
+                      <div key={index}>
+                        <Label className="text-sm font-medium text-gray-700">
+                          {item.field}{" "}
+                          {isRequired && <span className="text-red-500">*</span>}
+                          {isOptional && <span className="text-gray-500 ml-1">(Optional)</span>}
+                        </Label>
+                        {item.field === "Gender" ? (
+                          <RadioGroup className="flex flex-wrap gap-6 mt-1" disabled>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="male" id={`preview-gender-male-${index}`} />
+                              <Label htmlFor={`preview-gender-male-${index}`}>Male</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="female" id={`preview-gender-female-${index}`} />
+                              <Label htmlFor={`preview-gender-female-${index}`}>Female</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="prefer-not-to-say" id={`preview-gender-not-say-${index}`} />
+                              <Label htmlFor={`preview-gender-not-say-${index}`}>I prefer not to say</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="other" id={`preview-gender-other-${index}`} />
+                              <Label htmlFor={`preview-gender-other-${index}`}>Other</Label>
+                            </div>
+                          </RadioGroup>
+                        ) : item.field.includes("Contact Number") ? (
+                          <div className="relative mt-1">
+                            <Input  className="pl-10" type="text" placeholder="e.g., +63 912 345 6789" disabled />
+                            <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          </div>
+                        ) : item.field === "Email Address" ? (
+                          <div className="relative mt-1">
+                            <Input  className="pl-10" type="email" placeholder="e.g., email@example.com" disabled />
+                            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          </div>
+                        ) : item.field === "LinkedIn Profile" ? (
+                          <div className="relative mt-1">
+                            <Input  className="pl-10" type="url" placeholder="e.g., https://linkedin.com/in/yourprofile" disabled />
+                            <Linkedin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          </div>
+                        ) : item.field === "Birth Date" ? (
+                          <div className="relative mt-1">
+                            <Input className="pl-10" type="text" placeholder="DD-MMM-YYYY" disabled />
+                            <Cake className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          </div>
+                        ) : item.field === "Address" ? (
+                          <div className="space-y-4 mt-1">
+                            <Input placeholder="Address Line 1" disabled />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <Input placeholder="City" disabled />
+                              <Input placeholder="District" disabled />
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <Input placeholder="Postal Code" disabled />
+                              <Input placeholder="Country" disabled />
+                            </div>
+                          </div>
+                        ) : (
+                          <Input type="text" placeholder="Input text" disabled className="mt-1" />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Job Details Section */}
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <h2 className="text-lg font-semibold text-blue-600">Job Details</h2>
+                  <div className="flex-1 h-px bg-blue-600"></div>
+                </div>
+
+                <div className="space-y-6">
+                  {formFieldStatuses.job.map((item, index) => {
+                    // Do not render if disabled
+                    if (item.status === "disabled") return null;
+
+                    // Skip Job Title and Department as they are moved
+                    if (item.field === "Job Title" || item.field === "Company Name") return null;
+
+                    const isRequired = item.status === "required" || item.nonNegotiable;
+                    const isOptional = item.status === "optional";
+
+                    return (
+                      <div key={index}>
+                        <Label className="text-sm font-medium text-gray-700">
+                          {item.field}{" "}
+                          {isRequired && <span className="text-red-500">*</span>}
+                          {isOptional && <span className="text-gray-500 ml-1">(Optional)</span>}
+                        </Label>
+                        {item.field === "Are you willing to work onsite?" ? (
+                          <RadioGroup className="flex flex-wrap gap-6 mt-1" disabled>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="yes" id={`preview-onsite-yes-${index}`} />
+                              <Label htmlFor={`preview-onsite-yes-${index}`}>Yes</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="no" id={`preview-onsite-no-${index}`} />
+                              <Label htmlFor={`preview-onsite-no-${index}`}>No</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="flexible" id={`preview-onsite-flexible-${index}`} />
+                              <Label htmlFor={`preview-onsite-flexible-${index}`}>Flexible</Label>
+                            </div>
+                          </RadioGroup>
+                        ) : item.field.includes("Upload") ? (
+                          <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center mt-1">
+                            <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                            <span className="text-sm text-gray-600">Click to upload file</span>
+                          </div>
+                        ) : item.field === "Expected Salary" ? (
+                          <Input type="number" placeholder="e.g., 50000" disabled className="mt-1" />
+                        ) : item.field.includes("date") ? (
+                          <Input type="date" disabled className="mt-1" />
+                        ) : (
+                          <Input type="text" placeholder="Input text" disabled className="mt-1" />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Work and Education Section */}
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <h2 className="text-lg font-semibold text-blue-600">Work and Education</h2>
+                  <div className="flex-1 h-px bg-blue-600"></div>
+                </div>
+
+                <div className="space-y-6">
+                  {formFieldStatuses.education.map((item, index) => {
+                    // Do not render if disabled
+                    if (item.status === "disabled") return null;
+
+                    const isRequired = item.status === "required" || item.nonNegotiable;
+                    const isOptional = item.status === "optional";
+
+                    return (
+                      <div key={index}>
+                        <Label className="text-sm font-medium text-gray-700">
+                          {item.field}{" "}
+                          {isRequired && <span className="text-red-500">*</span>}
+                          {isOptional && <span className="text-gray-500 ml-1">(Optional)</span>}
+                        </Label>
+                        {item.field === "Highest Educational Attained" ? (
+                          <select
+                            className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            disabled
+                          >
+                            <option value="">Select education level</option>
+                            <option value="High School">High School</option>
+                            <option value="Associate Degree">Associate Degree</option>
+                            <option value="Bachelor's Degree">Bachelor's Degree</option>
+                            <option value="Master's Degree">Master's Degree</option>
+                            <option value="Doctorate">Doctorate</option>
+                          </select>
+                        ) : item.field === "Work Experience" ? (
+                          <RadioGroup className="flex flex-wrap gap-6 mt-1" disabled>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="yes" id={`preview-work-yes-${index}`} />
+                              <Label htmlFor={`preview-work-yes-${index}`}>Yes</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="no" id={`preview-work-no-${index}`} />
+                              <Label htmlFor={`preview-work-no-${index}`}>No</Label>
+                            </div>
+                          </RadioGroup>
+                        ) : (
+                          <Input type="text" placeholder="Input text" disabled className="mt-1" />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Acknowledgement Section */}
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <h2 className="text-lg font-semibold text-blue-600">Acknowledgement</h2>
+                  <div className="flex-1 h-px bg-blue-600"></div>
+                </div>
+
+                <div className="space-y-6">
+                  {formFieldStatuses.acknowledgement.map((item, index) => {
+                    // Do not render if disabled
+                    if (item.status === "disabled") return null;
+
+                    const isRequired = item.status === "required" || item.nonNegotiable;
+                    const isOptional = item.status === "optional";
+
+                    return (
+                      <div key={index}>
+                        <Label className="text-sm font-medium text-gray-700">
+                          {item.field}{" "}
+                          {isRequired && <span className="text-red-500">*</span>}
+                          {isOptional && <span className="text-gray-500 ml-1">(Optional)</span>}
+                        </Label>
+                        {item.field === "How did you learn about this job opportunity?" ? (
+                          <RadioGroup className="space-y-3 mt-1" disabled>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="jobstreet" id={`preview-learn-jobstreet-${index}`} />
+                              <Label htmlFor={`preview-learn-jobstreet-${index}`}>JobStreet</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="indeed" id={`preview-learn-indeed-${index}`} />
+                              <Label htmlFor={`preview-learn-indeed-${index}`}>Indeed</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="facebook" id={`preview-learn-facebook-${index}`} />
+                              <Label htmlFor={`preview-learn-facebook-${index}`}>Facebook</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="referral" id={`preview-learn-referral-${index}`} />
+                              <Label htmlFor={`preview-learn-referral-${index}`}>Referral</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="other" id={`preview-learn-other-${index}`} />
+                              <Label htmlFor={`preview-learn-other-${index}`}>Other</Label>
+                            </div>
+                          </RadioGroup>
+                        ) : item.field === "Agreement" ? (
+                          <div className="flex items-center space-x-2 mt-1">
+                            <Checkbox id={`preview-agreement-${index}`} disabled />
+                            <Label htmlFor={`preview-agreement-${index}`} className="text-sm text-gray-700">
+                              I accept the terms and conditions
+                            </Label>
+                          </div>
+                        ) : item.field === "Signature" ? (
+                          <div className="flex flex-col md:flex-row gap-4 mt-1">
+                            <div className="flex-1 h-[150px] border border-gray-300 rounded-md flex items-center justify-center text-gray-500">
+                              Signature Pad (Preview)
+                            </div>
+                            <div className="flex-1 h-[150px] border-2 border-dashed border-gray-300 rounded-lg p-4 text-center flex items-center justify-center text-gray-500">
+                              Upload Signature (Preview)
+                            </div>
+                          </div>
+                        ) : (
+                          <Input type="text" placeholder="Input text" disabled className="mt-1" />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {sections.length > 0 && (
+                <div className="space-y-6">
+                  <h5 className="font-bold text-gray-800 text-xl mb-4 mt-8">
+                    {questionnaireName || "Untitled Questionnaire"}
+                  </h5>
+                  {sections.map((section, _sectionIndex) => (
+                    <div key={section.id} className="space-y-6 mb-8">
+                      <h6 className="font-semibold text-gray-900 text-lg">{section.name}</h6>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {section.questions.map((question, _questionIndex) => {
+                          // Only render if not disabled
+                          if (question.mode === "Disabled") return null;
+
+                          const isRequired = question.required || question.mode === "Non-negotiable"
+                          const isOptional = question.mode === "Optional"
+
+                          return (
+                            <div key={question.id} className="flex flex-col">
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                {question.question}
+                                {isRequired && <span className="text-red-500 ml-1">*</span>}
+                                {isOptional && <span className="text-gray-500 ml-1">(Optional)</span>}
+                              </label>
+                              {question.description && (
+                                <p className="text-xs text-gray-500 mb-2">{question.description}</p>
+                              )}
+
+                              {/* Render input based on type, always disabled for preview */}
+                              {question.type === "Multiple Choice" && (
+                                <RadioGroup className="space-y-2" disabled>
+                                  {question.options
+                                    .filter((opt) => opt.trim() !== "")
+                                    .map((option, optIndex) => (
+                                      <div key={optIndex} className="flex items-center space-x-2">
+                                        <RadioGroupItem value={option} id={`q${question.id}-opt${optIndex}`} />
+                                        <Label htmlFor={`q${question.id}-opt${optIndex}`} className="text-sm font-normal">
+                                          {option}
+                                        </Label>
+                                      </div>
+                                    ))}
+                                </RadioGroup>
+                              )}
+
+                              {question.type === "Checkboxes" && (
+                                <div className="space-y-2">
+                                  {question.options
+                                    .filter((opt) => opt.trim() !== "")
+                                    .map((option, optIndex) => (
+                                      <div key={optIndex} className="flex items-center space-x-2">
+                                        <Checkbox id={`q${question.id}-cb${optIndex}`} disabled />
+                                        <Label htmlFor={`q${question.id}-cb${optIndex}`} className="text-sm font-normal">
+                                          {option}
+                                        </Label>
+                                      </div>
+                                    ))}
+                                </div>
+                              )}
+
+                              {question.type === "Text Entry" ? (
+                                <Input
+                                  type="text"
+                                  placeholder="Short answer"
+                                  disabled
+                                  className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                                />
+                              ) : question.type === "Paragraph" ? (
+                                <textarea
+                                  placeholder="Long answer"
+                                  disabled
+                                  className="w-full p-2 border border-gray-300 rounded-md text-sm min-h-[80px] resize-y"
+                                />
+                              ) : null}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Step 4 Pipeline Preview */}
+            <div className="space-y-6 mt-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="h-8 w-1 bg-blue-600 rounded-full"></div>
+                <h2 className="text-2xl font-bold text-blue-600">PIPELINE</h2>
+              </div>
+              <h4 className="text-lg font-medium text-gray-800 mb-4">Pipeline Stages</h4>
+              <div className="space-y-6">
+                {pipelineStages.map((stage) => (
+                  <div key={stage.id} className="border-l-4 border-blue-500 pl-6">
+                    <h4 className="text-blue-600 font-medium text-sm mb-4">{stage.name}</h4>
+                    <div className="space-y-3">
+                      {stage.steps.map((step, index) => {
+                        const IconComponent = step.icon
+                        return (
+                          <div key={step.id} className="flex items-center gap-3 p-3 border rounded-lg bg-white">
+                            <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-medium">
+                              {index + 1}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="w-6 h-6 bg-gray-100 rounded flex items-center justify-center">
+                                <IconComponent className="w-4 h-4 text-gray-600" />
+                              </div>
+                              <div>
+                                <div className="font-medium text-sm text-gray-800">{step.name}</div>
+                                <div className="text-xs text-gray-500">{step.type}</div>
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Hiring Team Members Preview */}
+            <div className="space-y-6 mt-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="h-8 w-1 bg-blue-600 rounded-full"></div>
+                <h2 className="text-2xl font-bold text-blue-600">HIRING TEAM MEMBERS</h2>
+              </div>
+              <div className="overflow-x-auto border rounded-lg">
+                <table className="w-full text-sm">
+                  <thead className="bg-blue-600 text-white">
+                    <tr>
+                      <th className="text-left p-4 font-medium">Names</th>
+                      <th className="text-left p-4 font-medium">Position</th>
+                      <th className="text-left p-4 font-medium">Department</th>
+                      <th className="text-left p-4 font-medium">Process</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {teamMembers.map((member) => (
+                      <tr key={member.id} className="border-b">
+                        <td className="p-4 text-gray-800">{member.name}</td>
+                        <td className="p-4 text-gray-600">{member.position}</td>
+                        <td className="p-4 text-gray-600">{member.department}</td> {/* Corrected to show department */}
+                        <td className="p-4 text-gray-600">{member.process}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+
   return (
     <>
       <Navbar />
@@ -2712,22 +3303,23 @@ export default function CreateNewPosition() {
           </div>
 
           {/* Steps Navigation */}
-          <div className="flex items-center gap-8 border-b pb-4">
-            {steps.map((step) => (
-              <div key={step.number} className="flex items-center gap-2">
-                <div
-                  className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
-                    step.active ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-500"
-                  }`}
-                >
-                  {step.number}
-                </div>
-                <span className={`text-sm font-medium ${step.active ? "text-blue-600" : "text-gray-500"}`}>
-                  {step.title}
-                </span>
-              </div>
-            ))}
-          </div>
+<div className="flex flex-col items-center gap-6 border-b pb-4 sm:flex-row sm:items-start sm:gap-8">
+  {steps.map((step) => (
+    <div key={step.number} className="flex items-center gap-2">
+      <div
+        className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
+          step.active ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-500"
+        }`}
+      >
+        {step.number}
+      </div>
+      <span className={`text-sm font-medium ${step.active ? "text-blue-600" : "text-gray-500"}`}>
+        {step.title}
+      </span>
+    </div>
+  ))}
+</div>
+
 
           {/* Main Content */}
           <div className="flex justify-between items-start">
@@ -2761,11 +3353,7 @@ export default function CreateNewPosition() {
                 currentStep === 5
                   ? isEditingAssessment
                     ? saveAssessmentChanges
-                    : () => {
-                        // Handle save logic here
-                        console.log("Saving position data...", formData)
-                        // You can add actual save functionality here
-                      }
+                    : handleNext // Changed to handleNext to trigger popup
                   : handleNext
               }
             >
@@ -3297,10 +3885,12 @@ export default function CreateNewPosition() {
                     setQuestionForm((prev) => ({
                       ...prev,
                       type: e.target.value,
-                      // Reset options/nonNegotiableOptions when type changes
+                      // Reset options/nonNegotiableOptions/parameter fields when type changes
                       options: ["", "", "", ""],
                       nonNegotiableOptions: [],
                       nonNegotiableText: "",
+                      scorePerOption: [],
+                      parameterValue: "",
                     }))
                   }}
                   className="w-full p-2 border border-gray-300 rounded-md text-sm"
@@ -3308,9 +3898,8 @@ export default function CreateNewPosition() {
                   <option value="Multiple Choice">Multiple Choice</option>
                   <option value="Checkboxes">Checkboxes</option>
                   <option value="Text Entry">Text Entry</option>
-                  <option value="Paragraph">Paragraph</option> {/* Added Paragraph type */}
-                  <option value="Number">Number</option>
-                  <option value="Date">Date</option>
+                  <option value="Paragraph">Paragraph</option>
+                  {/* Removed Number and Date options */}
                 </select>
               </div>
 
@@ -3323,15 +3912,17 @@ export default function CreateNewPosition() {
                     setQuestionForm((prev) => ({
                       ...prev,
                       mode: e.target.value,
-                      // Reset non-negotiable specific fields if mode changes
+                      // Reset non-negotiable/parameter specific fields if mode changes
                       nonNegotiableText: "",
                       nonNegotiableOptions: [],
+                      scorePerOption: [],
+                      parameterValue: "",
                     }))
                   }}
                   className="w-full p-2 border border-gray-300 rounded-md text-sm"
                 >
                   <option value="Non-negotiable">Non-negotiable</option>
-                  <option value="Preferred">Preferred</option>
+                  <option value="Parameter">Parameter</option> {/* Changed from Preferred to Parameter */}
                   <option value="Optional">Optional</option>
                 </select>
               </div>
@@ -3345,6 +3936,9 @@ export default function CreateNewPosition() {
                     {questionForm.mode === "Non-negotiable" && (
                       <div className="col-span-1">Non-negotiable Requirement</div>
                     )}
+                    {questionForm.mode === "Parameter" && (
+                      <div className="col-span-1">Score</div>
+                    )}
                   </div>
                   <div className="space-y-2">
                     {questionForm.options.map((option, index) => (
@@ -3355,19 +3949,30 @@ export default function CreateNewPosition() {
                           onChange={(e) => {
                             const newOptions = [...questionForm.options]
                             newOptions[index] = e.target.value
-                            // Also update nonNegotiableOptions if this option exists
+
+                            // Update nonNegotiableOptions
                             const newNonNegotiableOptions = [...(questionForm.nonNegotiableOptions || [])]
                             let nnOption = newNonNegotiableOptions.find((o) => o.option === option)
                             if (nnOption) {
                               nnOption.option = e.target.value // Update the option text
                             } else {
-                              // If option is new, add a placeholder entry
                               newNonNegotiableOptions.push({ option: e.target.value, required: false, requiredValue: "" })
                             }
+
+                            // Update scorePerOption
+                            const newScorePerOption = [...(questionForm.scorePerOption || [])]
+                            let scoreOpt = newScorePerOption.find((o) => o.option === option)
+                            if (scoreOpt) {
+                              scoreOpt.option = e.target.value // Update the option text
+                            } else {
+                              newScorePerOption.push({ option: e.target.value, score: 0 })
+                            }
+
                             setQuestionForm((prev) => ({
                               ...prev,
                               options: newOptions,
                               nonNegotiableOptions: newNonNegotiableOptions,
+                              scorePerOption: newScorePerOption,
                             }))
                           }}
                           className="flex-1"
@@ -3440,6 +4045,65 @@ export default function CreateNewPosition() {
                             />
                           </div>
                         )}
+                        {questionForm.mode === "Parameter" && (
+                          <div className="flex items-center gap-2 flex-1">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-8 h-8 p-0"
+                              onClick={() => {
+                                const newScorePerOption = [...(questionForm.scorePerOption || [])];
+                                const scoreOpt = newScorePerOption.find(o => o.option === option);
+                                if (scoreOpt) {
+                                  scoreOpt.score = (scoreOpt.score || 0) + 1;
+                                } else {
+                                  newScorePerOption.push({ option: option, score: 1 });
+                                }
+                                setQuestionForm(prev => ({ ...prev, scorePerOption: newScorePerOption }));
+                              }}
+                            >
+                              +1
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-8 h-8 p-0"
+                              onClick={() => {
+                                const newScorePerOption = [...(questionForm.scorePerOption || [])];
+                                const scoreOpt = newScorePerOption.find(o => o.option === option);
+                                if (scoreOpt) {
+                                  scoreOpt.score = (scoreOpt.score || 0) - 1;
+                                } else {
+                                  newScorePerOption.push({ option: option, score: -1 });
+                                }
+                                setQuestionForm(prev => ({ ...prev, scorePerOption: newScorePerOption }));
+                              }}
+                            >
+                              -1
+                            </Button>
+                            <Input
+                              type="number"
+                              placeholder="Score"
+                              value={
+                                (questionForm.scorePerOption || []).find((o) => o.option === option)
+                                  ?.score || 0
+                              }
+                              onChange={(e) => {
+                                const newScorePerOption = (questionForm.scorePerOption || []).map(
+                                  (o) =>
+                                    o.option === option
+                                      ? { ...o, score: parseInt(e.target.value) || 0 }
+                                      : o,
+                                )
+                                setQuestionForm((prev) => ({
+                                  ...prev,
+                                  scorePerOption: newScorePerOption,
+                                }))
+                              }}
+                              className="flex-1"
+                            />
+                          </div>
+                        )}
                       </div>
                     ))}
                     <Button
@@ -3456,6 +4120,28 @@ export default function CreateNewPosition() {
                 </div>
               )}
 
+              {/* Parameter Input for Text Entry and Paragraph */}
+              {(questionForm.type === "Text Entry" || questionForm.type === "Paragraph") &&
+                questionForm.mode === "Parameter" && (
+                  <div className="mb-4">
+                    {questionForm.type === "Paragraph" ? (
+                      <textarea
+                        placeholder="Enter parameter value (e.g., essay, long answer)"
+                        value={questionForm.parameterValue || ""}
+                        onChange={(e) => setQuestionForm((prev) => ({ ...prev, parameterValue: e.target.value }))}
+                        className="w-full p-2 border border-gray-300 rounded-md text-sm min-h-[80px] resize-y"
+                      />
+                    ) : (
+                      <Input
+                        placeholder="Enter parameter value"
+                        value={questionForm.parameterValue || ""}
+                        onChange={(e) => setQuestionForm((prev) => ({ ...prev, parameterValue: e.target.value }))}
+                        className="w-full"
+                      />
+                    )}
+                  </div>
+                )}
+
               {/* Non-negotiable Text Input for Text Entry and Paragraph */}
               {(questionForm.type === "Text Entry" || questionForm.type === "Paragraph") &&
                 questionForm.mode === "Non-negotiable" && (
@@ -3463,11 +4149,20 @@ export default function CreateNewPosition() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Non-negotiable Requirement Text
                     </label>
-                    <Input
-                      placeholder="Enter the exact text required"
-                      value={questionForm.nonNegotiableText || ""}
-                      onChange={(e) => setQuestionForm((prev) => ({ ...prev, nonNegotiableText: e.target.value }))}
-                    />
+                    {questionForm.type === "Paragraph" ? (
+                      <textarea
+                        placeholder="Enter the exact text required (e.g., specific essay content)"
+                        value={questionForm.nonNegotiableText || ""}
+                        onChange={(e) => setQuestionForm((prev) => ({ ...prev, nonNegotiableText: e.target.value }))}
+                        className="w-full p-2 border border-gray-300 rounded-md text-sm min-h-[80px] resize-y"
+                      />
+                    ) : (
+                      <Input
+                        placeholder="Enter the exact text required"
+                        value={questionForm.nonNegotiableText || ""}
+                        onChange={(e) => setQuestionForm((prev) => ({ ...prev, nonNegotiableText: e.target.value }))}
+                      />
+                    )}
                   </div>
                 )}
 
@@ -3875,7 +4570,9 @@ export default function CreateNewPosition() {
                                     className={`text-xs px-2 py-1 rounded ${
                                       question.mode === "Non-negotiable"
                                         ? "bg-red-100 text-red-800"
-                                        : "bg-gray-100 text-gray-800"
+                                        : question.mode === "Parameter"
+                                          ? "bg-purple-100 text-purple-800" // New color for Parameter
+                                          : "bg-gray-100 text-gray-800"
                                     }`}
                                   >
                                     {question.mode}
@@ -3887,6 +4584,16 @@ export default function CreateNewPosition() {
                                 {question.type === "Multiple Choice" && (
                                   <div className="text-sm text-gray-600">
                                     Options: {question.options.filter((opt) => opt.trim() !== "").join(", ")}
+                                  </div>
+                                )}
+                                {question.mode === "Parameter" && (question.type === "Multiple Choice" || question.type === "Checkboxes") && (
+                                  <div className="mt-2 text-xs text-gray-500">
+                                    Scores: {question.scorePerOption?.map(s => `${s.option}: ${s.score}`).join(', ')}
+                                  </div>
+                                )}
+                                {question.mode === "Parameter" && (question.type === "Text Entry" || question.type === "Paragraph") && (
+                                  <div className="mt-2 text-xs text-gray-500">
+                                    Parameter Value: {question.parameterValue}
                                   </div>
                                 )}
                               </div>
@@ -3905,7 +4612,8 @@ export default function CreateNewPosition() {
                                         type: question.type,
                                         mode: question.mode,
                                         options: question.options,
-                                        parameters: question.parameters,
+                                        scorePerOption: question.scorePerOption || [], // Load new field
+                                        parameterValue: question.parameterValue || "", // Load new field
                                         nonNegotiableText: question.nonNegotiableText || "",
                                         nonNegotiableOptions: question.nonNegotiableOptions || [],
                                         required: question.required,
@@ -3993,9 +4701,10 @@ export default function CreateNewPosition() {
                       question: "",
                       description: "",
                       type: "Multiple Choice",
-                      mode: "Non-negotiable",
+                      mode: "Parameter", // Changed to Parameter
                       options: ["", "", "", ""],
-                      parameters: [0, 0, 0, 0],
+                      scorePerOption: [], // Reset new field
+                      parameterValue: "", // Reset new field
                       nonNegotiableText: "",
                       nonNegotiableOptions: [],
                       required: false,
@@ -4042,6 +4751,8 @@ export default function CreateNewPosition() {
                       options: ["", "", "", ""], // Reset options when type changes
                       nonNegotiableOptions: [],
                       nonNegotiableText: "",
+                      scorePerOption: [],
+                      parameterValue: "",
                     }))
                   }}
                   className="w-full p-2 border border-gray-300 rounded-md text-sm"
@@ -4049,9 +4760,8 @@ export default function CreateNewPosition() {
                   <option value="Multiple Choice">Multiple Choice</option>
                   <option value="Checkboxes">Checkboxes</option>
                   <option value="Text Entry">Text Entry</option>
-                  <option value="Paragraph">Paragraph</option> {/* Added Paragraph type */}
-                  <option value="Number">Number</option>
-                  <option value="Date">Date</option>
+                  <option value="Paragraph">Paragraph</option>
+                  {/* Removed Number and Date options */}
                 </select>
               </div>
 
@@ -4066,12 +4776,14 @@ export default function CreateNewPosition() {
                       mode: e.target.value,
                       nonNegotiableText: "",
                       nonNegotiableOptions: [],
+                      scorePerOption: [],
+                      parameterValue: "",
                     }))
                   }}
                   className="w-full p-2 border border-gray-300 rounded-md text-sm"
                 >
                   <option value="Non-negotiable">Non-negotiable</option>
-                  <option value="Preferred">Preferred</option>
+                  <option value="Parameter">Parameter</option> {/* Changed from Preferred to Parameter */}
                   <option value="Optional">Optional</option>
                 </select>
               </div>
@@ -4085,6 +4797,9 @@ export default function CreateNewPosition() {
                     {questionFormStep3.mode === "Non-negotiable" && (
                       <div className="col-span-1">Non-negotiable Requirement</div>
                     )}
+                    {questionFormStep3.mode === "Parameter" && (
+                      <div className="col-span-1">Score</div>
+                    )}
                   </div>
                   <div className="space-y-2">
                     {questionFormStep3.options.map((option, index) => (
@@ -4095,6 +4810,8 @@ export default function CreateNewPosition() {
                           onChange={(e) => {
                             const newOptions = [...questionFormStep3.options]
                             newOptions[index] = e.target.value
+
+                            // Update nonNegotiableOptions
                             const newNonNegotiableOptions = [...(questionFormStep3.nonNegotiableOptions || [])]
                             let nnOption = newNonNegotiableOptions.find((o) => o.option === option)
                             if (nnOption) {
@@ -4102,10 +4819,21 @@ export default function CreateNewPosition() {
                             } else {
                               newNonNegotiableOptions.push({ option: e.target.value, required: false, requiredValue: "" })
                             }
+
+                            // Update scorePerOption
+                            const newScorePerOption = [...(questionFormStep3.scorePerOption || [])]
+                            let scoreOpt = newScorePerOption.find((o) => o.option === option)
+                            if (scoreOpt) {
+                              scoreOpt.option = e.target.value
+                            } else {
+                              newScorePerOption.push({ option: e.target.value, score: 0 })
+                            }
+
                             setQuestionFormStep3((prev) => ({
                               ...prev,
                               options: newOptions,
                               nonNegotiableOptions: newNonNegotiableOptions,
+                              scorePerOption: newScorePerOption,
                             }))
                           }}
                           className="flex-1"
@@ -4180,6 +4908,65 @@ export default function CreateNewPosition() {
                             />
                           </div>
                         )}
+                        {questionFormStep3.mode === "Parameter" && (
+                          <div className="flex items-center gap-2 flex-1">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-8 h-8 p-0"
+                              onClick={() => {
+                                const newScorePerOption = [...(questionFormStep3.scorePerOption || [])];
+                                const scoreOpt = newScorePerOption.find(o => o.option === option);
+                                if (scoreOpt) {
+                                  scoreOpt.score = (scoreOpt.score || 0) + 1;
+                                } else {
+                                  newScorePerOption.push({ option: option, score: 1 });
+                                }
+                                setQuestionFormStep3(prev => ({ ...prev, scorePerOption: newScorePerOption }));
+                              }}
+                            >
+                              +1
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-8 h-8 p-0"
+                              onClick={() => {
+                                const newScorePerOption = [...(questionFormStep3.scorePerOption || [])];
+                                const scoreOpt = newScorePerOption.find(o => o.option === option);
+                                if (scoreOpt) {
+                                  scoreOpt.score = (scoreOpt.score || 0) - 1;
+                                } else {
+                                  newScorePerOption.push({ option: option, score: -1 });
+                                }
+                                setQuestionFormStep3(prev => ({ ...prev, scorePerOption: newScorePerOption }));
+                              }}
+                            >
+                              -1
+                            </Button>
+                            <Input
+                              type="number"
+                              placeholder="Score"
+                              value={
+                                (questionFormStep3.scorePerOption || []).find((o) => o.option === option)
+                                  ?.score || 0
+                              }
+                              onChange={(e) => {
+                                const newScorePerOption = (questionFormStep3.scorePerOption || []).map(
+                                  (o) =>
+                                    o.option === option
+                                      ? { ...o, score: parseInt(e.target.value) || 0 }
+                                      : o,
+                                )
+                                setQuestionFormStep3((prev) => ({
+                                  ...prev,
+                                  scorePerOption: newScorePerOption,
+                                }))
+                              }}
+                              className="flex-1"
+                            />
+                          </div>
+                        )}
                       </div>
                     ))}
                     <Button
@@ -4196,6 +4983,28 @@ export default function CreateNewPosition() {
                 </div>
               )}
 
+              {/* Parameter Input for Text Entry and Paragraph */}
+              {(questionFormStep3.type === "Text Entry" || questionFormStep3.type === "Paragraph") &&
+                questionFormStep3.mode === "Parameter" && (
+                  <div className="mb-4">
+                    {questionFormStep3.type === "Paragraph" ? (
+                      <textarea
+                        placeholder="Enter parameter value (e.g., essay, long answer)"
+                        value={questionFormStep3.parameterValue || ""}
+                        onChange={(e) => setQuestionFormStep3((prev) => ({ ...prev, parameterValue: e.target.value }))}
+                        className="w-full p-2 border border-gray-300 rounded-md text-sm min-h-[80px] resize-y"
+                      />
+                    ) : (
+                      <Input
+                        placeholder="Enter parameter value"
+                        value={questionFormStep3.parameterValue || ""}
+                        onChange={(e) => setQuestionFormStep3((prev) => ({ ...prev, parameterValue: e.target.value }))}
+                        className="w-full"
+                      />
+                    )}
+                  </div>
+                )}
+
               {/* Non-negotiable Text Input for Text Entry and Paragraph */}
               {(questionFormStep3.type === "Text Entry" || questionFormStep3.type === "Paragraph") &&
                 questionFormStep3.mode === "Non-negotiable" && (
@@ -4203,13 +5012,24 @@ export default function CreateNewPosition() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Non-negotiable Requirement Text
                     </label>
-                    <Input
-                      placeholder="Enter the exact text required"
-                      value={questionFormStep3.nonNegotiableText || ""}
-                      onChange={(e) =>
-                        setQuestionFormStep3((prev) => ({ ...prev, nonNegotiableText: e.target.value }))
-                      }
-                    />
+                    {questionFormStep3.type === "Paragraph" ? (
+                      <textarea
+                        placeholder="Enter the exact text required (e.g., specific essay content)"
+                        value={questionFormStep3.nonNegotiableText || ""}
+                        onChange={(e) =>
+                          setQuestionFormStep3((prev) => ({ ...prev, nonNegotiableText: e.target.value }))
+                        }
+                        className="w-full p-2 border border-gray-300 rounded-md text-sm min-h-[80px] resize-y"
+                      />
+                    ) : (
+                      <Input
+                        placeholder="Enter the exact text required"
+                        value={questionFormStep3.nonNegotiableText || ""}
+                        onChange={(e) =>
+                          setQuestionFormStep3((prev) => ({ ...prev, nonNegotiableText: e.target.value }))
+                        }
+                      />
+                    )}
                   </div>
                 )}
 
@@ -4224,9 +5044,10 @@ export default function CreateNewPosition() {
                       question: "",
                       description: "",
                       type: "Multiple Choice",
-                      mode: "Non-negotiable",
+                      mode: "Parameter",
                       options: ["", "", "", ""],
-                      parameters: [0, 0, 0, 0],
+                      scorePerOption: [],
+                      parameterValue: "",
                       nonNegotiableText: "",
                       nonNegotiableOptions: [],
                       required: false,
@@ -4282,15 +5103,8 @@ export default function CreateNewPosition() {
                       </span>
                     </div>
                   </div>
-                  
-                  <div className="flex items-center gap-3 mb-6">
-                  <div className="h-8 w-1 bg-blue-600 rounded-full"></div>
-                    <div>
-                      <h4 className="text-xl font-bold text-blue-600">
-                        Job Title
-                      </h4>
-                      </div>
-                    </div>
+
+                  <h4 className="text-lg font-medium text-gray-800 mb-4">Position Details</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     {/* Removed Job Title and Department from here */}
                     <div className="flex flex-col">
@@ -4726,27 +5540,18 @@ export default function CreateNewPosition() {
                                     </div>
                                   )}
 
-                                  {question.type === "Text Entry" || question.type === "Paragraph" ? (
+                                  {question.type === "Text Entry" ? (
                                     <Input
                                       type="text"
-                                      placeholder={
-                                        question.type === "Text Entry" ? "Short answer" : "Long answer"
-                                      }
+                                      placeholder="Short answer"
                                       disabled
                                       className="w-full p-2 border border-gray-300 rounded-md text-sm"
                                     />
-                                  ) : question.type === "Number" ? (
-                                    <Input
-                                      type="number"
-                                      placeholder="Number input"
+                                  ) : question.type === "Paragraph" ? (
+                                    <textarea
+                                      placeholder="Long answer"
                                       disabled
-                                      className="w-full p-2 border border-gray-300 rounded-md text-sm"
-                                    />
-                                  ) : question.type === "Date" ? (
-                                    <Input
-                                      type="date"
-                                      disabled
-                                      className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                                      className="w-full p-2 border border-gray-300 rounded-md text-sm min-h-[80px] resize-y"
                                     />
                                   ) : null}
                                 </div>
@@ -4768,6 +5573,87 @@ export default function CreateNewPosition() {
                   Close Preview
                 </Button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Pool Applicants Before Publishing Popup */}
+      {showPoolApplicantsPopup && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setShowPoolApplicantsPopup(false)} />
+          <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-gray-800">Pool Applicants Before Publishing</h3>
+              <Button
+                onClick={() => setShowPoolApplicantsPopup(false)}
+                variant="ghost"
+                size="sm"
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+
+            <p className="text-sm text-gray-600 mb-6">You're about to publish the job post for: {formData.jobTitle || "Not specified"}</p>
+
+            <div className="flex items-center justify-center gap-4 mb-6">
+              <div className="flex flex-col items-center">
+                <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center">
+                  <Check className="w-6 h-6 text-white" />
+                </div>
+                <span className="text-green-600 text-sm mt-2">Creating Position</span>
+              </div>
+              <div className="w-16 h-px bg-gray-300"></div>
+              <div className="flex flex-col items-center">
+                <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center">
+                  <span className="text-white text-lg font-bold">2</span>
+                </div>
+                <span className="text-blue-600 text-sm mt-2">Applicant Pooling</span>
+              </div>
+            </div>
+
+            <p className="text-base text-gray-800 text-center mb-4">Would you like to start by pooling applicants for this role?</p>
+
+            <RadioGroup
+              value={selectedPoolingOption}
+              onValueChange={setSelectedPoolingOption}
+              className="space-y-3 mb-6"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="All Previous Applicants" id="pooling-all" />
+                <Label htmlFor="pooling-all">All Previous Applicants</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="New Applicants Only" id="pooling-new" />
+                <Label htmlFor="pooling-new">New Applicants Only</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="Both" id="pooling-both" />
+                <Label htmlFor="pooling-both">Both</Label>
+              </div>
+            </RadioGroup>
+
+            <div className="flex justify-end gap-3">
+              <Button
+                onClick={() => {
+                  setShowPoolApplicantsPopup(false);
+                  setShowSuccessPage(true); // Navigate to success page
+                }}
+                variant="ghost"
+                className="px-4 py-2 text-blue-600 hover:bg-blue-50"
+              >
+                Not now
+              </Button>
+              <Button
+                onClick={() => {
+                  // Currently does nothing as per instructions
+                  console.log("Confirm button clicked. Selected option:", selectedPoolingOption);
+                }}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
+              >
+                Confirm
+              </Button>
             </div>
           </div>
         </div>

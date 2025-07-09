@@ -28,8 +28,8 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navbar />} />
-      <Route path="/login" element={<Login />} />
+        <Route path="/navbartest" element={<Navbar />} />
+      <Route path="/" element={<Login />} />
 
       {/* Main Tabs */}
       <Route path="/dashboard/*" element={<Page />} />
@@ -49,17 +49,14 @@ export default function App() {
       <Route path="/applicants/:id/IEForm" element={<IEForm2 />} />
       <Route path="/applicants/job/:jobtitle/:jobstage" element={<JobStageTemplate />} />
       <Route path="/applicants/:name" element={<ApplicantInformationTab />} />
-
-      {/* Requests */}
-      <Route path="/positions/create-new-position" element={ < CreateNewPosition />} />
       <Route path="/applicants/job/:customStage" element={ <CustomStages/>} />
       <Route path="/applicants/job/:jobtitle/exam-form/:applicantId" element={<ExamForm />} />
 
       <Route path="/applicantlandingpage"  element={<ApplicantMainPage/>} />
 
+      {/* Requests */}
+      <Route path="/positions/create-new-position" element={ < CreateNewPosition />} />
       
-
-
       </Routes>
     </BrowserRouter>
   );
