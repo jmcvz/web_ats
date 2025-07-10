@@ -1,27 +1,31 @@
-import React, { useState } from "react"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Button } from "@/components/ui/button"
-import { Mail, Lock, Eye, EyeOff } from "lucide-react"
-import { Checkbox } from "@/components/ui/checkbox"
+import React, { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useNavigate } from "react-router-dom";
 
-
 const LoginForm: React.FC = () => {
-  const [showPassword, setShowPassword] = useState(false)
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     // Dummy credentials
-    const dummyEmail = "test@example.com"
-    const dummyPassword = "password123"
+    const adminEmail = "test@example.com";
+    const adminPassword = "password123";
 
-    if (email === dummyEmail && password === dummyPassword) {
+    const applicantEmail = "applicant@example.com";
+    const applicantPassword = "applicantpass";
+
+    if (email === adminEmail && password === adminPassword) {
       navigate("/dashboard");
+    } else if (email === applicantEmail && password === applicantPassword) {
+      navigate("/applicantlandingpage");
     } else {
       alert("Invalid email or password");
     }
@@ -78,29 +82,24 @@ const LoginForm: React.FC = () => {
 
       {/* Remember Me */}
       <div className="mb-6 flex items-center space-x-3">
-  <Checkbox
-    id="keep-logged-in"
-    className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-  />
-  <label htmlFor="keep-logged-in" className="text-lg">
-    Keep me logged in
-  </label>
-</div>
+        <Checkbox
+          id="keep-logged-in"
+          className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+        />
+        <label htmlFor="keep-logged-in" className="text-lg">
+          Keep me logged in
+        </label>
+      </div>
 
-
-
-
-      {/* Update the Button with the correct variant */}
-     <Button
-  type="submit"
-   // This ensures bg-blue-800 will be applied
-  size="lg"
-  className="w-full text-lg py-6 bg-[#0056d2]"
->
-  LOG IN
-</Button>
+      <Button
+        type="submit"
+        size="lg"
+        className="w-full text-lg py-6 bg-[#0056d2]"
+      >
+        LOG IN
+      </Button>
     </form>
-  )
-}
+  );
+};
 
-export default LoginForm
+export default LoginForm;

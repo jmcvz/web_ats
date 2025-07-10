@@ -65,8 +65,9 @@ export default function JobDetails() {
 
   // Build path conditionally
   const path = isCustomStage
-    ? `/applicants/job/${stageSlug}`
-    : `/applicants/job/${jobSlug}/${stageSlug}`
+  ? `/applicants/job/stage/${stageSlug}`
+  : `/applicants/job/${jobSlug}/${stageSlug}`
+
 
   // Navigate
   navigate(path, {

@@ -102,14 +102,31 @@ export default function Onboarding() {
   const navigate = useNavigate()
 
 const handleStageChange = (value: string) => {
-  navigate(`/applicants/job/${slugify(value)}`, {
+  const customFinalStages = [
+  "OfferAndFinalization",
+  "Onboarding",
+  "Warm",
+  "Failed",
+];
+
+
+  const isCustomFinalStage = customFinalStages.includes(value);
+
+  const routeSegment = slugify(value);
+
+  const path = isCustomFinalStage
+    ? `/applicants/job/stage/${routeSegment}`
+    : `/applicants/job/${routeSegment}`;
+
+  navigate(path, {
     state: {
       jobTitle: location.state?.jobTitle,
       jobData: location.state?.jobData,
-      from: location.pathname, // helpful for back button logic
+      from: location.pathname,
     },
   });
 };
+
 
 
   // Filter function
@@ -251,7 +268,7 @@ const jobTitleFromState = location.state?.jobTitle
 const from = location.state?.from
 
 const slugify = (str: string) =>
-  str.toLowerCase().replace(/\s+/g, "").replace(/[^\w]+/g, "");
+  str.replace(/\s+/g, "").replace(/[^\w]+/g, "");
 
 
 const backPath = from?.includes("/weekly")

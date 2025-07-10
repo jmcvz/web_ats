@@ -244,7 +244,7 @@ export default function JobManagement() {
   const resolvedJobTitle = formatJobTitle(jobtitle)
   const previousPath = location.state?.from
   const navigate = useNavigate();
-  
+  const customStage = "Failed"
 
 
   return (
@@ -422,7 +422,14 @@ export default function JobManagement() {
                                 variant="outline"
                                 size="sm"
                                 className="px-3 bg-white text-red-600 border border-red-600 hover:bg-red-600 hover:text-white text-xs h-8"
-                                onClick={() => navigate("/applicants/job/failed", {state: {jobTitle: jobtitle, from: location.pathname}})}
+                               onClick={() =>
+  navigate(`/applicants/job/stage/${customStage}`, {
+    state: {
+      jobTitle: jobtitle,
+      from: location.pathname
+    }
+  })
+}
                               >
                                 Fail
                               </Button>
