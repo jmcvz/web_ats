@@ -1434,6 +1434,7 @@ export default function JobOfferManagement() {
 
   const location = useLocation()
   const previousPath = location.state?.from
+  const customStage = "OfferAndFinalization";
 
   return (
     <>
@@ -1609,7 +1610,14 @@ export default function JobOfferManagement() {
                                 variant="outline"
                                 size="sm"
                                 className="bg-white text-green-700 border border-green-500 hover:bg-green-500 hover:text-white rounded-lg px-3 py-1 text-xs"
-                              onClick={() => navigate("/applicants/job/offerandfinalization", {state: {jobTitle: jobtitle, from: location.pathname}})}>
+                              onClick={() =>
+  navigate(`/applicants/job/stage/${customStage}`, {
+    state: {
+      jobTitle: jobtitle,
+      from: location.pathname
+    }
+  })
+}>
                                 Accepted
                               </Button>
                               <Button

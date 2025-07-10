@@ -333,7 +333,10 @@ function DroppableColumn({
       const currentJobTitle = jobtitle || "leaddeveloper"
       const jobSlug = currentJobTitle.toLowerCase().replace(/\s+/g, "")
 
-      const path = isCustomFinalStage ? `/applicants/job/${routeSegment}` : `/applicants/job/${jobSlug}/${routeSegment}`
+      const path = isCustomFinalStage
+  ? `/applicants/job/stage/${routeSegment}`
+  : `/applicants/job/${jobSlug}/${routeSegment}`;
+
 
       navigate(path, {
         state: {

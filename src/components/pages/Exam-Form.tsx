@@ -263,7 +263,7 @@ export default function ExamForm() {
 }
 
 // Full Exam Result Component
-function FullExamResult({ onBack }: { onBack: () => void }) {
+export function FullExamResult({ onBack }: { onBack: () => void }) {
   const mcqQuestions = [
     {
       id: 1,
