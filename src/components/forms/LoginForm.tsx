@@ -4,12 +4,14 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Mail, Lock, Eye, EyeOff } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
+import { useNavigate } from "react-router-dom";
 
 
 const LoginForm: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const navigate = useNavigate();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -19,11 +21,11 @@ const LoginForm: React.FC = () => {
     const dummyPassword = "password123"
 
     if (email === dummyEmail && password === dummyPassword) {
-      window.location.href = "http://localhost:5173/dashboard"
+      navigate("/dashboard");
     } else {
-      alert("Invalid email or password")
+      alert("Invalid email or password");
     }
-  }
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-10">
