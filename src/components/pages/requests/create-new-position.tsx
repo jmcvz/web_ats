@@ -1,5 +1,5 @@
 "use client"
-
+import { useNavigate } from "react-router-dom"
 import { Navbar } from "@/components/reusables/Navbar"
 import { useEffect, useState, useRef } from "react" // Import useRef
 import { Input } from "@/components/ui/input"
@@ -140,6 +140,8 @@ export default function CreateNewPosition() {
   }, [])
 
   const [currentStep, setCurrentStep] = useState(1)
+
+  const navigate = useNavigate()
 
   const [formData, setFormData] = useState({
     jobTitle: "",
@@ -5646,10 +5648,7 @@ export default function CreateNewPosition() {
                 Not now
               </Button>
               <Button
-                onClick={() => {
-                  // Currently does nothing as per instructions
-                  console.log("Confirm button clicked. Selected option:", selectedPoolingOption);
-                }}
+                onClick={() => navigate("/applicants/pool")}
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
               >
                 Confirm

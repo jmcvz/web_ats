@@ -74,9 +74,16 @@ export default function Library() {
   };
 
   const handleFormClick = (formName: string) => {
+    if (formName === "Personnel Requisition Form (PRF)") {
+      navigate("/prf");
+    } 
+    if (formName === "Open Position (For External Client)") {
+      navigate("/positions/create-new-position");
+    }
     if (formName === "Interview Evaluation Form") {
       navigate("/ieform");
-    } else {
+    }
+    else {
       toggleFormSelection(formName);
     }
   };

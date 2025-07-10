@@ -209,13 +209,15 @@ export default function Applicants() {
               </Button>
 
 
-              <button
+              <Button
+                variant="default"
+                size="sm"
+                className="w-full sm:w-auto hover:bg-black"
+                style={{ backgroundColor: "white", color: "#0056D2" }}
                 onClick={() => navigate("/applicants/job")}
-                className="flex items-center text-blue-500 text-sm hover:underline"
               >
-                Next
-                <ChevronRight className="w-4 h-4 ml-1" />
-              </button>
+                Applicants by Position
+              </Button>
             </div>
 
             {/* Spacer to prevent overlap with fixed buttons */}
