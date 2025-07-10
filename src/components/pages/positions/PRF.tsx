@@ -1,52 +1,262 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Navbar } from "@/components/reusables/Navbar";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
-import { User2, Sparkles, Wand2, Plus } from "lucide-react";
+"use client"
 
+import type React from "react"
 
-const InputField = ({ label, ...props }) => (
+import { useState, useEffect } from "react"
+// Remove useNavigate from this import if not using it
+// import { useNavigate } from "react-router-dom"
+import { Navbar } from "@/components/reusables/Navbar"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
+import { User2, Sparkles, Wand2, Plus } from "lucide-react"
+
+// Type definitions
+interface InputFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  label: string
+}
+
+interface FormData {
+  // Step 1 - Position Information
+  jobTitle: string
+  targetStartDate: string
+  numberOfVacancies: string
+  reasonForPosting: string
+
+  // Step 1 - Department Information
+  businessUnit: string
+  departmentName: string
+  interviewLevels: number
+  immediateSupervisor: string
+
+  // Step 2 - Job Details
+  contractType: string
+  workArrangement: string
+  category: string
+  position: string
+  workingSite: string
+  workSchedule: string
+
+  // Step 2 - Job Description
+  jobDescription: string
+  responsibilities: string
+  qualifications: string
+  nonNegotiables: string
+  salaryBudget: string
+
+  // Step 3 - Assessments
+  assessmentRequired: string
+  assessmentTypes: {
+    technical: boolean
+    language: boolean
+    cognitive: boolean
+    personality: boolean
+    behavioral: boolean
+    cultural: boolean
+  }
+  otherAssessment: string
+  hardwareRequired: {
+    desktop: boolean
+    handset: boolean
+    headset: boolean
+    laptop: boolean
+  }
+  softwareRequired: {
+    [key: string]: boolean
+  }
+}
+
+interface StepProps {
+  step: number
+  formData: FormData
+}
+
+interface NavigationProps {
+  goToNextStep: () => void
+  goToPreviousStep: () => void
+  step: number
+  formData: FormData
+  updateFormData: (updates: Partial<FormData>) => void
+}
+
+interface Step01Props {
+  goToNextStep: () => void
+  step: number
+  formData: FormData
+  updateFormData: (updates: Partial<FormData>) => void
+}
+
+interface Step04Props {
+  goToPreviousStep: () => void
+  step: number
+  formData: FormData
+}
+
+const InputField = ({ label, ...props }: InputFieldProps) => (
   <div>
     <label className="text-sm font-medium text-gray-700 mb-1 block">{label}</label>
     <Input {...props} />
   </div>
-);
+)
+
+// Custom Radio Button Component
+const CustomRadio = ({
+  name,
+  value,
+  checked,
+  onChange,
+  children,
+  ...props
+}: {
+  name: string
+  value: string
+  checked?: boolean
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
+  children: React.ReactNode
+  [key: string]: any
+}) => (
+  <label className="flex items-center gap-2 cursor-pointer">
+    <div className="relative">
+      <input
+        type="radio"
+        name={name}
+        value={value}
+        checked={checked}
+        onChange={onChange}
+        className="sr-only"
+        {...props}
+      />
+      <div
+        className={`w-4 h-4 rounded-full border-2 transition-all duration-200 ${
+          checked ? "bg-[#0056D2] border-[#0056D2]" : "bg-white border-gray-300 hover:border-gray-400"
+        }`}
+      >
+        {checked && (
+          <div className="w-2 h-2 bg-white rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+        )}
+      </div>
+    </div>
+    <span className="text-sm">{children}</span>
+  </label>
+)
+
+// Custom Checkbox Component
+const CustomCheckbox = ({
+  checked,
+  onChange,
+  children,
+  ...props
+}: {
+  checked?: boolean
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
+  children: React.ReactNode
+  [key: string]: any
+}) => (
+  <label className="flex items-center gap-2 cursor-pointer">
+    <div className="relative">
+      <input type="checkbox" checked={checked} onChange={onChange} className="sr-only" {...props} />
+      <div
+        className={`w-4 h-4 rounded border-2 transition-all duration-200 flex items-center justify-center ${
+          checked ? "bg-[#0056D2] border-[#0056D2]" : "bg-white border-gray-300 hover:border-gray-400"
+        }`}
+      >
+        {checked && (
+          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        )}
+      </div>
+    </div>
+    <span className="text-sm">{children}</span>
+  </label>
+)
 
 export default function PRF() {
-  const [step, setStep] = useState(1);
-  const navigate = useNavigate();
+  const [step, setStep] = useState(1)
+  const [formData, setFormData] = useState<FormData>({
+    // Step 1 - Position Information
+    jobTitle: "",
+    targetStartDate: "",
+    numberOfVacancies: "",
+    reasonForPosting: "",
+
+    // Step 1 - Department Information
+    businessUnit: "",
+    departmentName: "",
+    interviewLevels: 4,
+    immediateSupervisor: "",
+
+    // Step 2 - Job Details
+    contractType: "",
+    workArrangement: "",
+    category: "",
+    position: "",
+    workingSite: "",
+    workSchedule: "",
+
+    // Step 2 - Job Description
+    jobDescription: "",
+    responsibilities: "",
+    qualifications: "",
+    nonNegotiables: "",
+    salaryBudget: "",
+
+    // Step 3 - Assessments
+    assessmentRequired: "Yes",
+    assessmentTypes: {
+      technical: true,
+      language: true,
+      cognitive: false,
+      personality: true,
+      behavioral: false,
+      cultural: false,
+    },
+    otherAssessment: "Psychological Test",
+    hardwareRequired: {
+      desktop: false,
+      handset: false,
+      headset: true,
+      laptop: true,
+    },
+    softwareRequired: {
+      "Adobe Photoshop": true,
+      "Google Chrome": false,
+      "MS Teams": false,
+      "Open VPN": false,
+      WinRAR: false,
+      ZOHO: false,
+      Email: false,
+      "Microsoft Office": true,
+      "Nitro Pro 8 PDF": false,
+      Viber: true,
+      Xlite: false,
+      Zoom: false,
+    },
+  })
 
   useEffect(() => {
-    document.title = "Personnel Requisition Form";
-  }, []);
+    document.title = "Personnel Requisition Form"
+  }, [])
 
-  const goToNextStep = () => setStep((prev) => Math.min(prev + 1, 4));
-  const goToPreviousStep = () => setStep((prev) => Math.max(prev - 1, 1));
+  const goToNextStep = () => setStep((prev) => Math.min(prev + 1, 4))
+  const goToPreviousStep = () => setStep((prev) => Math.max(prev - 1, 1))
+
+  const updateFormData = (updates: Partial<FormData>) => {
+    setFormData((prev) => ({ ...prev, ...updates }))
+  }
 
   return (
     <>
       <Navbar />
       <div className="min-h-screen bg-white p-6 pt-[100px]">
         <div className="mx-auto max-w-7xl space-y-4">
-          <h1 className="text-lg font-bold text-gray-800 mb-6">
-            Personnel Requisition Form
-          </h1>
-
+          <h1 className="text-lg font-bold text-gray-800 mb-6">Personnel Requisition Form</h1>
           <div className="flex justify-between items-center mb-4">
             <a href="#" className="text-[#0056D2] text-sm hover:underline">
               &larr; Cancel Request
             </a>
           </div>
-
           <div className="flex space-x-0 border border-gray-300 rounded-md overflow-hidden mb-8">
             {["Step 01", "Step 02", "Step 03", "Step 04"].map((label, i) => (
               <div
@@ -61,24 +271,61 @@ export default function PRF() {
             ))}
           </div>
 
-          {step === 1 && <Step01 goToNextStep={goToNextStep} step={step} />}
+          {step === 1 && (
+            <Step01 goToNextStep={goToNextStep} step={step} formData={formData} updateFormData={updateFormData} />
+          )}
           {step === 2 && (
-            <Step02 goToNextStep={goToNextStep} goToPreviousStep={goToPreviousStep} step={step} />
+            <Step02
+              goToNextStep={goToNextStep}
+              goToPreviousStep={goToPreviousStep}
+              step={step}
+              formData={formData}
+              updateFormData={updateFormData}
+            />
           )}
           {step === 3 && (
-            <Step03 goToNextStep={goToNextStep} goToPreviousStep={goToPreviousStep} step={step} />
+            <Step03
+              goToNextStep={goToNextStep}
+              goToPreviousStep={goToPreviousStep}
+              step={step}
+              formData={formData}
+              updateFormData={updateFormData}
+            />
           )}
-          {step === 4 && (
-            <Step04 goToPreviousStep={goToPreviousStep} step={step} />
-            )}
+          {step === 4 && <Step04 goToPreviousStep={goToPreviousStep} step={step} formData={formData} />}
         </div>
       </div>
     </>
-  );
+  )
 }
 
-function PreviewInfo({ step }) {
-  const [showMore, setShowMore] = useState(false);
+function PreviewInfo({ step, formData }: StepProps) {
+  const [showMore, setShowMore] = useState(false)
+
+  // Get selected assessment types
+  const selectedAssessments = Object.entries(formData.assessmentTypes)
+    .filter(([_, selected]) => selected)
+    .map(([type, _]) => {
+      const typeMap: { [key: string]: string } = {
+        technical: "Technical Test",
+        language: "Language Proficiency Test",
+        cognitive: "Cognitive Test",
+        personality: "Personality Test",
+        behavioral: "Behavioral Test",
+        cultural: "Cultural Test",
+      }
+      return typeMap[type]
+    })
+
+  // Get selected hardware
+  const selectedHardware = Object.entries(formData.hardwareRequired)
+    .filter(([_, selected]) => selected)
+    .map(([hardware, _]) => hardware.charAt(0).toUpperCase() + hardware.slice(1))
+
+  // Get selected software
+  const selectedSoftware = Object.entries(formData.softwareRequired)
+    .filter(([_, selected]) => selected)
+    .map(([software, _]) => software)
 
   return (
     <div className="border rounded-md p-4 bg-white text-sm h-fit sticky top-28 space-y-4">
@@ -89,23 +336,37 @@ function PreviewInfo({ step }) {
             <h2 className="text-[#0056D2] font-bold text-sm border-l-4 border-[#0056D2] pl-2 uppercase">
               POSITION INFORMATION
             </h2>
-            <p><strong>Job Title:</strong> UI Designer Manager</p>
-            <p><strong>Target Start Date:</strong> March 28, 2025</p>
-            <p><strong>Number of Vacancies:</strong> 3</p>
-            <p><strong>Reason for Posting Position:</strong> New role to support product development</p>
+            <p>
+              <strong>Job Title:</strong> {formData.jobTitle || "Not specified"}
+            </p>
+            <p>
+              <strong>Target Start Date:</strong> {formData.targetStartDate || "Not specified"}
+            </p>
+            <p>
+              <strong>Number of Vacancies:</strong> {formData.numberOfVacancies || "Not specified"}
+            </p>
+            <p>
+              <strong>Reason for Posting Position:</strong> {formData.reasonForPosting || "Not specified"}
+            </p>
           </div>
-
           {/* DEPARTMENT INFORMATION */}
           <div className="space-y-2">
             <h2 className="text-[#0056D2] font-bold text-sm border-l-4 border-[#0056D2] pl-2 uppercase">
               DEPARTMENT INFORMATION
             </h2>
-            <p><strong>Business Unit:</strong> OODC</p>
-            <p><strong>Levels of Interview:</strong> 3</p>
-            <p><strong>Department Name:</strong> Continuous Improvement Department</p>
-            <p><strong>Immediate Supervisor:</strong> Hailey Adams</p>
+            <p>
+              <strong>Business Unit:</strong> {formData.businessUnit || "Not specified"}
+            </p>
+            <p>
+              <strong>Levels of Interview:</strong> {formData.interviewLevels}
+            </p>
+            <p>
+              <strong>Department Name:</strong> {formData.departmentName || "Not specified"}
+            </p>
+            <p>
+              <strong>Immediate Supervisor:</strong> {formData.immediateSupervisor || "Not specified"}
+            </p>
           </div>
-
           {step >= 2 && (
             <>
               {/* JOB DETAILS */}
@@ -113,216 +374,184 @@ function PreviewInfo({ step }) {
                 <h2 className="text-[#0056D2] font-bold text-sm border-l-4 border-[#0056D2] pl-2 uppercase">
                   JOB DETAILS
                 </h2>
-                <p><strong>Contract Type:</strong> Probationary</p>
-                <p><strong>Work Arrangement:</strong> Hybrid</p>
-                <p><strong>Category:</strong> Managerial</p>
-                <p><strong>Subcategory:</strong> UI Design Manager</p>
-                <p><strong>Working Site:</strong> Makati</p>
-                <p><strong>Working Schedule:</strong> 8:00 am - 5:00 pm</p>
+                <p>
+                  <strong>Contract Type:</strong> {formData.contractType || "Not specified"}
+                </p>
+                <p>
+                  <strong>Work Arrangement:</strong> {formData.workArrangement || "Not specified"}
+                </p>
+                <p>
+                  <strong>Category:</strong> {formData.category || "Not specified"}
+                </p>
+                <p>
+                  <strong>Subcategory:</strong> {formData.position || "Not specified"}
+                </p>
+                <p>
+                  <strong>Working Site:</strong> {formData.workingSite || "Not specified"}
+                </p>
+                <p>
+                  <strong>Working Schedule:</strong> {formData.workSchedule || "Not specified"}
+                </p>
               </div>
-
               {/* JOB DESCRIPTION */}
               <div className="space-y-2">
                 <h2 className="text-[#0056D2] font-bold text-sm border-l-4 border-[#0056D2] pl-2 uppercase">
                   JOB DESCRIPTION
                 </h2>
-                <p>
-                  We are looking for a creative and detail-oriented UI Designer to design visually appealing and user-friendly interfaces for web and mobile applications...
-                </p>
+                <p>{formData.jobDescription || "Job description not provided yet..."}</p>
               </div>
-
               {showMore && (
                 <>
                   {/* KEY RESPONSIBILITIES */}
                   <div className="space-y-2">
                     <h3 className="font-semibold text-sm">Key Responsibilities:</h3>
-                    <ul className="list-disc list-inside space-y-1">
-                      <li>Design intuitive and aesthetically pleasing interfaces.</li>
-                      <li>Collaborate with cross-functional teams.</li>
-                      <li>Create wireframes and prototypes.</li>
-                      <li>Conduct user research and usability testing.</li>
-                      <li>Maintain visual consistency.</li>
-                    </ul>
+                    <p className="text-sm">{formData.responsibilities || "Responsibilities not specified yet..."}</p>
                   </div>
-
                   {/* QUALIFICATIONS */}
                   <div className="space-y-2">
                     <h3 className="font-semibold text-sm">Qualifications:</h3>
-                    <ul className="list-disc list-inside space-y-1">
-                      <li>Bachelor's degree in a related field.</li>
-                      <li>Experience in UI design roles.</li>
-                      <li>Proficiency in Adobe XD, Figma, or Sketch.</li>
-                      <li>Strong design portfolio.</li>
-                      <li>Attention to detail.</li>
-                    </ul>
+                    <p className="text-sm">{formData.qualifications || "Qualifications not specified yet..."}</p>
                   </div>
-
                   {/* NON-NEGOTIABLES */}
                   <div className="space-y-2">
                     <h3 className="font-semibold text-sm">Non-Negotiables:</h3>
-                    <ul className="list-disc list-inside space-y-1">
-                      <li>2+ years of experience in UI design.</li>
-                      <li>Proficiency in design tools.</li>
-                      <li>Collaborative team skills.</li>
-                      <li>Strong problem-solving ability.</li>
-                    </ul>
+                    <p className="text-sm">{formData.nonNegotiables || "Non-negotiables not specified yet..."}</p>
                   </div>
-
                   {/* ASSESSMENTS */}
                   {step === 3 && (
                     <div className="space-y-2">
                       <h2 className="text-[#0056D2] font-bold text-sm border-l-4 border-[#0056D2] pl-2 uppercase">
                         ASSESSMENTS
                       </h2>
-                      <ul className="list-disc list-inside space-y-1">
-                        <li><strong>Assessment Required: YES</strong></li>
-                        <li>Technical Test</li>
-                        <li>Language Proficiency Test</li>
-                        <li>Personality Test</li>
-                        <li>Psychological Test</li>
-                      </ul>
+                      <p>
+                        <strong>Assessment Required:</strong> {formData.assessmentRequired}
+                      </p>
+                      {selectedAssessments.length > 0 && (
+                        <ul className="list-disc list-inside space-y-1">
+                          {selectedAssessments.map((assessment, index) => (
+                            <li key={index}>{assessment}</li>
+                          ))}
+                          {formData.otherAssessment && <li>{formData.otherAssessment}</li>}
+                        </ul>
+                      )}
                     </div>
                   )}
-
                   {/* SALARY BUDGET */}
                   <div className="space-y-2">
                     <h2 className="text-[#0056D2] font-bold text-sm border-l-4 border-[#0056D2] pl-2 uppercase">
                       SALARY BUDGET
                     </h2>
-                    <p className="font-semibold text-gray-800">₱ 20,000 - 25,000</p>
+                    <p className="font-semibold text-gray-800">{formData.salaryBudget || "Not specified"}</p>
                   </div>
                 </>
               )}
-
               {/* SHOW MORE TOGGLE */}
-              <div
-                className="text-[#0056D2] text-sm mt-2 cursor-pointer"
-                onClick={() => setShowMore(!showMore)}
-              >
+              <div className="text-[#0056D2] text-sm mt-2 cursor-pointer" onClick={() => setShowMore(!showMore)}>
                 {showMore ? "▲ See less" : "▼ See more"}
               </div>
             </>
           )}
         </>
       )}
-
       {step === 4 && (
-  <div className="space-y-6">
-    <h2 className="text-[#0056D2] font-bold text-sm border-l-4 border-[#0056D2] pl-2 uppercase">
-      APPROVAL
-    </h2>
-
-    {/* STEP BLOCK */}
-    {[1, 2, 3].map((stepNumber, i) => {
-      const titles = [
-        {
-          title: "HR Manager Review",
-          subtitle: "Initial review and budget allocation",
-          label: "HR Manager",
-        },
-        {
-          title: "Finance Approval",
-          subtitle: "Budget verification",
-          label: "Finance Manager",
-        },
-        {
-          title: "Final Approval",
-          subtitle: "Final approval before position opens",
-          label: "General Manager",
-        },
-      ];
-
-      const isLast = i === 2;
-      const { title, subtitle, label } = titles[i];
-
-      return (
-        <div key={i} className="relative flex gap-4">
-          {/* Left Timeline */}
-          <div className="flex flex-col items-center w-6">
-            {/* Line */}
-            {!isLast && (
-              <div className="absolute top-6 left-[11px] h-full w-px bg-blue-200 z-0" />
-            )}
-
-            {/* Circle */}
-            <div className="relative z-10 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
-              {stepNumber}
-            </div>
-          </div>
-
-          {/* Right Content */}
-          <div className="border rounded-lg p-4 bg-white shadow space-y-4 flex-1">
-            {/* Header with title & buttons */}
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="font-semibold text-sm">{title}</p>
-                <p className="text-xs text-gray-500">{subtitle}</p>
+        <div className="space-y-6">
+          <h2 className="text-[#0056D2] font-bold text-sm border-l-4 border-[#0056D2] pl-2 uppercase">APPROVAL</h2>
+          {/* STEP BLOCK */}
+          {[1, 2, 3].map((stepNumber, i) => {
+            const titles = [
+              {
+                title: "HR Manager Review",
+                subtitle: "Initial review and budget allocation",
+                label: "HR Manager",
+              },
+              {
+                title: "Finance Approval",
+                subtitle: "Budget verification",
+                label: "Finance Manager",
+              },
+              {
+                title: "Final Approval",
+                subtitle: "Final approval before position opens",
+                label: "General Manager",
+              },
+            ]
+            const isLast = i === 2
+            const { title, subtitle, label } = titles[i]
+            return (
+              <div key={i} className="relative flex gap-4">
+                {/* Left Timeline */}
+                <div className="flex flex-col items-center w-6">
+                  {/* Line */}
+                  {!isLast && <div className="absolute top-6 left-[11px] h-full w-px bg-blue-200 z-0" />}
+                  {/* Circle */}
+                  <div className="relative z-10 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                    {stepNumber}
+                  </div>
+                </div>
+                {/* Right Content */}
+                <div className="border rounded-lg p-4 bg-white shadow space-y-4 flex-1">
+                  {/* Header with title & buttons */}
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-semibold text-sm">{title}</p>
+                      <p className="text-xs text-gray-500">{subtitle}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button className="text-red-600 bg-red-100 px-3 py-1 text-xs rounded">Reject</button>
+                      <button className="text-green-600 bg-green-100 px-3 py-1 text-xs rounded">Approve</button>
+                    </div>
+                  </div>
+                  {/* Approver */}
+                  <p className="text-sm text-gray-500">
+                    <strong>{label}:</strong> Mr. Carlos Garcia
+                  </p>
+                  {/* Budget Allocation */}
+                  <div>
+                    <label className="text-sm font-semibold block mb-1">Budget Allocation</label>
+                    <input
+                      type="text"
+                      value={formData.salaryBudget || "₱ 20,000 - 25,000"}
+                      disabled
+                      className="w-full border border-gray-300 rounded px-3 py-1.5 text-sm text-gray-500 bg-white"
+                    />
+                  </div>
+                  {/* Comments */}
+                  <div>
+                    <label className="text-sm font-semibold block mb-1">Comments</label>
+                    <textarea
+                      rows={4}
+                      disabled
+                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm text-gray-500 bg-white resize-none"
+                      defaultValue={
+                        stepNumber === 1
+                          ? "Approved. Please confirm final budget availability with Finance before proceeding with recruitment."
+                          : "Add your review comments..."
+                      }
+                    />
+                  </div>
+                  {/* Edit Button */}
+                  {stepNumber === 1 && (
+                    <div>
+                      <button className="px-3 py-1 text-xs rounded bg-gray-100 text-blue-600 hover:bg-gray-200">
+                        Edit
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
-
-              <div className="flex gap-2">
-                <button className="text-red-600 bg-red-100 px-3 py-1 text-xs rounded">Reject</button>
-                <button className="text-green-600 bg-green-100 px-3 py-1 text-xs rounded">Approve</button>
-              </div>
-            </div>
-
-            {/* Approver */}
-            <p className="text-sm text-gray-500">
-              <strong>{label}:</strong> Mr. Carlos Garcia
-            </p>
-
-            {/* Budget Allocation */}
-            <div>
-              <label className="text-sm font-semibold block mb-1">Budget Allocation</label>
-              <input
-                type="text"
-                value="₱ 20,000 - 25,000"
-                disabled
-                className="w-full border border-gray-300 rounded px-3 py-1.5 text-sm text-gray-500 bg-white"
-              />
-            </div>
-
-            {/* Comments */}
-            <div>
-              <label className="text-sm font-semibold block mb-1">Comments</label>
-              <textarea
-                rows={4}
-                disabled
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm text-gray-500 bg-white resize-none"
-                defaultValue={
-                  stepNumber === 1
-                    ? "Approved. Please confirm final budget availability with Finance before proceeding with recruitment."
-                    : "Add your review comments..."
-                }
-              />
-            </div>
-
-            {/* Edit Button */}
-            {stepNumber === 1 && (
-              <div>
-                <button className="px-3 py-1 text-xs rounded bg-gray-100 text-blue-600 hover:bg-gray-200">
-                  Edit
-                </button>
-              </div>
-            )}
-          </div>
+            )
+          })}
         </div>
-      );
-    })}
-  </div>
-)}
-
+      )}
     </div>
-  );
+  )
 }
 
-
-function Step01({ goToNextStep, step }) {
-  const [interviewLevels, setInterviewLevels] = useState(4);
-
-  const handleInterviewLevelChange = (e) => {
-    const value = parseInt(e.target.value);
-    setInterviewLevels(Number.isNaN(value) ? 0 : value);
-  };
+function Step01({ goToNextStep, step, formData, updateFormData }: Step01Props) {
+  const handleInterviewLevelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Number.parseInt(e.target.value)
+    updateFormData({ interviewLevels: Number.isNaN(value) ? 0 : value })
+  }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
@@ -333,13 +562,33 @@ function Step01({ goToNextStep, step }) {
             Position Information
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <InputField label="Job Title" placeholder="Enter Job Title" />
-            <InputField label="Target Start Date" type="date" />
-            <InputField label="No. of Vacancies" type="number" placeholder="e.g. 3" />
-            <InputField label="Reason for Posting Position" placeholder="e.g. New Role" />
+            <InputField
+              label="Job Title"
+              placeholder="Enter Job Title"
+              value={formData.jobTitle}
+              onChange={(e) => updateFormData({ jobTitle: e.target.value })}
+            />
+            <InputField
+              label="Target Start Date"
+              type="date"
+              value={formData.targetStartDate}
+              onChange={(e) => updateFormData({ targetStartDate: e.target.value })}
+            />
+            <InputField
+              label="No. of Vacancies"
+              type="number"
+              placeholder="e.g. 3"
+              value={formData.numberOfVacancies}
+              onChange={(e) => updateFormData({ numberOfVacancies: e.target.value })}
+            />
+            <InputField
+              label="Reason for Posting Position"
+              placeholder="e.g. New Role"
+              value={formData.reasonForPosting}
+              onChange={(e) => updateFormData({ reasonForPosting: e.target.value })}
+            />
           </div>
         </div>
-
         {/* Department Information */}
         <div>
           <h2 className="text-[#0056D2] font-bold text-sm mb-4 border-l-4 border-[#0056D2] pl-2 uppercase">
@@ -349,38 +598,50 @@ function Step01({ goToNextStep, step }) {
             <div>
               <label className="text-sm font-medium text-gray-700 block mb-1">Business Unit</label>
               <div className="flex items-center gap-4">
-                <label className="flex items-center gap-1">
-                  <input type="radio" name="businessUnit" value="OODC" />
+                <CustomRadio
+                  name="businessUnit"
+                  value="OODC"
+                  checked={formData.businessUnit === "OODC"}
+                  onChange={(e) => updateFormData({ businessUnit: e.target.value })}
+                >
                   OODC
-                </label>
-                <label className="flex items-center gap-1">
-                  <input type="radio" name="businessUnit" value="OORS" />
+                </CustomRadio>
+                <CustomRadio
+                  name="businessUnit"
+                  value="OORS"
+                  checked={formData.businessUnit === "OORS"}
+                  onChange={(e) => updateFormData({ businessUnit: e.target.value })}
+                >
                   OORS
-                </label>
+                </CustomRadio>
               </div>
             </div>
-
             <div>
               <label className="text-sm font-medium text-gray-700 block mb-1">Department Name</label>
-              <Select>
+              <Select
+                value={formData.departmentName}
+                onValueChange={(value) => updateFormData({ departmentName: value })}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Ex: Information Technology" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="IT">Information Technology</SelectItem>
-                  <SelectItem value="HR">Human Resources</SelectItem>
+                  <SelectItem value="Information Technology">Information Technology</SelectItem>
+                  <SelectItem value="Human Resources">Human Resources</SelectItem>
+                  <SelectItem value="Continuous Improvement Department">Continuous Improvement Department</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-
             <div>
               <label className="text-sm font-medium text-gray-700 block mb-1">Levels of Interview</label>
-              <Input type="number" value={interviewLevels} onChange={handleInterviewLevelChange} />
+              <Input type="number" value={formData.interviewLevels} onChange={handleInterviewLevelChange} />
             </div>
-
             <div>
               <label className="text-sm font-medium text-gray-700 block mb-1">Immediate Supervisor</label>
-              <Select>
+              <Select
+                value={formData.immediateSupervisor}
+                onValueChange={(value) => updateFormData({ immediateSupervisor: value })}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Ex: Ms. Hailey Adams" />
                 </SelectTrigger>
@@ -391,23 +652,18 @@ function Step01({ goToNextStep, step }) {
               </Select>
             </div>
           </div>
-
           {/* Dynamic Hiring Manager Fields */}
           <div className="mt-6">
             <div className="grid grid-cols-2 bg-gray-100 p-3 font-medium text-sm text-gray-700 border border-gray-200 rounded-t-md">
               <div>LEVELS OF INTERVIEW</div>
               <div>HIRING MANAGERS</div>
             </div>
-            {Array.from({ length: interviewLevels }, (_, i) => (
-              <div
-                key={i}
-                className="grid grid-cols-2 gap-4 items-center border-b border-gray-200 p-3"
-              >
+            {Array.from({ length: formData.interviewLevels }, (_, i) => (
+              <div key={i} className="grid grid-cols-2 gap-4 items-center border-b border-gray-200 p-3">
                 <div className="flex items-center gap-2 text-sm text-gray-600">
-                <User2 className="w-4 h-4 text-gray-500" />
-                Hiring Manager {i + 1}
+                  <User2 className="w-4 h-4 text-gray-500" />
+                  Hiring Manager {i + 1}
                 </div>
-
                 <Select>
                   <SelectTrigger>
                     <SelectValue placeholder="Name" />
@@ -421,20 +677,18 @@ function Step01({ goToNextStep, step }) {
             ))}
           </div>
         </div>
-
         <div className="flex justify-end mt-10">
           <Button className="bg-[#0056D2] hover:bg-blue-700 text-white" onClick={goToNextStep}>
             Next &rarr;
           </Button>
         </div>
       </div>
-
-      <PreviewInfo step={step} />
+      <PreviewInfo step={step} formData={formData} />
     </div>
-  );
+  )
 }
 
-function Step02({ goToNextStep, goToPreviousStep, step }) {
+function Step02({ goToNextStep, goToPreviousStep, step, formData, updateFormData }: NavigationProps) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
       <div className="lg:col-span-2 space-y-6">
@@ -446,86 +700,137 @@ function Step02({ goToNextStep, goToPreviousStep, step }) {
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">Contract Type</label>
               <div className="flex items-center gap-4">
-                <label><input type="radio" name="contract" /> Probationary</label>
-                <label><input type="radio" name="contract" /> Project</label>
+                <CustomRadio
+                  name="contract"
+                  value="Probationary"
+                  checked={formData.contractType === "Probationary"}
+                  onChange={(e) => updateFormData({ contractType: e.target.value })}
+                >
+                  Probationary
+                </CustomRadio>
+                <CustomRadio
+                  name="contract"
+                  value="Project"
+                  checked={formData.contractType === "Project"}
+                  onChange={(e) => updateFormData({ contractType: e.target.value })}
+                >
+                  Project
+                </CustomRadio>
               </div>
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">Work Arrangement</label>
               <div className="flex items-center gap-4">
-                <label><input type="radio" name="arrangement" /> Hybrid</label>
-                <label><input type="radio" name="arrangement" /> Onsite</label>
-                <label><input type="radio" name="arrangement" /> Remote</label>
+                <CustomRadio
+                  name="arrangement"
+                  value="Hybrid"
+                  checked={formData.workArrangement === "Hybrid"}
+                  onChange={(e) => updateFormData({ workArrangement: e.target.value })}
+                >
+                  Hybrid
+                </CustomRadio>
+                <CustomRadio
+                  name="arrangement"
+                  value="Onsite"
+                  checked={formData.workArrangement === "Onsite"}
+                  onChange={(e) => updateFormData({ workArrangement: e.target.value })}
+                >
+                  Onsite
+                </CustomRadio>
+                <CustomRadio
+                  name="arrangement"
+                  value="Remote"
+                  checked={formData.workArrangement === "Remote"}
+                  onChange={(e) => updateFormData({ workArrangement: e.target.value })}
+                >
+                  Remote
+                </CustomRadio>
               </div>
             </div>
             <div>
               <label className="text-sm font-medium text-gray-700">Category</label>
-              <Select>
+              <Select value={formData.category} onValueChange={(value) => updateFormData({ category: value })}>
                 <SelectTrigger>
                   <SelectValue placeholder="All Job Title" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Managerial">Managerial</SelectItem>
+                  <SelectItem value="Technical">Technical</SelectItem>
+                  <SelectItem value="Administrative">Administrative</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
               <label className="text-sm font-medium text-gray-700">Position</label>
-              <Select>
+              <Select value={formData.position} onValueChange={(value) => updateFormData({ position: value })}>
                 <SelectTrigger>
                   <SelectValue placeholder="All Job Title" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Managerial">Managerial</SelectItem>
+                  <SelectItem value="UI Design Manager">UI Design Manager</SelectItem>
+                  <SelectItem value="Software Developer">Software Developer</SelectItem>
+                  <SelectItem value="Project Manager">Project Manager</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <InputField label="Working Site" placeholder="Makati" />
-            <InputField label="Work Schedule" placeholder="8:00 am - 5:00 pm" />
+            <InputField
+              label="Working Site"
+              placeholder="Makati"
+              value={formData.workingSite}
+              onChange={(e) => updateFormData({ workingSite: e.target.value })}
+            />
+            <InputField
+              label="Work Schedule"
+              placeholder="8:00 am - 5:00 pm"
+              value={formData.workSchedule}
+              onChange={(e) => updateFormData({ workSchedule: e.target.value })}
+            />
           </div>
         </div>
-
         <div>
           <h2 className="text-[#0056D2] font-bold text-sm mb-4 border-l-4 border-[#0056D2] pl-2 uppercase">
             Job Description
           </h2>
           <div className="space-y-6">
-        {[
-          "Job Description",
-          "Responsibilities",
-          "Qualifications",
-          "Non Negotiables",
-        ].map((label) => (
-          <div key={label}>
-            <label className="block text-sm font-semibold mb-1">
-              {label}
-            </label>
-            <div className="relative">
-              <Textarea
-                placeholder="Input text"
-                className="min-h-[90px] pr-20 resize-none"
-              />
-              <Button
-                variant="ghost"
-                size="sm"
-                className="absolute bottom-2 right-2 text-[#8B8B8B] text-sm hover:bg-transparent flex items-center space-x-1"
-              >
-                <span>Ask AI</span>
-                <Wand2 className="w-4 h-4" />
-              </Button>
-            </div>
+            {[
+              { key: "jobDescription", label: "Job Description" },
+              { key: "responsibilities", label: "Responsibilities" },
+              { key: "qualifications", label: "Qualifications" },
+              { key: "nonNegotiables", label: "Non Negotiables" },
+            ].map(({ key, label }) => (
+              <div key={key}>
+                <label className="block text-sm font-semibold mb-1">{label}</label>
+                <div className="relative">
+                  <Textarea
+                    placeholder="Input text"
+                    className="min-h-[90px] pr-20 resize-none"
+                    value={formData[key as keyof FormData] as string}
+                    onChange={(e) => updateFormData({ [key]: e.target.value })}
+                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="absolute bottom-2 right-2 text-[#8B8B8B] text-sm hover:bg-transparent flex items-center space-x-1"
+                  >
+                    <span>Ask AI</span>
+                    <Wand2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
         </div>
-
         <div>
           <h2 className="text-[#0056D2] font-bold text-sm mb-4 border-l-4 border-[#0056D2] pl-2 uppercase">
             Salary Budget
           </h2>
-          <InputField label="Salary Budget" placeholder="₱ 20,000 - 25,000" />
+          <InputField
+            label="Salary Budget"
+            placeholder="₱ 20,000 - 25,000"
+            value={formData.salaryBudget}
+            onChange={(e) => updateFormData({ salaryBudget: e.target.value })}
+          />
         </div>
-
         <div className="flex justify-between mt-10">
           <Button variant="outline" onClick={goToPreviousStep}>
             &larr; Previous
@@ -535,147 +840,178 @@ function Step02({ goToNextStep, goToPreviousStep, step }) {
           </Button>
         </div>
       </div>
-
-      <PreviewInfo step={step} />
+      <PreviewInfo step={step} formData={formData} />
     </div>
-  );
+  )
 }
 
-function Step03({ goToNextStep, goToPreviousStep, step }) {
+function Step03({ goToNextStep, goToPreviousStep, step, formData, updateFormData }: NavigationProps) {
+  const handleAssessmentTypeChange = (type: string) => {
+    updateFormData({
+      assessmentTypes: {
+        ...formData.assessmentTypes,
+        [type]: !formData.assessmentTypes[type as keyof typeof formData.assessmentTypes],
+      },
+    })
+  }
+
+  const handleHardwareChange = (hardware: string) => {
+    updateFormData({
+      hardwareRequired: {
+        ...formData.hardwareRequired,
+        [hardware]: !formData.hardwareRequired[hardware as keyof typeof formData.hardwareRequired],
+      },
+    })
+  }
+
+  const handleSoftwareChange = (software: string) => {
+    updateFormData({
+      softwareRequired: {
+        ...formData.softwareRequired,
+        [software]: !formData.softwareRequired[software],
+      },
+    })
+  }
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
       <div className="lg:col-span-2 space-y-6">
         <h2 className="text-[#0056D2] font-bold text-sm mb-4 border-l-4 border-[#0056D2] pl-2 uppercase">
           Assessments
         </h2>
-
         {/* Require Assessment */}
         <div>
           <label className="text-sm font-medium text-gray-700">Require Assessment:</label>
           <div className="flex items-center gap-6 mt-1">
-            <label className="flex items-center gap-1 text-sm">
-              <input type="radio" name="assessmentRequired" defaultChecked />
+            <CustomRadio
+              name="assessmentRequired"
+              value="Yes"
+              checked={formData.assessmentRequired === "Yes"}
+              onChange={(e) => updateFormData({ assessmentRequired: e.target.value })}
+            >
               Yes
-            </label>
-            <label className="flex items-center gap-1 text-sm">
-              <input type="radio" name="assessmentRequired" />
+            </CustomRadio>
+            <CustomRadio
+              name="assessmentRequired"
+              value="No"
+              checked={formData.assessmentRequired === "No"}
+              onChange={(e) => updateFormData({ assessmentRequired: e.target.value })}
+            >
               No
-            </label>
+            </CustomRadio>
           </div>
         </div>
-
         {/* Row: Other Assessment + Type of Assessment */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
           {/* Type of Assessment */}
           <div>
             <label className="text-sm font-medium text-gray-700 mb-1 block">Type of Assessment</label>
             <div className="space-y-2 mt-1">
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" 
-                className="accent-[#0056D2] bg-white border border-gray-300 rounded"
-                defaultChecked />
+              <CustomCheckbox
+                checked={formData.assessmentTypes.technical}
+                onChange={() => handleAssessmentTypeChange("technical")}
+              >
                 Technical Test
-              </label>
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" 
-                className="accent-[#0056D2] bg-white border border-gray-300 rounded"
-                defaultChecked />
+              </CustomCheckbox>
+              <CustomCheckbox
+                checked={formData.assessmentTypes.language}
+                onChange={() => handleAssessmentTypeChange("language")}
+              >
                 Language Proficiency Test
-              </label>
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" 
-                className="accent-[#0056D2] bg-white border border-gray-300 rounded"/>
+              </CustomCheckbox>
+              <CustomCheckbox
+                checked={formData.assessmentTypes.cognitive}
+                onChange={() => handleAssessmentTypeChange("cognitive")}
+              >
                 Cognitive Test
-              </label>
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" 
-                className="accent-[#0056D2] bg-white border border-gray-300 rounded"
-                defaultChecked />
+              </CustomCheckbox>
+              <CustomCheckbox
+                checked={formData.assessmentTypes.personality}
+                onChange={() => handleAssessmentTypeChange("personality")}
+              >
                 Personality Test
-              </label>
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" 
-                className="accent-[#0056D2] bg-white border border-gray-300 rounded"/>
+              </CustomCheckbox>
+              <CustomCheckbox
+                checked={formData.assessmentTypes.behavioral}
+                onChange={() => handleAssessmentTypeChange("behavioral")}
+              >
                 Behavioral Test
-              </label>
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" 
-                className="accent-[#0056D2] bg-white border border-gray-300 rounded"/>
+              </CustomCheckbox>
+              <CustomCheckbox
+                checked={formData.assessmentTypes.cultural}
+                onChange={() => handleAssessmentTypeChange("cultural")}
+              >
                 Cultural Test
-              </label>
+              </CustomCheckbox>
             </div>
             <div className="mt-5 text-sm text-blue-600 cursor-pointer hover:underline inline-flex items-center gap-1">
               Generate to AI <Sparkles className="w-4 h-4" />
             </div>
           </div>
-
           {/* Other Assessment */}
           <div className="w-full">
             <div className="flex items-center mb-1">
-              <label className="text-sm font-semibold text-gray-700 mr-2.5">
-                Other Assessment
-              </label>
+              <label className="text-sm font-semibold text-gray-700 mr-2.5">Other Assessment</label>
               <div className="w-4 h-4 rounded-full bg-gray-400 flex items-center justify-center cursor-pointer relative">
                 <Plus className="w-3 h-3 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
               </div>
             </div>
             <input
               type="text"
-              value="Psychological Test"
-              disabled
-              className="max-w-xs px-3 py-1.5 border border-gray-300 rounded text-sm text-gray-400 bg-white placeholder:text-gray-400"
+              value={formData.otherAssessment}
+              onChange={(e) => updateFormData({ otherAssessment: e.target.value })}
+              className="max-w-xs px-3 py-1.5 border border-gray-300 rounded text-sm text-gray-700 bg-white placeholder:text-gray-400"
               placeholder="Psychological Test"
             />
           </div>
         </div>
-
         {/* Asset Request Section */}
         <div>
           <h2 className="text-[#0056D2] font-bold text-sm mt-8 mb-4 border-l-4 border-[#0056D2] pl-2 uppercase flex items-center gap-2">
-            ASSET REQUEST 
+            ASSET REQUEST
             <span>
               <div className="w-3.5 h-3.5 rounded-full bg-gray-400 flex items-center justify-center cursor-pointer relative">
                 <Plus className="w-2.5 h-2.5 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
               </div>
             </span>
           </h2>
-
           {/* Hardware and Software Sections */}
           <div className="space-y-6">
             {/* Hardware */}
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block flex items-center gap-1">
+              <label className="text-sm font-medium text-gray-700 mb-1 block items-center gap-1">
                 Hardware Required
               </label>
               <div className="space-y-2 mt-1">
-                <label className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" 
-                  className="accent-[#0056D2] bg-white border border-gray-300 rounded"/>
+                <CustomCheckbox
+                  checked={formData.hardwareRequired.desktop}
+                  onChange={() => handleHardwareChange("desktop")}
+                >
                   Desktop
-                </label>
-                <label className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" 
-                  className="accent-[#0056D2] bg-white border border-gray-300 rounded"/>
+                </CustomCheckbox>
+                <CustomCheckbox
+                  checked={formData.hardwareRequired.handset}
+                  onChange={() => handleHardwareChange("handset")}
+                >
                   Handset
-                </label>
-                <label className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" 
-                  className="accent-[#0056D2] bg-white border border-gray-300 rounded"
-                  defaultChecked />
+                </CustomCheckbox>
+                <CustomCheckbox
+                  checked={formData.hardwareRequired.headset}
+                  onChange={() => handleHardwareChange("headset")}
+                >
                   Headset
-                </label>
-                <label className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" 
-                  className="accent-[#0056D2] bg-white border border-gray-300 rounded"
-                  defaultChecked />
+                </CustomCheckbox>
+                <CustomCheckbox
+                  checked={formData.hardwareRequired.laptop}
+                  onChange={() => handleHardwareChange("laptop")}
+                >
                   Laptop
-                </label>
+                </CustomCheckbox>
               </div>
             </div>
-
             {/* Software */}
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block flex items-center gap-2">
+              <label className="text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
                 Software Required
                 <span>
                   <div className="w-3.5 h-3.5 rounded-full bg-gray-400 flex items-center justify-center cursor-pointer relative">
@@ -698,20 +1034,18 @@ function Step03({ goToNextStep, goToPreviousStep, step }) {
                   "Xlite",
                   "Zoom",
                 ].map((software, index) => (
-                  <label key={index} className="flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      className="accent-[#0056D2] bg-white border border-gray-300 rounded"
-                      defaultChecked={["Adobe Photoshop", "Microsoft Office", "Viber"].includes(software)}
-                    />
+                  <CustomCheckbox
+                    key={index}
+                    checked={formData.softwareRequired[software]}
+                    onChange={() => handleSoftwareChange(software)}
+                  >
                     {software}
-                  </label>
+                  </CustomCheckbox>
                 ))}
               </div>
             </div>
           </div>
         </div>
-
         {/* Navigation buttons */}
         <div className="flex justify-between mt-10">
           <Button variant="outline" onClick={goToPreviousStep}>
@@ -722,14 +1056,38 @@ function Step03({ goToNextStep, goToPreviousStep, step }) {
           </Button>
         </div>
       </div>
-
       {/* Preview Sidebar */}
-      <PreviewInfo step={step} />
+      <PreviewInfo step={step} formData={formData} />
     </div>
-  );
+  )
 }
 
-function Step04({ goToPreviousStep, step }) {
+function Step04({ goToPreviousStep, step, formData }: Step04Props) {
+  // Get selected assessment types
+  const selectedAssessments = Object.entries(formData.assessmentTypes)
+    .filter(([_, selected]) => selected)
+    .map(([type, _]) => {
+      const typeMap: { [key: string]: string } = {
+        technical: "Technical Test",
+        language: "Language Proficiency Test",
+        cognitive: "Cognitive Test",
+        personality: "Personality Test",
+        behavioral: "Behavioral Test",
+        cultural: "Cultural Test",
+      }
+      return typeMap[type]
+    })
+
+  // Get selected hardware
+  const selectedHardware = Object.entries(formData.hardwareRequired)
+    .filter(([_, selected]) => selected)
+    .map(([hardware, _]) => hardware.charAt(0).toUpperCase() + hardware.slice(1))
+
+  // Get selected software
+  const selectedSoftware = Object.entries(formData.softwareRequired)
+    .filter(([_, selected]) => selected)
+    .map(([software, _]) => software)
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6 text-gray-800">
       {/* Left Content */}
@@ -744,23 +1102,22 @@ function Step04({ goToPreviousStep, step }) {
             <div className="space-y-4">
               <div>
                 <p className="text-xs text-gray-500 mb-1">Job Title</p>
-                <p className="text-sm font-semibold text-gray-800">UI Designer Manager</p>
+                <p className="text-sm font-semibold text-gray-800">{formData.jobTitle || "Not specified"}</p>
               </div>
               <div>
                 <p className="text-xs text-gray-500 mb-1">Target Start Date</p>
-                <p className="text-sm text-gray-800">March 28, 2025</p>
+                <p className="text-sm text-gray-800">{formData.targetStartDate || "Not specified"}</p>
               </div>
               <div>
                 <p className="text-xs text-gray-500 mb-1">Number of Vacancies</p>
-                <p className="text-sm text-gray-800">3</p>
+                <p className="text-sm text-gray-800">{formData.numberOfVacancies || "Not specified"}</p>
               </div>
               <div>
                 <p className="text-xs text-gray-500 mb-1">Reason for Posting Position</p>
-                <p className="text-sm text-gray-800">New role to support product development</p>
+                <p className="text-sm text-gray-800">{formData.reasonForPosting || "Not specified"}</p>
               </div>
             </div>
           </div>
-
           {/* DEPARTMENT INFORMATION */}
           <div>
             <h2 className="text-[#0056D2] font-bold text-sm border-l-4 border-[#0056D2] pl-2 uppercase mb-2">
@@ -769,23 +1126,22 @@ function Step04({ goToPreviousStep, step }) {
             <div className="space-y-4">
               <div>
                 <p className="text-xs text-gray-500 mb-1">Business Unit</p>
-                <p className="text-sm text-gray-800">OODC</p>
+                <p className="text-sm text-gray-800">{formData.businessUnit || "Not specified"}</p>
               </div>
               <div>
                 <p className="text-xs text-gray-500 mb-1">Levels of Interview</p>
-                <p className="text-sm text-gray-800">3</p>
+                <p className="text-sm text-gray-800">{formData.interviewLevels}</p>
               </div>
               <div>
                 <p className="text-xs text-gray-500 mb-1">Department Name</p>
-                <p className="text-sm text-gray-800">Continuous Improvement Department</p>
+                <p className="text-sm text-gray-800">{formData.departmentName || "Not specified"}</p>
               </div>
               <div>
                 <p className="text-xs text-gray-500 mb-1">Immediate Supervisor</p>
-                <p className="text-sm text-gray-800">Hailey Adams</p>
+                <p className="text-sm text-gray-800">{formData.immediateSupervisor || "Not specified"}</p>
               </div>
             </div>
           </div>
-
           {/* JOB DETAILS */}
           <div>
             <h2 className="text-[#0056D2] font-bold text-sm border-l-4 border-[#0056D2] pl-2 uppercase mb-2 mt-2">
@@ -794,31 +1150,30 @@ function Step04({ goToPreviousStep, step }) {
             <div className="space-y-4">
               <div>
                 <p className="text-xs text-gray-500 mb-1">Contract Type</p>
-                <p className="text-sm text-gray-800">Probationary</p>
+                <p className="text-sm text-gray-800">{formData.contractType || "Not specified"}</p>
               </div>
               <div>
                 <p className="text-xs text-gray-500 mb-1">Work Arrangement</p>
-                <p className="text-sm text-gray-800">Hybrid</p>
+                <p className="text-sm text-gray-800">{formData.workArrangement || "Not specified"}</p>
               </div>
               <div>
                 <p className="text-xs text-gray-500 mb-1">Category</p>
-                <p className="text-sm text-gray-800">Managerial</p>
+                <p className="text-sm text-gray-800">{formData.category || "Not specified"}</p>
               </div>
               <div>
                 <p className="text-xs text-gray-500 mb-1">Subcategory</p>
-                <p className="text-sm text-gray-800">UI Design Manager</p>
+                <p className="text-sm text-gray-800">{formData.position || "Not specified"}</p>
               </div>
               <div>
                 <p className="text-xs text-gray-500 mb-1">Working Site</p>
-                <p className="text-sm text-gray-800">Makati</p>
+                <p className="text-sm text-gray-800">{formData.workingSite || "Not specified"}</p>
               </div>
               <div>
                 <p className="text-xs text-gray-500 mb-1">Working Schedule</p>
-                <p className="text-sm text-gray-800">8:00 am - 5:00 pm</p>
+                <p className="text-sm text-gray-800">{formData.workSchedule || "Not specified"}</p>
               </div>
             </div>
           </div>
-
           {/* ASSESSMENTS */}
           <div>
             <h2 className="text-[#0056D2] font-bold text-sm border-l-4 border-[#0056D2] pl-2 uppercase mb-4">
@@ -827,102 +1182,84 @@ function Step04({ goToPreviousStep, step }) {
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <p className="text-xs text-gray-500">Assessment Required:</p>
-                <p className="text-sm text-gray-800">Yes</p>
+                <p className="text-sm text-gray-800">{formData.assessmentRequired}</p>
               </div>
-              <ul className="list-disc list-inside text-gray-700 pl-2 text-sm">
-                <li>Technical Test</li>
-                <li>Language Proficiency Test</li>
-                <li>Personality Test</li>
-                <li>Psychological Test</li>
-              </ul>
+              {selectedAssessments.length > 0 && (
+                <ul className="list-disc list-inside text-gray-700 pl-2 text-sm">
+                  {selectedAssessments.map((assessment, index) => (
+                    <li key={index}>{assessment}</li>
+                  ))}
+                  {formData.otherAssessment && <li>{formData.otherAssessment}</li>}
+                </ul>
+              )}
             </div>
-
             <h2 className="text-[#0056D2] font-bold text-sm border-l-4 border-[#0056D2] pl-2 uppercase mb-4 mt-8">
               Asset Request
             </h2>
             <div className="space-y-4">
-              <div className="flex items-center">
-                <p className="text-xs text-gray-500">Hardware</p>
-              </div>
-              <ul className="list-disc list-inside text-gray-700 pl-2 text-sm">
-                <li>Headset</li>
-                <li>Laptop</li>
-              </ul>
-              <div className="flex items-center">
-                <p className="text-xs text-gray-500">Software</p>
-              </div>
-              <ul className="list-disc list-inside text-gray-700 pl-2 text-sm">
-                <li>Adobe Photoshop</li>
-                <li>Microsoft Office</li>
-                <li>Viber</li>
-              </ul>
+              {selectedHardware.length > 0 && (
+                <>
+                  <div className="flex items-center">
+                    <p className="text-xs text-gray-500">Hardware</p>
+                  </div>
+                  <ul className="list-disc list-inside text-gray-700 pl-2 text-sm">
+                    {selectedHardware.map((hardware, index) => (
+                      <li key={index}>{hardware}</li>
+                    ))}
+                  </ul>
+                </>
+              )}
+              {selectedSoftware.length > 0 && (
+                <>
+                  <div className="flex items-center">
+                    <p className="text-xs text-gray-500">Software</p>
+                  </div>
+                  <ul className="list-disc list-inside text-gray-700 pl-2 text-sm">
+                    {selectedSoftware.map((software, index) => (
+                      <li key={index}>{software}</li>
+                    ))}
+                  </ul>
+                </>
+              )}
             </div>
           </div>
         </div>
-
         {/* JOB DESCRIPTION */}
         <div>
           <h2 className="text-[#0056D2] font-bold text-sm border-l-4 border-[#0056D2] pl-2 uppercase mb-2">
             Job Description
           </h2>
           <div className="space-y-4">
-            <p className="text-sm text-gray-800">
-              We are looking for a creative and detail-oriented UI Designer...
-            </p>
-
+            <p className="text-sm text-gray-800">{formData.jobDescription || "Job description not provided yet..."}</p>
             <p className="text-sm font-bold mb-1">Key Responsibilities:</p>
-            <ul className="list-disc list-inside text-gray-700 pl-2 text-sm">
-              <li>Design intuitive and aesthetically pleasing UIs.</li>
-              <li>Collaborate with team members on implementation.</li>
-              <li>Create wireframes, prototypes, high-fidelity designs.</li>
-              <li>Conduct usability testing and refine designs.</li>
-              <li>Ensure brand consistency in visual design.</li>
-            </ul>
-
+            <p className="text-sm text-gray-700">
+              {formData.responsibilities || "Responsibilities not specified yet..."}
+            </p>
             <p className="text-sm font-bold mb-1">Qualifications:</p>
-            <ul className="list-disc list-inside text-gray-700 pl-2 text-sm">
-              <li>Bachelor’s degree in relevant field.</li>
-              <li>Experience as UI Designer or similar role.</li>
-              <li>Proficiency in Adobe XD, Figma, etc.</li>
-              <li>Strong portfolio.</li>
-              <li>Great attention to detail.</li>
-            </ul>
-
+            <p className="text-sm text-gray-700">{formData.qualifications || "Qualifications not specified yet..."}</p>
             <p className="text-sm font-bold mb-1">Non-Negotiables:</p>
-            <ul className="list-disc list-inside text-gray-700 pl-2 text-sm">
-              <li>Bachelor’s degree in relevant field.</li>
-              <li>Experience as UI Designer or similar role.</li>
-              <li>Proficiency in Adobe XD, Figma, etc.</li>
-              <li>Strong portfolio.</li>
-              <li>Great attention to detail.</li>
-            </ul>
+            <p className="text-sm text-gray-700">{formData.nonNegotiables || "Non-negotiables not specified yet..."}</p>
           </div>
-
           {/* SALARY BUDGET */}
           <div className="space-y-2 mt-6">
             <h2 className="text-[#0056D2] font-bold text-sm border-l-4 border-[#0056D2] pl-2 uppercase">
               SALARY BUDGET
             </h2>
-            <p className="font-semibold text-gray-800">₱ 20,000 - 25,000</p>
+            <p className="font-semibold text-gray-800">{formData.salaryBudget || "Not specified"}</p>
           </div>
-
         </div>
-
         {/* BUTTONS */}
         <div className="flex justify-between mt-10">
           <Button variant="outline" onClick={goToPreviousStep}>
             &larr; Previous
           </Button>
-          <Button className="bg-[#0056D2] hover:bg-blue-700 text-white">
-            Submit
-          </Button>
+          <Button className="bg-[#0056D2] hover:bg-blue-700 text-white">Submit</Button>
         </div>
       </div>
-
       {/* Right Content (Preview) */}
       <div>
-        <PreviewInfo step={step} />
+        <PreviewInfo step={step} formData={formData} />
       </div>
     </div>
-  );
+  )
 }

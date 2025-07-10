@@ -397,11 +397,11 @@ const getDepartmentColor = (department: string) => {
 const ProgressBar = ({ progress, assignee }: { progress: { completed: number; total: number }; assignee: string }) => {
   // Colors for each interview
   const segmentColors = [
-    "bg-red-500", // Step 1
-    "bg-orange-500", // Step 2
-    "bg-yellow-500", // Step 3
-    "bg-green-500", // Step 4
-    "bg-blue-500", // Step 5
+    "bg-blue-500", // Step 1
+    "bg-blue-600", // Step 2
+    "bg-blue-700", // Step 3
+    "bg-blue-800", // Step 4
+    "bg-blue-900", // Step 5
   ]
 
   // Use actual total for number of interview
@@ -615,7 +615,9 @@ export default function Positions() {
       </div>
 
       {/* Client */}
-      <div className="flex flex-col items-center space-y-2 cursor-pointer">
+      <div 
+        className="flex flex-col items-center space-y-2 cursor-pointer"
+        onClick={() => navigate("/positions/create-new-position")}>
         <div className="w-16 h-16 rounded-full border border-gray-400 text-gray-500 flex items-center justify-center">
           <Users2 className="w-6 h-6" />
         </div>
