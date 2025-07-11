@@ -2,13 +2,13 @@
 
 import { Navbar } from "@/components/reusables/Navbar"
 import { useEffect, useState } from "react"
-import { useNavigate} from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Pencil, ExternalLink, RotateCcw, Archive, Info } from "lucide-react"
+import { Pencil, ExternalLink, RotateCcw, Archive, Trash2, Pause } from "lucide-react"
 import { ShareModal } from "@/components/ui/ShareModal"
 import {
   Dialog,
@@ -20,6 +20,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { User, Users2 } from "lucide-react"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface BaseJobPosting {
   id: number
@@ -30,6 +31,7 @@ interface BaseJobPosting {
   assignee?: string
   progress?: { completed: number; total: number }
   link?: string
+  type?: "internal" | "external"
 }
 
 type JobPosting = BaseJobPosting
@@ -86,58 +88,6 @@ const jobData = {
     },
   ],
 
-  pendings: [
-    {
-      id: 11,
-      title: "Sales Development Representative",
-      department: "Sales",
-      description:
-        "Energetic SDR needed to generate leads and build our sales pipeline through outbound prospecting....",
-    },
-    {
-      id: 12,
-      title: "Customer Success Manager",
-      department: "Customer Success",
-      description: "Join our customer success team to ensure client satisfaction and drive account growth....",
-    },
-    {
-      id: 13,
-      title: "Backend Engineer",
-      department: "Engineering",
-      description: "We're looking for a skilled Backend Engineer to build scalable APIs and microservices....",
-    },
-    {
-      id: 14,
-      title: "Content Marketing Specialist",
-      department: "Marketing",
-      description: "Creative content marketer needed to develop engaging content across multiple channels....",
-    },
-    {
-      id: 15,
-      title: "Financial Analyst",
-      department: "Finance",
-      description: "Detail-oriented Financial Analyst to support budgeting, forecasting, and financial reporting....",
-    },
-    {
-      id: 16,
-      title: "HR Business Partner",
-      department: "Human Resources",
-      description: "Strategic HR Business Partner to support organizational development and employee relations....",
-    },
-    {
-      id: 17,
-      title: "Machine Learning Engineer",
-      department: "Analytics",
-      description: "ML Engineer to develop and deploy machine learning models for our AI-powered features....",
-    },
-    {
-      id: 18,
-      title: "Partnership Manager",
-      department: "Business Development",
-      description: "Partnership Manager to identify and develop strategic alliances and business partnerships....",
-    },
-  ],
-
   "on-hold": [
     {
       id: 21,
@@ -179,97 +129,251 @@ const jobData = {
     },
   ],
 
-  published: [
-    {
-      id: 31,
-      title: "Account Executive",
-      department: "Sales",
-      description: "Experienced Account Executive to manage enterprise client relationships and close deals....",
-    },
-    {
-      id: 32,
-      title: "Software Engineer",
-      department: "Engineering",
-      description: "Full-stack Software Engineer to work on our core platform and new feature development....",
-    },
-    {
-      id: 33,
-      title: "Digital Marketing Manager",
-      department: "Marketing",
-      description: "Digital Marketing Manager to lead our online marketing efforts and campaign optimization....",
-    },
-    {
-      id: 34,
-      title: "Product Manager",
-      department: "Product",
-      description: "Product Manager to define product roadmap and work closely with engineering and design teams....",
-    },
-    {
-      id: 35,
-      title: "Technical Writer",
-      department: "Documentation",
-      description: "Technical Writer to create clear documentation and user guides for our products and APIs....",
-    },
-    {
-      id: 36,
-      title: "Site Reliability Engineer",
-      department: "Engineering",
-      description: "SRE to ensure system reliability, performance monitoring, and incident response....",
-    },
-    {
-      id: 37,
-      title: "Growth Marketing Manager",
-      department: "Marketing",
-      description: "Growth Marketing Manager to drive user acquisition and retention through data-driven campaigns....",
-    },
-    {
-      id: 38,
-      title: "Solutions Architect",
-      department: "Engineering",
-      description: "Solutions Architect to design scalable system architectures for enterprise clients....",
-    },
-  ],
+  published: {
+    internal: [
+      {
+        id: 31,
+        title: "Senior Account Executive",
+        department: "Sales",
+        description:
+          "Internal promotion opportunity for Account Executive to manage enterprise client relationships and drive revenue growth...",
+        type: "internal" as const,
+      },
+      {
+        id: 32,
+        title: "Lead Software Engineer",
+        department: "Engineering",
+        description:
+          "Internal advancement opportunity for Software Engineer to lead technical initiatives and mentor junior developers...",
+        type: "internal" as const,
+      },
+      {
+        id: 33,
+        title: "Marketing Team Lead",
+        department: "Marketing",
+        description:
+          "Internal leadership role for Digital Marketing Manager to lead our online marketing efforts and team expansion...",
+        type: "internal" as const,
+      },
+      {
+        id: 34,
+        title: "Senior Product Manager",
+        department: "Product",
+        description:
+          "Internal promotion for Product Manager to define product roadmap and lead cross-functional initiatives...",
+        type: "internal" as const,
+      },
+      {
+        id: 35,
+        title: "Principal Data Scientist",
+        department: "Analytics",
+        description:
+          "Internal advancement for Data Scientist to lead analytics strategy and advanced modeling projects...",
+        type: "internal" as const,
+      },
+      {
+        id: 36,
+        title: "Design Team Lead",
+        department: "Design",
+        description:
+          "Internal promotion for UX Designer to lead design team and establish design systems across products...",
+        type: "internal" as const,
+      },
+      {
+        id: 37,
+        title: "Senior DevOps Engineer",
+        department: "Engineering",
+        description:
+          "Internal advancement for DevOps Engineer to architect cloud infrastructure and lead automation initiatives...",
+        type: "internal" as const,
+      },
+      {
+        id: 38,
+        title: "Customer Success Team Lead",
+        department: "Customer Success",
+        description: "Internal promotion to lead customer success team and develop retention strategies...",
+        type: "internal" as const,
+      },
+      {
+        id: 39,
+        title: "Senior Business Analyst",
+        department: "Operations",
+        description: "Internal advancement for Business Analyst to lead process optimization and strategic planning...",
+        type: "internal" as const,
+      },
+      {
+        id: 40,
+        title: "HR Manager",
+        department: "Human Resources",
+        description:
+          "Internal promotion for HR Business Partner to manage HR operations and talent development programs...",
+        type: "internal" as const,
+      },
+    ],
+    external: [
+      {
+        id: 41,
+        title: "Technical Writer",
+        department: "Documentation",
+        description:
+          "External hire for Technical Writer to create comprehensive documentation and user guides for our products and APIs...",
+        type: "external" as const,
+      },
+      {
+        id: 42,
+        title: "Site Reliability Engineer",
+        department: "Engineering",
+        description:
+          "External SRE position to ensure system reliability, performance monitoring, and incident response management...",
+        type: "external" as const,
+      },
+      {
+        id: 43,
+        title: "Growth Marketing Manager",
+        department: "Marketing",
+        description:
+          "External hire for Growth Marketing Manager to drive user acquisition, retention, and revenue growth through data-driven campaigns...",
+        type: "external" as const,
+      },
+      {
+        id: 44,
+        title: "Solutions Architect",
+        department: "Engineering",
+        description:
+          "External Solutions Architect to design scalable system architectures for enterprise clients and complex integrations...",
+        type: "external" as const,
+      },
+      {
+        id: 45,
+        title: "Customer Experience Manager",
+        department: "Customer Success",
+        description:
+          "External hire to lead customer experience initiatives, improve satisfaction metrics, and develop customer journey optimization...",
+        type: "external" as const,
+      },
+      {
+        id: 46,
+        title: "Data Analytics Manager",
+        department: "Analytics",
+        description:
+          "External manager position to lead data analytics team, drive insights, and establish data governance practices...",
+        type: "external" as const,
+      },
+      {
+        id: 47,
+        title: "Cybersecurity Specialist",
+        department: "Security",
+        description:
+          "External cybersecurity expert to implement security protocols, conduct risk assessments, and manage compliance requirements...",
+        type: "external" as const,
+      },
+      {
+        id: 48,
+        title: "Financial Controller",
+        department: "Finance",
+        description:
+          "External hire for Financial Controller to oversee financial reporting, budgeting, and compliance with regulatory requirements...",
+        type: "external" as const,
+      },
+      {
+        id: 49,
+        title: "Legal Counsel",
+        department: "Legal",
+        description:
+          "External Legal Counsel to handle contracts, intellectual property, regulatory compliance, and corporate governance matters...",
+        type: "external" as const,
+      },
+      {
+        id: 50,
+        title: "Talent Acquisition Manager",
+        department: "Human Resources",
+        description:
+          "External hire for Talent Acquisition Manager to lead recruitment strategy, build talent pipelines, and enhance employer branding...",
+        type: "external" as const,
+      },
+      {
+        id: 51,
+        title: "Product Marketing Manager",
+        department: "Marketing",
+        description:
+          "External Product Marketing Manager to develop go-to-market strategies, competitive analysis, and product positioning...",
+        type: "external" as const,
+      },
+      {
+        id: 52,
+        title: "Cloud Infrastructure Engineer",
+        department: "Engineering",
+        description:
+          "External Cloud Engineer to design and implement scalable cloud solutions, optimize costs, and ensure high availability...",
+        type: "external" as const,
+      },
+      {
+        id: 53,
+        title: "Business Development Manager",
+        department: "Business Development",
+        description:
+          "External BD Manager to identify partnership opportunities, negotiate strategic alliances, and drive revenue growth...",
+        type: "external" as const,
+      },
+      {
+        id: 54,
+        title: "Quality Assurance Manager",
+        department: "Quality Assurance",
+        description:
+          "External QA Manager to establish testing frameworks, lead quality initiatives, and ensure product reliability...",
+        type: "external" as const,
+      },
+      {
+        id: 55,
+        title: "Research and Development Lead",
+        department: "R&D",
+        description:
+          "External R&D Lead to drive innovation initiatives, explore emerging technologies, and lead experimental projects...",
+        type: "external" as const,
+      },
+    ],
+  },
 
   closed: [
     {
-      id: 41,
+      id: 61,
       title: "Marketing Coordinator",
       department: "Marketing",
       description: "Entry-level Marketing Coordinator to support marketing campaigns and event coordination.",
       status: "Reopened",
     },
     {
-      id: 42,
+      id: 62,
       title: "Junior Developer",
       department: "Engineering",
       description: "Junior Developer position for recent graduates to start their career in software development.",
     },
     {
-      id: 43,
+      id: 63,
       title: "Sales Intern",
       department: "Sales",
       description: "Summer internship opportunity in sales to gain hands-on experience in B2B sales.",
     },
     {
-      id: 44,
+      id: 64,
       title: "Graphic Designer",
       department: "Design",
       description: "Graphic Designer to create visual assets for marketing materials and digital campaigns.",
     },
     {
-      id: 45,
+      id: 65,
       title: "Administrative Assistant",
       department: "Operations",
       description: "Administrative Assistant to provide executive support and manage office operations.",
     },
     {
-      id: 46,
+      id: 66,
       title: "Social Media Manager",
       department: "Marketing",
       description: "Social Media Manager to manage our social media presence and community engagement.",
     },
     {
-      id: 47,
+      id: 67,
       title: "IT Support Specialist",
       department: "IT",
       description: "IT Support Specialist to provide technical support and maintain office technology systems.",
@@ -278,32 +382,32 @@ const jobData = {
 
   archive: [
     {
-      id: 51,
+      id: 71,
       title: "Legacy System Administrator",
       department: "IT",
       description:
         "System Administrator role for maintaining legacy infrastructure (position archived due to system migration).",
     },
     {
-      id: 52,
+      id: 72,
       title: "Regional Sales Manager",
       department: "Sales",
       description: "Regional Sales Manager position for European market expansion (archived due to strategy change).",
     },
     {
-      id: 53,
+      id: 73,
       title: "Print Marketing Specialist",
       department: "Marketing",
       description: "Specialist for traditional print marketing campaigns (archived due to digital-first strategy).",
     },
     {
-      id: 54,
+      id: 74,
       title: "Flash Developer",
       department: "Engineering",
       description: "Flash Developer for interactive web content (archived due to technology deprecation).",
     },
     {
-      id: 55,
+      id: 75,
       title: "Telemarketing Representative",
       department: "Sales",
       description: "Telemarketing role for cold calling campaigns (archived due to strategy pivot).",
@@ -336,18 +440,22 @@ const generatePositionsData = () => {
   return {
     drafts: jobData.drafts,
 
-    pendings: jobData.pendings.map((job, index) => ({
-      ...job,
-      assignee: assignees[index % assignees.length],
-      progress: getRandomProgress(),
-    })),
-
     "on-hold": jobData["on-hold"],
 
-    published: jobData.published.map((job) => ({
-      ...job,
-      link: generateJobLink(job.title),
-    })),
+    published: {
+      all: [...jobData.published.internal, ...jobData.published.external].map((job) => ({
+        ...job,
+        link: generateJobLink(job.title),
+      })),
+      internal: jobData.published.internal.map((job) => ({
+        ...job,
+        link: generateJobLink(job.title),
+      })),
+      external: jobData.published.external.map((job) => ({
+        ...job,
+        link: generateJobLink(job.title),
+      })),
+    },
 
     closed: jobData.closed,
 
@@ -389,6 +497,10 @@ const getDepartmentColor = (department: string) => {
       return "bg-amber-100 text-amber-700"
     case "R&D":
       return "bg-violet-100 text-violet-700"
+    case "Security":
+      return "bg-red-100 text-red-800"
+    case "Quality Assurance":
+      return "bg-green-100 text-green-800"
     default:
       return "bg-gray-100 text-gray-700"
   }
@@ -446,7 +558,7 @@ const ProgressBar = ({ progress, assignee }: { progress: { completed: number; to
 
 export default function Positions() {
   const navigate = useNavigate()
- 
+
   // Get current tab from URL path or default to 'drafts'
   const getCurrentTab = () => {
     const path = window.location.pathname
@@ -455,28 +567,39 @@ export default function Positions() {
   }
 
   const [currentTab, setCurrentTab] = useState(getCurrentTab())
+  const [publishedSubTab, setPublishedSubTab] = useState<"all" | "internal" | "external">("all")
   const [search, setSearch] = useState("")
   const [selected, setSelected] = useState<number[]>([])
   const [shareOpen, setShareOpen] = useState(false)
   const [selectedLink, setSelectedLink] = useState("")
-  const [showDialog, setShowDialog] = useState(false)
+  const [showCancelDialog, setShowCancelDialog] = useState(false)
 
   // Update current tab when URL changes
   useEffect(() => {
     const newTab = getCurrentTab()
     setCurrentTab(newTab)
     document.title = `Positions | ${newTab.charAt(0).toUpperCase() + newTab.slice(1).replace("-", " ")}`
-  }, [currentTab]) // Add currentTab as dependency
+  }, [currentTab])
 
   const handleTabChange = (value: string) => {
     setCurrentTab(value)
     navigate(`/positions/${value}`)
     setSelected([])
-    // Update document title
+    // Reset published subtab when changing main tabs
+    if (value !== "published") {
+      setPublishedSubTab("all")
+    }
     document.title = `Positions | ${value.charAt(0).toUpperCase() + value.slice(1).replace("-", " ")}`
   }
 
-  const currentData: JobPosting[] = positionsData[currentTab as keyof typeof positionsData] || []
+  const getCurrentData = (): JobPosting[] => {
+    if (currentTab === "published") {
+      return positionsData.published[publishedSubTab] || []
+    }
+    return positionsData[currentTab as keyof typeof positionsData] || []
+  }
+
+  const currentData: JobPosting[] = getCurrentData()
 
   const filteredPostings = currentData.filter((posting: JobPosting) =>
     posting.title.toLowerCase().includes(search.toLowerCase()),
@@ -495,6 +618,11 @@ export default function Positions() {
     setShareOpen(true)
   }
 
+  const handleCancelRequest = () => {
+    setSelected([])
+    setShowCancelDialog(false)
+  }
+
   const renderActionButton = (posting: JobPosting) => {
     switch (currentTab) {
       case "drafts":
@@ -509,19 +637,12 @@ export default function Positions() {
             Edit
           </Button>
         )
-      case "on-hold":
-        return (
-          <a className="text-sm text-blue-600 hover:underline mt-1" href="#">
-            Open position
-          </a>
-        )
       case "published":
         return (
           <div
-            className="flex items-center gap-2 text-green-600 font-medium text-sm cursor-pointer"
+            className="flex items-center gap-2 cursor-pointer"
             onClick={() => posting.link && handleShareClick(posting.link)}
           >
-            Published
             <ExternalLink className="w-4 h-4 text-gray-500 hover:text-blue-600" />
           </div>
         )
@@ -537,30 +658,17 @@ export default function Positions() {
             Edit
           </Button>
         )
-      case "archive":
-        return (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-gray-500 hover:text-blue-600 text-sm flex items-center gap-1"
-          >
-            <RotateCcw className="w-4 h-4" />
-            Restore
-          </Button>
-        )
       default:
         return null
     }
   }
 
-  const renderRightContent = (posting: JobPosting) => {
-    if (currentTab === "pendings" && posting.assignee && posting.progress) {
-      return (
-        <div className="flex flex-col items-end min-w-[150px] text-sm text-gray-500">
-          <ProgressBar progress={posting.progress} assignee={posting.assignee} />
-        </div>
-      )
+  const renderRightContent = (posting: JobPosting, idx: number) => {
+    // Only show default actions when no items are selected
+    if (selected.length > 0) {
+      return null
     }
+
     return renderActionButton(posting)
   }
 
@@ -590,125 +698,195 @@ export default function Positions() {
                 <option>All Employment Type</option>
               </select>
               <Dialog>
-  <DialogTrigger asChild>
-    <Button variant="outline" className="w-full sm:w-auto">
-      + File Request
-    </Button>
-  </DialogTrigger>
-  <DialogContent className="text-center">
-    <DialogHeader>
-      <DialogTitle className="text-blue-700 text-sm font-semibold">
-        SELECT REQUISITION FORM
-      </DialogTitle>
-    </DialogHeader>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="w-full sm:w-auto bg-transparent">
+                    Add New Position
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="text-center">
+                  <DialogHeader>
+                    <DialogTitle className="text-blue-700 text-sm font-semibold">SELECT TYPE OF HIRING</DialogTitle>
+                  </DialogHeader>
 
-    <div className="flex justify-center gap-12 mt-6">
-      {/* Internal Hiring */}
-      <div
-        className="flex flex-col items-center space-y-2 cursor-pointer"
-        onClick={() => navigate("/prf")}
-      >
-        <div className="w-16 h-16 rounded-full border border-blue-500 text-blue-500 flex items-center justify-center">
-          <User className="w-6 h-6" />
-        </div>
-        <span className="text-sm text-blue-500 font-medium">Internal Hiring</span>
-      </div>
+                  <div className="flex justify-center gap-12 mt-6">
+                    {/* Internal Hiring */}
+                    <div
+                      className="flex flex-col items-center space-y-2 cursor-pointer group"
+                      onClick={() => navigate("/prf")}
+                    >
+                      <div className="w-16 h-16 rounded-full border border-gray-500 text-gray-600 flex items-center justify-center group-hover:border-blue-500 group-hover:text-blue-500">
+                        <User className="w-6 h-6" />
+                      </div>
+                      <span className="text-sm text-gray-600  font-medium group-hover:text-blue-500">
+                        Internal Hiring
+                      </span>
+                    </div>
 
-      {/* Client */}
-      <div 
-        className="flex flex-col items-center space-y-2 cursor-pointer"
-        onClick={() => navigate("/positions/create-new-position")}>
-        <div className="w-16 h-16 rounded-full border border-gray-400 text-gray-500 flex items-center justify-center">
-          <Users2 className="w-6 h-6" />
-        </div>
-        <span className="text-sm text-gray-500 font-medium">Client</span>
-      </div>
-    </div>
-  </DialogContent>
-</Dialog>
-
-
+                    {/* Client */}
+                    <div
+                      className="flex flex-col items-center space-y-2 cursor-pointer group"
+                      onClick={() => navigate("/positions/create-new-position")}
+                    >
+                      <div className="w-16 h-16 rounded-full border border-gray-500 text-gray-600 group-hover:border-blue-500 group-hover:text-blue-500 flex items-center justify-center">
+                        <Users2 className="w-6 h-6" />
+                      </div>
+                      <span className="text-sm text-gray-600 group-hover:text-blue-500 font-medium">Client</span>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
 
-          {/* Tabs */}
-          {/* Tabs and Select All controls */}
-{/* Tabs and Select All section */}
-<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b pb-4 pt-2 gap-4 sm:gap-0">
+          {/* Select All Row */}
+          <div className="flex justify-between items-center pb-2">
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2 text-sm text-gray-700 font-medium cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={selected.length === filteredPostings.length && filteredPostings.length > 0}
+                  onChange={handleSelectAllToggle}
+                  className="w-4 h-4 bg-white border-2 border-gray-400 rounded focus:ring-2 focus:ring-blue-500 checked:bg-blue-600 checked:border-blue-600 appearance-none relative checked:after:content-['✓'] checked:after:absolute checked:after:inset-0 checked:after:flex checked:after:items-center checked:after:justify-center checked:after:text-white checked:after:text-xs checked:after:font-bold"
+                />
+                Select All
+              </label>
+            </div>
+          </div>
 
-  {/* Tabs: center on mobile, left on desktop */}
-  <div className="flex justify-center sm:justify-start w-full sm:w-auto">
-    <Tabs value={currentTab} onValueChange={handleTabChange} className="w-full sm:w-auto">
-      <TabsList className="flex flex-wrap justify-center sm:justify-start gap-4 bg-transparent border-b-0">
-        {["drafts", "pendings", "on-hold", "published", "closed", "archive"].map((tab) => (
-          <TabsTrigger
-            key={tab}
-            value={tab}
-            className="relative px-2 pb-2 text-sm font-medium text-gray-500 data-[state=active]:text-blue-600"
-          >
-            {tab.charAt(0).toUpperCase() + tab.slice(1).replace("-", " ")}
-            <span className="absolute left-0 -bottom-0.5 w-full h-0.5 bg-blue-600 scale-x-0 data-[state=active]:scale-x-100 transition-transform origin-left" />
-          </TabsTrigger>
-        ))}
-      </TabsList>
-    </Tabs>
-  </div>
+          {/* Tabs Row */}
+          <div className="flex justify-between items-center border-b pb-4">
+            <div className="flex flex-col gap-4">
+              <Tabs value={currentTab} onValueChange={handleTabChange} className="w-auto">
+                <TabsList className="flex gap-4 bg-transparent border-b-0">
+                  {["drafts", "on-hold", "published", "closed", "archive"].map((tab) => (
+                    <TabsTrigger
+                      key={tab}
+                      value={tab}
+                      className="relative px-2 pb-2 text-sm font-medium text-gray-500 data-[state=active]:text-blue-600"
+                    >
+                      {tab.charAt(0).toUpperCase() + tab.slice(1).replace("-", " ")}
+                      <span className="absolute left-0 -bottom-0.5 w-full h-0.5 bg-blue-600 scale-x-0 data-[state=active]:scale-x-100 transition-transform origin-left" />
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
 
-  {/* Select All & Archive Actions */}
-  <div className="flex justify-center sm:justify-end items-center gap-3 px-2 w-full sm:w-auto mt-10 sm:mt-0">
+              {/* Published Subtabs */}
+              {currentTab === "published" && (
+                <Tabs
+                  value={publishedSubTab}
+                  onValueChange={(value) => setPublishedSubTab(value as "all" | "internal" | "external")}
+                  className="w-auto"
+                >
+                  <TabsList className="flex gap-4 bg-transparent border-b-0 ml-4">
+                    {["all", "internal", "external"].map((subtab) => (
+                      <TabsTrigger
+                        key={subtab}
+                        value={subtab}
+                        className="relative px-2 pb-2 text-xs font-medium text-gray-400 data-[state=active]:text-blue-500"
+                      >
+                        {subtab.charAt(0).toUpperCase() + subtab.slice(1)}
+                        <span className="absolute left-0 -bottom-0.5 w-full h-0.5 bg-blue-500 scale-x-0 data-[state=active]:scale-x-100 transition-transform origin-left" />
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                </Tabs>
+              )}
+            </div>
 
-    <label className="flex items-center gap-2 text-sm text-gray-700 font-medium cursor-pointer">
-      <input
-        type="checkbox"
-        checked={selected.length === filteredPostings.length && filteredPostings.length > 0}
-        onChange={handleSelectAllToggle}
-        className="w-4 h-4 bg-white border-2 border-gray-400 rounded focus:ring-2 focus:ring-blue-500 checked:bg-white checked:border-blue-600 appearance-none relative checked:after:content-['✓'] checked:after:absolute checked:after:inset-0 checked:after:flex checked:after:items-center checked:after:justify-center checked:after:text-blue-600 checked:after:text-xs checked:after:font-bold"
-      />
-      Select All
-    </label>
+            {/* Action Icons - appear when items are selected, aligned with tabs */}
+            {selected.length > 0 && (
+              <TooltipProvider>
+                <div className="flex items-center gap-2">
+                  {currentTab === "drafts" && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" size="sm" className="text-red-600 hover:bg-red-50">
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Delete</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
 
-    {currentTab === "closed" && selected.length > 0 && (
-      <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogTrigger asChild>
-          <button
-            className="p-2 rounded border hover:bg-gray-100 transition text-gray-600"
-            aria-label="Archive"
-          >
-            <Archive className="w-4 h-4" />
-          </button>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-sm font-medium flex items-center gap-2 text-gray-800">
-              <Info className="text-blue-600 w-4 h-4" /> Archive Item
-            </DialogTitle>
-            <DialogDescription className="text-sm text-gray-600">
-              This will be moved to your archives. You can restore it later if needed.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="text-sm text-gray-800 mt-4">Archive now?</div>
-          <DialogFooter className="mt-4 flex justify-end gap-2">
-            <button onClick={() => setShowDialog(false)} className="text-sm text-gray-600 hover:underline">
-              Cancel
-            </button>
-            <button
-              onClick={() => {
-                setSelected([])
-                setShowDialog(false)
-              }}
-              className="text-sm text-blue-600 font-medium hover:underline"
-            >
-              Confirm
-            </button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    )}
-  </div>
-</div>
+                  {currentTab === "on-hold" && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-blue-600 border-blue-600 hover:bg-blue-50 bg-transparent"
+                    >
+                      Open
+                    </Button>
+                  )}
 
+                  {currentTab === "published" && (
+                    <>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button variant="ghost" size="sm" className="text-gray-600 hover:bg-gray-50">
+                            <Archive className="w-4 h-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Archive</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button variant="ghost" size="sm" className="text-gray-600 hover:bg-gray-50">
+                            <Pause className="w-4 h-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Hold</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </>
+                  )}
 
+                  {currentTab === "closed" && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" size="sm" className="text-red-600 hover:bg-red-50">
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Delete</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
 
+                  {currentTab === "archive" && (
+                    <>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button variant="ghost" size="sm" className="text-blue-600 hover:bg-blue-50">
+                            <RotateCcw className="w-4 h-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Restore</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button variant="ghost" size="sm" className="text-red-600 hover:bg-red-50">
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Delete</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </>
+                  )}
+                </div>
+              </TooltipProvider>
+            )}
+          </div>
 
           {/* Postings */}
           <div className="space-y-2">
@@ -716,17 +894,17 @@ export default function Positions() {
               <Card key={posting.id} className="p-4 shadow-sm hover:shadow-md transition border rounded-md">
                 <div className="flex justify-between items-start">
                   <div className="flex items-start gap-4 sm:gap-6">
-  <div className="pt-1">
-    <input
-      type="checkbox"
-      className="mt-1 w-4 h-4 bg-white border-2 border-gray-400 rounded focus:ring-2 focus:ring-blue-500 checked:bg-white checked:border-blue-600 appearance-none relative checked:after:content-['✓'] checked:after:absolute checked:after:inset-0 checked:after:flex checked:after:items-center checked:after:justify-center checked:after:text-blue-600 checked:after:text-xs checked:after:font-bold"
-      checked={selected.includes(idx)}
-      onChange={() =>
-        setSelected((prev) => (prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx]))
-      }
-    />
-  </div>
-  <div className="flex-1 min-w-0">
+                    <div className="pt-1">
+                      <input
+                        type="checkbox"
+                        className="mt-1 w-4 h-4 bg-white border-2 border-gray-400 rounded focus:ring-2 focus:ring-blue-500 checked:bg-blue-600 checked:border-blue-600 appearance-none relative checked:after:content-['✓'] checked:after:absolute checked:after:inset-0 checked:after:flex checked:after:items-center checked:after:justify-center checked:after:text-white checked:after:text-xs checked:after:font-bold"
+                        checked={selected.includes(idx)}
+                        onChange={() =>
+                          setSelected((prev) => (prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx]))
+                        }
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="text-base font-semibold text-gray-800">{posting.title}</h3>
                         <Badge variant="secondary" className={`${getDepartmentColor(posting.department)} text-xs`}>
@@ -734,6 +912,13 @@ export default function Positions() {
                         </Badge>
                         {posting.status && (
                           <Badge className="bg-yellow-100 text-yellow-700 text-xs">{posting.status}</Badge>
+                        )}
+                        {currentTab === "published" && posting.type && (
+                          <Badge
+                            className={`text-xs ${posting.type === "internal" ? "bg-blue-100 text-blue-700" : "bg-green-100 text-green-700"}`}
+                          >
+                            {posting.type}
+                          </Badge>
                         )}
                       </div>
                       <p className="text-sm text-gray-600 mt-1">
@@ -743,7 +928,7 @@ export default function Positions() {
                       </p>
                     </div>
                   </div>
-                  {renderRightContent(posting)}
+                  {renderRightContent(posting, idx)}
                 </div>
               </Card>
             ))}
@@ -752,6 +937,24 @@ export default function Positions() {
       </div>
 
       <ShareModal open={shareOpen} onOpenChange={setShareOpen} link={selectedLink} />
+
+      {/* Cancel Request Dialog */}
+      <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-medium text-gray-800">Cancel Request</DialogTitle>
+            <DialogDescription className="text-sm text-gray-600">Are you sure you want to cancel?</DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4 flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setShowCancelDialog(false)}>
+              No, Keep
+            </Button>
+            <Button variant="destructive" onClick={handleCancelRequest}>
+              Cancel request
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }
