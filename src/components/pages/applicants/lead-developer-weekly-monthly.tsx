@@ -334,8 +334,8 @@ function DroppableColumn({
       const jobSlug = currentJobTitle.toLowerCase().replace(/\s+/g, "")
 
       const path = isCustomFinalStage
-  ? `/applicants/job/stage/${routeSegment}`
-  : `/applicants/job/${jobSlug}/${routeSegment}`;
+  ? `/job/stage/${routeSegment}`
+  : `/job/${jobSlug}/${routeSegment}`;
 
 
       navigate(path, {
@@ -520,8 +520,8 @@ function MiniCalendar() {
           className={`px-3 py-1 text-xs rounded border 
             ${
               viewMode === "weekly"
-                ? "bg-white text-[#0056d2] border-[#0056d2]"
-                : "bg-[#0056d2] text-white border-[#0056d2]"
+                ? "bg-[#0056d2] text-white border-[#0056d2]"
+                : "bg-white text-[#0056d2] border-[#0056d2]"
             }`}
         >
           Weekly
@@ -531,8 +531,8 @@ function MiniCalendar() {
           className={`px-3 py-1 text-xs rounded border 
             ${
               viewMode === "monthly"
-                ? "bg-white text-[#0056d2] border-[#0056d2]"
-                : "bg-[#0056d2] text-white border-[#0056d2]"
+                ? "bg-[#0056d2] text-white border-[#0056d2]"
+                : "bg-white text-[#0056d2] border-[#0056d2]"
             }`}
         >
           Monthly
@@ -1200,23 +1200,23 @@ export default function LeadDeveloperWeekly() {
             <Navbar />
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" onClick={() => navigate(`/applicants/job/${jobtitle}`)}>
+                <Button variant="ghost" size="icon" onClick={() => navigate(`/job/${jobtitle}`)}>
                   <ArrowLeft className="h-5 w-5" />
                 </Button>
                 <h2 className="text-3xl font-bold text-gray-800">{resolvedJobTitle}</h2>
               </div>
               <div className="flex gap-2">
-                <Button variant="ghost" size="icon" className={viewMode === "grid" ? "text-black" : "text-gray-600"}>
-                  <LayoutGrid className="h-4 w-4 text-gray-600" />
+                <Button variant="ghost" size="icon" className={viewMode === "grid" ? "text-black" : "text-blue-800"}>
+                  <LayoutGrid className="h-4 w-4 text-blue-800" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => {
                     setViewMode("list")
-                    navigate(`/applicants/job/${jobtitle}`)
+                    navigate(`/job/${jobtitle}`)
                   }}
-                  className={viewMode === "list" ? "text-black" : "text-blue-800"}
+                  className={viewMode === "list" ? "text-black" : "text-gray-600"}
                 >
                   <List className="h-4 w-4" />
                 </Button>

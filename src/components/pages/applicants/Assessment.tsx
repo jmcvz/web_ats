@@ -266,9 +266,9 @@ export default function JobManagement() {
                     className="flex items-center gap-2"
                     onClick={() => {
                       if (previousPath?.includes("/weekly")) {
-                        navigate(`/applicants/job/${jobtitle}/weekly`)
+                        navigate(`/job/${jobtitle}/weekly`)
                       } else {
-                        navigate(`/applicants/job/${jobtitle}`)
+                        navigate(`/job/${jobtitle}`)
                       }
                     }}
                   >
@@ -317,7 +317,7 @@ export default function JobManagement() {
                     onValueChange={(value) => {
                       setSelectedFilter(value)
                       if (jobtitle) {
-                        navigate(`/applicants/job/${jobtitle}/${value}`)
+                        navigate(`/job/${jobtitle}/${value}`)
                       }
                     }}
                   >
@@ -362,13 +362,15 @@ export default function JobManagement() {
 
               {/* Applicants Table */}
               <div className="mt-4 rounded-md border bg-white overflow-x-auto">
-                <Table className="text-xs lg:min-w-[800px]">
+                <Table className="table-fixed w-full text-xs lg:min-w-[800px]">
+
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="border border-gray-200 py-2 px-3 w-16 lg:min-w-[80px] text-xs lg:text-sm lg:py-3 lg:px-4">
-                        ID
-                      </TableHead>
-                      <TableHead className="border border-gray-200 py-2 px-3 w-48 lg:min-w-[200px] text-xs lg:text-sm lg:py-3 lg:px-4">
+                     <TableHead className="text-center align-center w-16 border border-gray-200 py-2 px-3 text-xs lg:text-sm lg:py-3 lg:px-4">
+  ID
+</TableHead>
+
+                      <TableHead className="text-center align-center border border-gray-200 py-2 px-3 w-32 lg:min-w-[200px] text-xs lg:text-sm lg:py-3 lg:px-4">
                         Full Name
                       </TableHead>
                       <TableHead className="border border-gray-200 py-2 px-3 w-32 lg:min-w-[140px] text-center text-xs lg:text-sm lg:py-3 lg:px-4">
@@ -378,7 +380,7 @@ export default function JobManagement() {
                         Status
                       </TableHead>
                       <TableHead className="border border-gray-200 py-2 px-3 w-32 lg:min-w-[140px] text-center text-xs lg:text-sm lg:py-3 lg:px-4">
-                        Assessment
+                       View <br></br> Assessment
                       </TableHead>
                     </TableRow>
                   </TableHeader>
@@ -386,11 +388,13 @@ export default function JobManagement() {
                     {filteredApplicants.length > 0 ? (
                       filteredApplicants.map((applicant) => (
                         <TableRow key={applicant.id} className="hover:bg-gray-50 h-16 lg:h-20">
-                          <TableCell className="border border-gray-200 py-3 px-3 lg:py-4 lg:px-4 font-medium text-xs lg:text-sm align-middle">
-                            {applicant.id}
-                          </TableCell>
+                          <TableCell className="text-center align-center border border-gray-200 py-3 px-3 font-medium text-xs lg:text-sm align-middle">
+  {applicant.id}
+</TableCell>
+
+
                           <TableCell className="border border-gray-200 py-3 px-3 lg:py-4 lg:px-4 w-48 align-middle">
-                            <div className="flex items-center gap-2 lg:gap-3">
+                            <div className="flex items-center justify-center gap-2 lg:gap-3">
                               <Avatar className="h-6 w-6 lg:h-8 lg:w-8 flex-shrink-0">
                                 <AvatarImage src={applicant.avatar || "/placeholder.svg"} />
                                 <AvatarFallback className="text-xs lg:text-sm">
@@ -414,7 +418,7 @@ export default function JobManagement() {
                                 variant="outline"
                                 size="sm"
                                 className="px-3 bg-white text-green-600 border border-green-600 hover:bg-green-600 hover:text-white text-xs h-8"
-                                onClick={() => navigate(`/applicants/job/${jobtitle}/finalinterview`)}
+                                onClick={() => navigate(`/job/${jobtitle}/finalinterview`)}
                               >
                                 Pass
                               </Button>
@@ -423,7 +427,7 @@ export default function JobManagement() {
                                 size="sm"
                                 className="px-3 bg-white text-red-600 border border-red-600 hover:bg-red-600 hover:text-white text-xs h-8"
                                onClick={() =>
-  navigate(`/applicants/job/stage/${customStage}`, {
+  navigate(`/job/stage/${customStage}`, {
     state: {
       jobTitle: jobtitle,
       from: location.pathname
@@ -450,8 +454,8 @@ export default function JobManagement() {
                             <button
                               className="text-blue-600 hover:text-blue-800 text-xs lg:text-sm underline"
                               onClick={() => {
-                                console.log(`Navigating to: /applicants/job/${jobtitle}/exam-form/${applicant.id}`)
-                                navigate(`/applicants/job/${jobtitle}/exam-form/${applicant.id}`)
+                                console.log(`Navigating to: /job/${jobtitle}/exam-form/${applicant.id}`)
+                                navigate(`/job/${jobtitle}/exam-form/${applicant.id}`)
                               }}
                             >
                               View result

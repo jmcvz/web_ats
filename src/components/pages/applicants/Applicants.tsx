@@ -3,13 +3,17 @@
 import { Navbar } from "@/components/reusables/Navbar"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
-import { ChevronRight } from "lucide-react"
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select"
+import { ChevronRightCircle } from "lucide-react"
 import { useEffect } from "react"
-import { Link } from "react-router-dom"
-import { useNavigate } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 
-// tab title
 export default function Applicants() {
   useEffect(() => {
     document.title = "Applicants"
@@ -21,52 +25,62 @@ export default function Applicants() {
     <>
       <Navbar />
 
-      <div className="min-h-screen bg-gray-50 p-6 pt-[100px]">
-        <div className="mx-auto max-w-7xl space-y-4">
-          {/* Title */}
-          <h1 className="text-3xl font-bold text-gray-800">Applicants</h1>
+      {/* Fixed Header Section */}
+      <div className="fixed top-[64px] left-0 right-0 z-30 bg-gray-50 border-b border-gray-200 shadow-sm px-6 pt-4 pb-3">
+        <div className="max-w-7xl mx-auto -space-y-2">
 
-          {/* Filters */}
-          <div className="w-full space-y-2">
-            {/* Clear filters */}
-            <div className="flex justify-end mb-2">
-              <a className="text-medium text-blue-500 hover:underline">Clear filters</a>
+            <h1 className="text-3xl font-bold text-gray-800">Applicants</h1>
+          <div className="flex justify-end">
+              <button
+                
+                className="text-sm text-blue-500 hover:underline cursor-pointer pb-2"
+              >
+                Clear filters
+              </button>
             </div>
 
-            {/* Search bar and filters */}
-            <div className="flex flex-wrap justify-between items-center gap-4">
-              {/* Search bar */}
-              <Input placeholder="Search applicants..." className="w-64" />
+          <div className="flex flex-wrap justify-between items-center gap-4">
+            <Input placeholder="Search applicants..." className="w-64" />
 
-              {/* Filter dropdowns */}
-              <div className="flex flex-wrap gap-2 ml-auto">
-                {["All Internal", "All Status", "All Job Position", "All Departments", "Employment Type"].map(
-                  (label) => (
-                    <Select key={label}>
-                      <SelectTrigger className="min-w-[160px] bg-gray-100">
-                        <SelectValue placeholder={label} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">{label}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  ),
-                )}
-              </div>
+            <div className="flex flex-wrap gap-2 ml-auto">
+              {[
+                "All Internal",
+                "All Status",
+                "All Job Position",
+                "All Departments",
+                "Employment Type",
+              ].map((label) => (
+                <Select key={label}>
+                  <SelectTrigger className="min-w-[160px] bg-gray-100">
+                    <SelectValue placeholder={label} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{label}</SelectItem>
+                  </SelectContent>
+                </Select>
+              ))}
             </div>
           </div>
+        </div>
+      </div>
 
-          {/* Applicants Table */}
-          <div className="mt-6 overflow-x-auto">
-            <div className="min-w-[800px] rounded-md border bg-white mb-20">
+      {/* Main Content (with top padding to offset fixed header) */}
+      <div className="min-h-screen bg-gray-50 px-6 pt-[220px] pb-[80px]">
+        <div className="mx-auto max-w-7xl">
+          <div className="overflow-x-auto">
+            <div className="min-w-[800px] rounded-md border bg-white">
               <table className="min-w-full text-sm text-left">
                 <thead className="bg-gray-100">
                   <tr className="text-xs text-muted-foreground uppercase">
                     <th className="px-6 py-4 font-medium">Applicants</th>
-                    <th className="px-6 py-4 font-medium">Status</th>
-                    <th className="px-6 py-4 font-medium">Position applying for</th>
-                    <th className="px-6 py-4 font-medium">Department</th>
-                    <th className="px-6 py-4 font-medium">Employment Type</th>
+                    <th className="px-6 py-4 font-medium text-center">Status</th>
+                    <th className="px-6 py-4 font-medium text-center">
+                      Position applying for
+                    </th>
+                    <th className="px-6 py-4 font-medium text-center">Department</th>
+                    <th className="px-6 py-4 font-medium text-center">
+                      Employment Type
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
@@ -156,7 +170,9 @@ export default function Applicants() {
                     <tr key={index} className="hover:bg-gray-50">
                       <td className="px-6 py-4 flex items-center gap-3">
                         <Link
-                          to={`/applicants/${encodeURIComponent(applicant.name.replace(/\s+/g, "-").toLowerCase())}`}
+                          to={`/applicants/${encodeURIComponent(
+                            applicant.name.replace(/\s+/g, "-").toLowerCase()
+                          )}`}
                           className="flex items-center gap-3 hover:underline text-blue-600"
                         >
                           <img
@@ -167,63 +183,58 @@ export default function Applicants() {
                           <span>{applicant.name}</span>
                         </Link>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 text-center align-middle">
                         <span
                           className={`text-xs font-medium px-2 py-1 rounded-full ${
                             applicant.status === "Hired"
                               ? "bg-green-100 text-green-800"
                               : applicant.status === "Failed"
-                                ? "bg-red-100 text-red-800"
-                                : applicant.status === "Warm"
-                                  ? "bg-yellow-100 text-yellow-800"
-                                  : applicant.status === "For Interview"
-                                    ? "bg-orange-100 text-orange-800"
-                                    : applicant.status === "For Job Offer"
-                                      ? "bg-blue-100 text-blue-800"
-                                      : applicant.status === "Onboarding"
-                                        ? "bg-purple-100 text-purple-800"
-                                        : "bg-gray-100 text-gray-800"
+                              ? "bg-red-100 text-red-800"
+                              : applicant.status === "Warm"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : applicant.status === "For Interview"
+                              ? "bg-orange-100 text-orange-800"
+                              : applicant.status === "For Job Offer"
+                              ? "bg-blue-100 text-blue-800"
+                              : applicant.status === "Onboarding"
+                              ? "bg-purple-100 text-purple-800"
+                              : "bg-gray-100 text-gray-800"
                           }`}
                         >
                           {applicant.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4">{applicant.position}</td>
-                      <td className="px-6 py-4">{applicant.department}</td>
-                      <td className="px-6 py-4">{applicant.type}</td>
+                      <td className="px-6 py-4 text-center">{applicant.position}</td>
+                      <td className="px-6 py-4 text-center">{applicant.department}</td>
+                      <td className="px-6 py-4 text-center">{applicant.type}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-            {/* Footer buttons */}
-            <div className="fixed bottom-0 left-0 w-full bg-white border-t p-4 flex flex-col sm:flex-row items-center justify-center sm:justify-between gap-4 z-50">
-              <Button
-                variant="default"
-                size="sm"
-                className="w-full sm:w-auto"
-                style={{ backgroundColor: "#0056D2", color: "white" }}
-                onClick={() => navigate("/applicants/pool")}
-              >
-                Pool Applicant
-              </Button>
-
-
-              <Button
-                variant="default"
-                size="sm"
-                className="w-full sm:w-auto hover:bg-black"
-                style={{ backgroundColor: "white", color: "#0056D2" }}
-                onClick={() => navigate("/applicants/job")}
-              >
-                Applicants by Position
-              </Button>
-            </div>
-
-            {/* Spacer to prevent overlap with fixed buttons */}
-            <div className="h-[90px] sm:h-0" />
           </div>
         </div>
+      </div>
+
+      {/* Fixed Footer Buttons */}
+      <div className="fixed bottom-0 left-0 w-full bg-white border-t p-4 flex flex-col sm:flex-row items-center justify-center sm:justify-between gap-4 z-50">
+        <Button
+          variant="default"
+          size="sm"
+          className="w-full sm:w-auto"
+          style={{ backgroundColor: "#0056D2", color: "white" }}
+          onClick={() => navigate("/applicants/pool")}
+        >
+          Pool Applicant
+        </Button>
+
+        <button
+          onClick={() => navigate("/job")}
+          className="text-right flex items-center text-blue-500 text-sm hover:underline"
+        >
+          <ChevronRightCircle className="w-4 h-4 mr-1" />
+          Applicants by Position
+        </button>
       </div>
     </>
   )

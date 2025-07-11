@@ -44,18 +44,18 @@ export default function App() {
       <Route path="/requests/*" element={<Requests />} />
 
       {/* Applicants */}
-      <Route path="/applicants/job" element={<JobDetails />} />
-      <Route path="/applicants/job/:jobtitle" element={<LeadDeveloper />} />
+      <Route path="/job" element={<JobDetails />} />
+      <Route path="/job/:jobtitle" element={<LeadDeveloper />} />
       <Route path="/ApplicantInformation/" element={<ApplicantInformationTab />} />
       <Route path="/ieform/*" element={<InterviewEvaluationForm/>} />
       <Route path="/applicants/:name/IEForm" element ={<IEForm2/>} />
       <Route path="/applicants/:id/IEForm" element={<IEForm2 />} />
-      <Route path="/applicants/job/:jobtitle/:jobstage" element={<JobStageTemplate />} />
+      <Route path="/job/:jobtitle/:jobstage" element={<JobStageTemplate />} />
       <Route path="/applicants/:name" element={<ApplicantInformationTab />} />
-      <Route path="/applicants/job/stage/:customStage" element={<CustomStages />} />
-      <Route path="/applicants/job/:jobtitle/exam-form/:applicantId" element={<ExamForm />} />
+      <Route path="/job/stage/:customStage" element={<CustomStages />} />
+      <Route path="/job/:jobtitle/exam-form/:applicantId" element={<ExamForm />} />
       <Route path="/applicants/pool"  element={<PoolApplicants/>} />
-      <Route path="/applicants/job/:jobtitle/applicant/:applicantId/full-result" element={<FullExamResultPage />} />
+      <Route path="/job/:jobtitle/applicant/:applicantId/full-result" element={<FullExamResultPage />} />
 
       {/* Applicant View */}
       <Route path="/applicantlandingpage"  element={<ApplicantMainPage/>} />

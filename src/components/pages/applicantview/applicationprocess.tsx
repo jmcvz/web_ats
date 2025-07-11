@@ -262,7 +262,7 @@ export default function JobApplicationPage() {
     <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row">
       {/* Document Upload Modal */}
       {showUploadModal && (
-        <div className="fixed inset-0 bg-gray-900 bg-opacity-30 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-gray-900/65 flex items-center justify-center z-50 p-4">
           <div className="max-h-[90vh] overflow-y-auto">
             <DocumentUploadModal
               onClose={() => setShowUploadModal(false)}
@@ -1099,7 +1099,7 @@ export default function JobApplicationPage() {
 
       {/* Application Complete Modal */}
       {showCompletionModal && (
-        <div className="fixed inset-0 bg-gray-900 bg-opacity-30 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-gray-900/65 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 text-center max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Application Complete!</h2>
             <p className="text-gray-600 text-sm leading-relaxed mb-4">
