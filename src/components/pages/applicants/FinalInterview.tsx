@@ -464,9 +464,9 @@ const previousPath = location.state?.from
   className="flex items-center gap-2"
   onClick={() => {
     if (previousPath?.includes("/weekly")) {
-      navigate(`/applicants/job/${jobtitle}/weekly`)
+      navigate(`/job/${jobtitle}/weekly`)
     } else {
-      navigate(`/applicants/job/${jobtitle}`)
+      navigate(`/job/${jobtitle}`)
     }
   }}
 >
@@ -515,7 +515,7 @@ const previousPath = location.state?.from
   onValueChange={(value) => {
     setSelectedFilter(value)
     if (jobtitle) {
-      navigate(`/applicants/job/${jobtitle}/${value}`)
+      navigate(`/job/${jobtitle}/${value}`)
     }
   }}
 >
@@ -563,13 +563,14 @@ const previousPath = location.state?.from
 
               {/* Applicants Table */}
               <div className="mt-4 rounded-md border bg-white overflow-x-auto">
-                <Table className="text-xs lg:min-w-[800px]">
+                <Table className="table-fixed text-xs lg:min-w-[800px]">
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="border border-gray-200 py-2 px-3 w-12 lg:min-w-[60px] text-xs lg:text-sm lg:py-3 lg:px-4">
-                        ID
-                      </TableHead>
-                      <TableHead className="border border-gray-200 py-2 px-3 w-32 lg:min-w-[200px] text-xs lg:text-sm lg:py-3 lg:px-4">
+                      <TableHead className="text-center align-center w-16 border border-gray-200 py-2 px-3 text-xs lg:text-sm lg:py-3 lg:px-4">
+  ID
+</TableHead>
+
+                      <TableHead className="text-center align-center border border-gray-200 py-2 px-3 w-32 lg:min-w-[200px] text-xs lg:text-sm lg:py-3 lg:px-4">
                         Full Name
                       </TableHead>
                       <TableHead className="border border-gray-200 py-2 px-3 w-20 lg:min-w-[120px] text-center text-xs lg:text-sm lg:py-3 lg:px-4">
@@ -585,7 +586,7 @@ const previousPath = location.state?.from
                       <TableHead className="border border-gray-200 py-2 px-3 w-12 lg:min-w-[80px] text-center text-xs lg:text-sm lg:py-3 lg:px-4">
                         Status
                       </TableHead>
-                      <TableHead className="border border-gray-200 py-2 px-3 w-20 lg:min-w-[120px] text-xs lg:text-sm lg:py-3 lg:px-4">
+                      <TableHead className="text-center align-center border border-gray-200 py-2 px-3 w-20 lg:min-w-[120px] text-xs lg:text-sm lg:py-3 lg:px-4">
                         Department
                       </TableHead>
                       <TableHead className="border border-gray-200 py-2 px-3 w-24 lg:min-w-[160px] text-center text-xs lg:text-sm lg:py-3 lg:px-4">
@@ -599,11 +600,12 @@ const previousPath = location.state?.from
                     {filteredApplicants.length > 0 ? (
                       filteredApplicants.map((applicant) => (
                         <TableRow key={applicant.id} className="hover:bg-gray-50 h-16 lg:h-20">
-                          <TableCell className="border border-gray-200 py-3 px-3 lg:py-4 lg:px-4 font-medium text-xs lg:text-sm align-middle">
-                            {applicant.id}
-                          </TableCell>
+                          <TableCell className="text-center align-center border border-gray-200 py-3 px-3 font-medium text-xs lg:text-sm align-middle">
+  {applicant.id}
+</TableCell>
+
                           <TableCell className="border border-gray-200 py-3 px-3 lg:py-4 lg:px-4 w-32 align-middle">
-                            <div className="flex items-center gap-2 lg:gap-3">
+                            <div className="flex items-center justify-center gap-2 lg:gap-3">
                               <Avatar className="h-6 w-6 lg:h-8 lg:w-8 flex-shrink-0">
                                 <AvatarImage src={applicant.avatar || "/placeholder.svg"} />
                                 <AvatarFallback className="text-xs lg:text-sm">
@@ -649,13 +651,13 @@ const previousPath = location.state?.from
                             <Button
   variant="outline"
   size="sm"
-  className="w-full px-1 lg:px-3 bg-white text-red-600 border border-red-500 hover:bg-red-500 hover:text-white text-xs lg:text-sm h-7 lg:h-8 lg:whitespace-nowrap"
+  className="w-full px-1 lg:px-3 bg-white text-red-600 border border-red-500 hover:bg-red-500 hover:text-white text-xs lg:text-sm h-7 lg:h-10 lg:whitespace-nowrap"
 >
   Fail
 </Button>
 
                           </TableCell>
-                          <TableCell className="border border-gray-200 py-3 px-3 lg:py-4 lg:px-4 w-20 text-xs lg:text-sm align-middle">
+                          <TableCell className="text-center align-center border border-gray-200 py-3 px-3 lg:py-4 lg:px-4 w-20 text-xs lg:text-sm align-middle">
                             <span className="break-words leading-tight lg:whitespace-nowrap">
                               {applicant.department}
                             </span>
@@ -664,7 +666,7 @@ const previousPath = location.state?.from
                             <Button
   variant="outline"
   size="sm"
-  className="w-full px-1 lg:px-3 text-xs lg:text-sm h-7 lg:h-8 lg:whitespace-nowrap"
+  className="w-full px-1 lg:px-3 text-xs lg:text-sm h-7 lg:h-10 lg:whitespace-nowrap"
   onClick={() => navigate(`/applicants/${applicant.id}/IEForm`)}
 >
   View

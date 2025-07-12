@@ -115,8 +115,8 @@ const handleStageChange = (value: string) => {
   const routeSegment = slugify(value);
 
   const path = isCustomFinalStage
-    ? `/applicants/job/stage/${routeSegment}`
-    : `/applicants/job/${routeSegment}`;
+    ? `/job/stage/${routeSegment}`
+    : `/job/${routeSegment}`;
 
   navigate(path, {
     state: {
@@ -272,8 +272,8 @@ const slugify = (str: string) =>
 
 
 const backPath = from?.includes("/weekly")
-  ? `/applicants/job/${slugify(jobTitleFromState)}\/weekly`
-  : `/applicants/job/${slugify(jobTitleFromState)}`
+  ? `/job/${slugify(jobTitleFromState)}\/weekly`
+  : `/job/${slugify(jobTitleFromState)}`
 
 
 

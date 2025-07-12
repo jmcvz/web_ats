@@ -98,8 +98,8 @@ const customFinalStages = [
   const routeSegment = slugify(value);
 
   const path = isCustomFinalStage
-    ? `/applicants/job/stage/${routeSegment}`
-    : `/applicants/job/${routeSegment}`;
+    ? `/job/stage/${routeSegment}`
+    : `/job/${routeSegment}`;
 
   navigate(path, {
     state: {
@@ -135,7 +135,7 @@ const customFinalStages = [
   const slug = slugify(jobTitle || "");
 
   if (status === "pass") {
-    navigate(`/applicants/job/${slug}/forjoboffer`, {
+    navigate(`/job/${slug}/forjoboffer`, {
       state: {
         jobTitle,
         from: location.pathname,
@@ -143,7 +143,7 @@ const customFinalStages = [
     });
   } else {
     // navigate to custom stage route for "Failed"
-    navigate(`/applicants/job/stage/Failed`, {
+    navigate(`/job/stage/Failed`, {
       state: {
         jobTitle,
         from: location.pathname,
@@ -214,8 +214,8 @@ const slugify = (str: string) =>
 
 
 const backPath = from?.includes("/weekly")
-  ? `/applicants/job/${slugify(jobTitleFromState)}\/weekly`
-  : `/applicants/job/${slugify(jobTitleFromState)}`
+  ? `/job/${slugify(jobTitleFromState)}\/weekly`
+  : `/job/${slugify(jobTitleFromState)}`
 
 
   return (

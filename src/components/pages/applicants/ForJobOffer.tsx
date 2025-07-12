@@ -1454,9 +1454,9 @@ export default function JobOfferManagement() {
                     className="flex items-center gap-2"
                     onClick={() => {
                       if (previousPath?.includes("/weekly")) {
-                        navigate(`/applicants/job/${jobtitle}/weekly`)
+                        navigate(`/job/${jobtitle}/weekly`)
                       } else {
-                        navigate(`/applicants/job/${jobtitle}`)
+                        navigate(`/job/${jobtitle}`)
                       }
                     }}
                   >
@@ -1505,7 +1505,7 @@ export default function JobOfferManagement() {
                     onValueChange={(value) => {
                       setSelectedFilter(value)
                       if (jobtitle) {
-                        navigate(`/applicants/job/${jobtitle}/${value}`)
+                        navigate(`/job/${jobtitle}/${value}`)
                       }
                     }}
                   >
@@ -1550,17 +1550,18 @@ export default function JobOfferManagement() {
 
               {/* Job Offer Table */}
               <div className="mt-4 rounded-md border bg-white overflow-x-auto">
-                <Table className="text-xs lg:min-w-[1000px]">
+                <Table className="table-fixed text-xs lg:min-w-[800px]">
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="break-words border border-gray-200 py-2 px-3 w-24 text-xs lg:text-sm lg:py-3 lg:px-4">
-                        ID Number
-                      </TableHead>
-                      <TableHead className="border border-gray-200 py-2 px-3 w-48 text-xs lg:text-sm lg:py-3 lg:px-4">
+                      <TableHead className="text-center align-center w-24 border table-fixed border-gray-200 py-2 px-3 text-xs lg:text-sm lg:py-3 lg:px-4">
+  ID
+</TableHead>
+
+                      <TableHead className="text-center align-center border border-gray-200 py-2 px-3 w-48 text-xs lg:text-sm lg:py-3 lg:px-4">
                         Full Name
                       </TableHead>
-                      <TableHead className="border border-gray-200 py-2 px-3 w-32 text-xs lg:text-sm lg:py-3 lg:px-4">
-                        Status of Job Offer
+                      <TableHead className="border border-gray-200 py-2 px-3 w-32 text-center text-xs lg:text-sm lg:py-3 lg:px-4">
+                        Status of <br></br> Job Offer
                       </TableHead>
                       <TableHead className="border border-gray-200 py-2 px-3 w-32 text-center text-xs lg:text-sm lg:py-3 lg:px-4">
                         Job Offer
@@ -1574,11 +1575,14 @@ export default function JobOfferManagement() {
                     {filteredApplicants.length > 0 ? (
                       filteredApplicants.map((applicant) => (
                         <TableRow key={applicant.id} className="hover:bg-gray-50 h-16 lg:h-20">
-                          <TableCell className="border border-gray-200 py-3 px-3 lg:py-4 lg:px-4 font-medium text-xs lg:text-sm align-middle">
-                            {applicant.id}
-                          </TableCell>
-                          <TableCell className="border border-gray-200 py-3 px-3 lg:py-4 lg:px-4 align-middle">
-                            <div className="flex items-center gap-2 lg:gap-3">
+                          <TableCell className="text-center align-center border border-gray-200 py-3 px-3 font-medium text-xs lg:text-sm align-middle">
+  {applicant.id}
+</TableCell>
+
+
+
+                          <TableCell className="border border-gray-200 py-3 px-1 lg:py-4 lg:px-4 align-middle">
+                            <div className="flex items-center justify-center gap-2 lg:gap-3">
                               <Avatar className="h-6 w-6 lg:h-8 lg:w-8 flex-shrink-0">
                                 <AvatarImage src={applicant.avatar || "/placeholder.svg"} />
                                 <AvatarFallback className="text-xs lg:text-sm">
@@ -1593,13 +1597,13 @@ export default function JobOfferManagement() {
                               </span>
                             </div>
                           </TableCell>
-                          <TableCell className="border border-gray-200 py-3 px-3 lg:py-4 lg:px-4 text-xs lg:text-sm align-middle">
+                          <TableCell className="text-center align-center border border-gray-200 py-3 px-3 lg:py-4 lg:px-4 text-xs lg:text-sm align-middle">
                             {applicant.offerStatus}
                           </TableCell>
                           <TableCell className="border border-gray-200 py-3 px-3 lg:py-4 lg:px-4 text-center align-middle">
                             <Button
                               onClick={() => handleSendJobOffer(applicant.name)}
-                              className="bg-white text-blue-600 border border-blue-600 hover:bg-blue-600 hover:text-white rounded-lg px-4 py-2 text-xs lg:text-sm whitespace-normal"
+                              className="bg-white text-blue-600 border border-blue-600 hover:bg-blue-600 hover:text-white rounded-lg px-4 py-2 text-xs lg:text-sm whitespace-normal lg: h-10"
                             >
                               Send Job Offer
                             </Button>
@@ -1609,9 +1613,9 @@ export default function JobOfferManagement() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="bg-white text-green-700 border border-green-500 hover:bg-green-500 hover:text-white rounded-lg px-3 py-1 text-xs"
+                                className="lg: h-10 bg-white text-green-700 border border-green-500 hover:bg-green-500 hover:text-white rounded-lg px-3 py-1 text-xs"
                               onClick={() =>
-  navigate(`/applicants/job/stage/${customStage}`, {
+  navigate(`/job/stage/${customStage}`, {
     state: {
       jobTitle: jobtitle,
       from: location.pathname
@@ -1624,7 +1628,7 @@ export default function JobOfferManagement() {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => handleRejectOffer(applicant.name)}
-                                className="bg-white text-red-700 border border-red-500 hover:bg-red-500 hover:text-white rounded-lg px-3 py-1 text-xs"
+                                className="lg: h-10 bg-white text-red-700 border border-red-500 hover:bg-red-500 hover:text-white rounded-lg px-3 py-1 text-xs"
                               >
                                 Rejected
                               </Button>
@@ -1632,7 +1636,7 @@ export default function JobOfferManagement() {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => handleRescindOffer(applicant.name)}
-                                className="bg-white text-yellow-700 border border-yellow-400 hover:bg-yellow-400 hover:text-white rounded-lg px-3 py-1 text-xs"
+                                className="lg: h-10 bg-white text-yellow-700 border border-yellow-400 hover:bg-yellow-400 hover:text-white rounded-lg px-3 py-1 text-xs"
                               >
                                 Rescind Offer
                               </Button>

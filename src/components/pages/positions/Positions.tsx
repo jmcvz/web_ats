@@ -413,6 +413,38 @@ const jobData = {
       description: "Telemarketing role for cold calling campaigns (archived due to strategy pivot).",
     },
   ],
+  deleted: [
+    {
+      id: 81,
+      title: "Internship Program Coordinator",
+      department: "Human Resources",
+      description: "Coordinator for managing our annual internship program (deleted due to restructuring).",
+    },
+    {
+      id: 82,
+      title: "Customer Support Tier 1",
+      department: "Customer Success",
+      description: "Entry-level customer support role (deleted due to automation of common queries).",
+    },
+    {
+      id: 83,
+      title: "Office Administrator",
+      department: "Operations",
+      description: "General office administration and supplies management (deleted, responsibilities merged).",
+    },
+    {
+      id: 84,
+      title: "Junior Data Entry Clerk",
+      department: "Administration",
+      description: "Data entry and record keeping (deleted, replaced by automated systems).",
+    },
+    {
+      id: 85,
+      title: "Event Planner",
+      department: "Marketing",
+      description: "Planning and execution of company events (deleted due to shift to virtual events).",
+    },
+  ],
 }
 
 // Interviewers for pending jobs
@@ -460,6 +492,7 @@ const generatePositionsData = () => {
     closed: jobData.closed,
 
     archive: jobData.archive,
+    deleted: jobData.deleted, // Add deleted data
   }
 }
 
@@ -501,6 +534,8 @@ const getDepartmentColor = (department: string) => {
       return "bg-red-100 text-red-800"
     case "Quality Assurance":
       return "bg-green-100 text-green-800"
+    case "Administration":
+      return "bg-stone-100 text-stone-700" // New color for Administration
     default:
       return "bg-gray-100 text-gray-700"
   }
@@ -573,6 +608,9 @@ export default function Positions() {
   const [shareOpen, setShareOpen] = useState(false)
   const [selectedLink, setSelectedLink] = useState("")
   const [showCancelDialog, setShowCancelDialog] = useState(false)
+  const [deletedPostings, setDeletedPostings] = useState<JobPosting[]>(positionsData.deleted);
+  const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false); // New state for delete confirmation
+
 
   // Update current tab when URL changes
   useEffect(() => {
@@ -594,10 +632,18 @@ export default function Positions() {
 
   const getCurrentData = (): JobPosting[] => {
     if (currentTab === "published") {
-      return positionsData.published[publishedSubTab] || []
+      return positionsData.published?.[publishedSubTab] ?? []
     }
-    return positionsData[currentTab as keyof typeof positionsData] || []
+    if (currentTab === "deleted") {
+      return deletedPostings;
+    }
+
+    const tabData = positionsData[currentTab as keyof typeof positionsData]
+
+
+    return Array.isArray(tabData) ? tabData : []
   }
+
 
   const currentData: JobPosting[] = getCurrentData()
 
@@ -623,7 +669,18 @@ export default function Positions() {
     setShowCancelDialog(false)
   }
 
+  const handleDeletePermanently = () => {
+    const remainingPostings = filteredPostings.filter((_, idx) => !selected.includes(idx));
+    setDeletedPostings(remainingPostings);
+    setSelected([]); // Clear selection after deletion
+    setShowDeleteConfirmDialog(false); // Close the dialog after deletion
+  };
+
   const renderActionButton = (posting: JobPosting) => {
+    // Only show default actions when no items are selected
+    if (selected.length > 0) {
+      return null
+    }
     switch (currentTab) {
       case "drafts":
         return (
@@ -758,7 +815,7 @@ export default function Positions() {
             <div className="flex flex-col gap-4">
               <Tabs value={currentTab} onValueChange={handleTabChange} className="w-auto">
                 <TabsList className="flex gap-4 bg-transparent border-b-0">
-                  {["drafts", "on-hold", "published", "closed", "archive"].map((tab) => (
+                  {["drafts", "on-hold", "published", "closed", "archive", "deleted"].map((tab) => (
                     <TabsTrigger
                       key={tab}
                       value={tab}
@@ -883,6 +940,31 @@ export default function Positions() {
                       </Tooltip>
                     </>
                   )}
+
+                  {currentTab === "deleted" && (
+                    <>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button variant="ghost" size="sm" className="text-blue-600 hover:bg-blue-50">
+                            <RotateCcw className="w-4 h-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Restore</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button variant="ghost" size="sm" className="text-red-600 hover:bg-red-50" onClick={() => setShowDeleteConfirmDialog(true)}>
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Delete Permanently</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </>
+                  )}
                 </div>
               </TooltipProvider>
             )}
@@ -890,48 +972,57 @@ export default function Positions() {
 
           {/* Postings */}
           <div className="space-y-2">
-            {filteredPostings.map((posting: JobPosting, idx: number) => (
-              <Card key={posting.id} className="p-4 shadow-sm hover:shadow-md transition border rounded-md">
-                <div className="flex justify-between items-start">
-                  <div className="flex items-start gap-4 sm:gap-6">
-                    <div className="pt-1">
-                      <input
-                        type="checkbox"
-                        className="mt-1 w-4 h-4 bg-white border-2 border-gray-400 rounded focus:ring-2 focus:ring-blue-500 checked:bg-blue-600 checked:border-blue-600 appearance-none relative checked:after:content-['✓'] checked:after:absolute checked:after:inset-0 checked:after:flex checked:after:items-center checked:after:justify-center checked:after:text-white checked:after:text-xs checked:after:font-bold"
-                        checked={selected.includes(idx)}
-                        onChange={() =>
-                          setSelected((prev) => (prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx]))
-                        }
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="text-base font-semibold text-gray-800">{posting.title}</h3>
-                        <Badge variant="secondary" className={`${getDepartmentColor(posting.department)} text-xs`}>
-                          {posting.department}
-                        </Badge>
-                        {posting.status && (
-                          <Badge className="bg-yellow-100 text-yellow-700 text-xs">{posting.status}</Badge>
-                        )}
-                        {currentTab === "published" && posting.type && (
-                          <Badge
-                            className={`text-xs ${posting.type === "internal" ? "bg-blue-100 text-blue-700" : "bg-green-100 text-green-700"}`}
-                          >
-                            {posting.type}
-                          </Badge>
-                        )}
+            {filteredPostings.length > 0 ? (
+              filteredPostings.map((posting: JobPosting, idx: number) => (
+                <Card key={posting.id} className="p-4 shadow-sm hover:shadow-md transition border rounded-md">
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-start gap-4 sm:gap-6">
+                      <div className="pt-1">
+                        <input
+                          type="checkbox"
+                          className="mt-1 w-4 h-4 bg-white border-2 border-gray-400 rounded focus:ring-2 focus:ring-blue-500 checked:bg-blue-600 checked:border-blue-600 appearance-none relative checked:after:content-['✓'] checked:after:absolute checked:after:inset-0 checked:after:flex checked:after:items-center checked:after:justify-center checked:after:text-white checked:after:text-xs checked:after:font-bold"
+                          checked={selected.includes(idx)}
+                          onChange={() =>
+                            setSelected((prev) => (prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx]))
+                          }
+                        />
                       </div>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {posting.description.length > 100
-                          ? posting.description.slice(0, 100) + "..."
-                          : posting.description}
-                      </p>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="text-base font-semibold text-gray-800">{posting.title}</h3>
+                          <Badge variant="secondary" className={`${getDepartmentColor(posting.department)} text-xs`}>
+                            {posting.department}
+                          </Badge>
+                          {posting.status && (
+                            <Badge className="bg-yellow-100 text-yellow-700 text-xs">{posting.status}</Badge>
+                          )}
+                          {currentTab === "published" && posting.type && (
+                            <Badge
+                              className={`text-xs ${posting.type === "internal" ? "bg-blue-100 text-blue-700" : "bg-green-100 text-green-700"}`}
+                            >
+                              {posting.type}
+                            </Badge>
+                          )}
+                          {currentTab === "deleted" && (
+                            <div className="bg-red-100 text-red-800 text-xs px-2 py-0.5 rounded-full font-medium">
+                              Deleted
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-600 mt-1">
+                          {posting.description.length > 100
+                            ? posting.description.slice(0, 100) + "..."
+                            : posting.description}
+                        </p>
+                      </div>
                     </div>
+                    {renderRightContent(posting, idx)}
                   </div>
-                  {renderRightContent(posting, idx)}
-                </div>
-              </Card>
-            ))}
+                </Card>
+              ))
+            ) : (
+              <div className="text-center text-gray-500 py-10">This tab is empty.</div>
+            )}
           </div>
         </div>
       </div>
@@ -951,6 +1042,26 @@ export default function Positions() {
             </Button>
             <Button variant="destructive" onClick={handleCancelRequest}>
               Cancel request
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteConfirmDialog} onOpenChange={setShowDeleteConfirmDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-medium text-gray-800">Delete Permanently</DialogTitle>
+            <DialogDescription className="text-sm text-gray-600">
+              Do you want to delete {selected.length} jobs permanently?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4 flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setShowDeleteConfirmDialog(false)}>
+              No
+            </Button>
+            <Button variant="destructive" onClick={handleDeletePermanently}>
+              Yes
             </Button>
           </DialogFooter>
         </DialogContent>

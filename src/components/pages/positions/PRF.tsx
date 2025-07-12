@@ -3,14 +3,22 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-// Remove useNavigate from this import if not using it
-// import { useNavigate } from "react-router-dom"
+import { useNavigate } from "react-router-dom" // Import useNavigate
 import { Navbar } from "@/components/reusables/Navbar"
 import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
-import { User2, Sparkles, Wand2, Plus } from "lucide-react"
+import { Button } from "@/components/ui/button" // Ensure Button is correctly imported
+import { Textarea } from "@/components/ui/textarea" // Ensure Textarea is correctly imported
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select" // Ensure all Select components are correctly imported
+import { User2, Sparkles, Wand2, Plus } from "lucide-react" // Ensure all Lucide React icons are correctly imported
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog" // Import Dialog components
 
 // Type definitions
 interface InputFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -173,6 +181,7 @@ const CustomCheckbox = ({
 )
 
 export default function PRF() {
+  const navigate = useNavigate() // Initialize useNavigate
   const [step, setStep] = useState(1)
   const [formData, setFormData] = useState<FormData>({
     // Step 1 - Position Information
@@ -234,17 +243,44 @@ export default function PRF() {
       Zoom: false,
     },
   })
+  // New state to track the maximum step visited
+  const [maxStepVisited, setMaxStepVisited] = useState(1);
+  // State for the cancel confirmation dialog
+  const [showCancelConfirmDialog, setShowCancelConfirmDialog] = useState(false);
 
   useEffect(() => {
     document.title = "Personnel Requisition Form"
   }, [])
 
-  const goToNextStep = () => setStep((prev) => Math.min(prev + 1, 4))
+  const goToNextStep = () => {
+    setStep((prev) => {
+      const nextStep = Math.min(prev + 1, 4);
+      setMaxStepVisited((currentMax) => Math.max(currentMax, nextStep)); // Update maxStepVisited
+      return nextStep;
+    });
+  };
   const goToPreviousStep = () => setStep((prev) => Math.max(prev - 1, 1))
 
   const updateFormData = (updates: Partial<FormData>) => {
     setFormData((prev) => ({ ...prev, ...updates }))
   }
+
+  const handleCancelRequest = () => {
+    setShowCancelConfirmDialog(true);
+  };
+
+  const handleConfirmCancel = () => {
+    setShowCancelConfirmDialog(false);
+    navigate("/positions");
+  };
+
+  const handleSaveAsDraft = () => {
+    // In a real application, you would send formData to your backend or a global state management system
+    // to save it as a draft. For this example, we'll just log it.
+    console.log("Saving form data as draft:", formData);
+    setShowCancelConfirmDialog(false);
+    navigate("/positions"); // Navigate to positions after "saving"
+  };
 
   return (
     <>
@@ -253,7 +289,8 @@ export default function PRF() {
         <div className="mx-auto max-w-7xl space-y-4">
           <h1 className="text-lg font-bold text-gray-800 mb-6">Personnel Requisition Form</h1>
           <div className="flex justify-between items-center mb-4">
-            <a href="#" className="text-[#0056D2] text-sm hover:underline">
+            {/* Modified to open dialog */}
+            <a href="#" className="text-[#0056D2] text-sm hover:underline" onClick={handleCancelRequest}>
               &larr; Cancel Request
             </a>
           </div>
@@ -261,9 +298,16 @@ export default function PRF() {
             {["Step 01", "Step 02", "Step 03", "Step 04"].map((label, i) => (
               <div
                 key={i}
+                // Add conditional clickability based on maxStepVisited
                 className={`flex-1 text-center py-2 text-sm font-semibold relative ${
                   i + 1 === step ? "bg-[#0056D2] text-white" : "bg-white text-gray-500"
-                }`}
+                } ${i + 1 <= maxStepVisited && i + 1 !== step ? "cursor-pointer hover:bg-gray-100" : ""}`}
+                onClick={() => {
+                  // Allow clicking on steps that have been visited, but not the current step
+                  if (i + 1 <= maxStepVisited && i + 1 !== step) {
+                    setStep(i + 1)
+                  }
+                }}
               >
                 {label}
                 {i < 3 && <span className="absolute right-0 top-0 h-full w-px bg-gray-300" />}
@@ -295,6 +339,29 @@ export default function PRF() {
           {step === 4 && <Step04 goToPreviousStep={goToPreviousStep} step={step} formData={formData} />}
         </div>
       </div>
+
+      {/* Cancel Confirmation Dialog */}
+      <Dialog open={showCancelConfirmDialog} onOpenChange={setShowCancelConfirmDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-medium text-gray-800">Cancel Request</DialogTitle>
+            <DialogDescription className="text-sm text-gray-600">
+              Do you want to cancel the request form for this position?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4 flex justify-end gap-2">
+            <Button variant="outline" onClick={handleSaveAsDraft}>
+              Save as Draft
+            </Button>
+            <Button variant="outline" onClick={() => setShowCancelConfirmDialog(false)}>
+              No
+            </Button>
+            <Button variant="destructive" onClick={handleConfirmCancel}>
+              Yes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }
@@ -566,26 +633,26 @@ function Step01({ goToNextStep, step, formData, updateFormData }: Step01Props) {
               label="Job Title"
               placeholder="Enter Job Title"
               value={formData.jobTitle}
-              onChange={(e) => updateFormData({ jobTitle: e.target.value })}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData({ jobTitle: e.target.value })}
             />
             <InputField
               label="Target Start Date"
               type="date"
               value={formData.targetStartDate}
-              onChange={(e) => updateFormData({ targetStartDate: e.target.value })}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData({ targetStartDate: e.target.value })}
             />
             <InputField
               label="No. of Vacancies"
               type="number"
               placeholder="e.g. 3"
               value={formData.numberOfVacancies}
-              onChange={(e) => updateFormData({ numberOfVacancies: e.target.value })}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData({ numberOfVacancies: e.target.value })}
             />
             <InputField
               label="Reason for Posting Position"
               placeholder="e.g. New Role"
               value={formData.reasonForPosting}
-              onChange={(e) => updateFormData({ reasonForPosting: e.target.value })}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData({ reasonForPosting: e.target.value })}
             />
           </div>
         </div>
@@ -602,7 +669,7 @@ function Step01({ goToNextStep, step, formData, updateFormData }: Step01Props) {
                   name="businessUnit"
                   value="OODC"
                   checked={formData.businessUnit === "OODC"}
-                  onChange={(e) => updateFormData({ businessUnit: e.target.value })}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData({ businessUnit: e.target.value })}
                 >
                   OODC
                 </CustomRadio>
@@ -610,7 +677,7 @@ function Step01({ goToNextStep, step, formData, updateFormData }: Step01Props) {
                   name="businessUnit"
                   value="OORS"
                   checked={formData.businessUnit === "OORS"}
-                  onChange={(e) => updateFormData({ businessUnit: e.target.value })}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData({ businessUnit: e.target.value })}
                 >
                   OORS
                 </CustomRadio>
@@ -620,7 +687,7 @@ function Step01({ goToNextStep, step, formData, updateFormData }: Step01Props) {
               <label className="text-sm font-medium text-gray-700 block mb-1">Department Name</label>
               <Select
                 value={formData.departmentName}
-                onValueChange={(value) => updateFormData({ departmentName: value })}
+                onValueChange={(value: string) => updateFormData({ departmentName: value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Ex: Information Technology" />
@@ -640,7 +707,7 @@ function Step01({ goToNextStep, step, formData, updateFormData }: Step01Props) {
               <label className="text-sm font-medium text-gray-700 block mb-1">Immediate Supervisor</label>
               <Select
                 value={formData.immediateSupervisor}
-                onValueChange={(value) => updateFormData({ immediateSupervisor: value })}
+                onValueChange={(value: string) => updateFormData({ immediateSupervisor: value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Ex: Ms. Hailey Adams" />
@@ -664,7 +731,7 @@ function Step01({ goToNextStep, step, formData, updateFormData }: Step01Props) {
                   <User2 className="w-4 h-4 text-gray-500" />
                   Hiring Manager {i + 1}
                 </div>
-                <Select>
+                <Select onValueChange={(value: string) => console.log(`Hiring Manager ${i + 1}: ${value}`)}> {/* Added onValueChange for Select */}
                   <SelectTrigger>
                     <SelectValue placeholder="Name" />
                   </SelectTrigger>
@@ -704,7 +771,7 @@ function Step02({ goToNextStep, goToPreviousStep, step, formData, updateFormData
                   name="contract"
                   value="Probationary"
                   checked={formData.contractType === "Probationary"}
-                  onChange={(e) => updateFormData({ contractType: e.target.value })}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData({ contractType: e.target.value })}
                 >
                   Probationary
                 </CustomRadio>
@@ -712,7 +779,7 @@ function Step02({ goToNextStep, goToPreviousStep, step, formData, updateFormData
                   name="contract"
                   value="Project"
                   checked={formData.contractType === "Project"}
-                  onChange={(e) => updateFormData({ contractType: e.target.value })}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData({ contractType: e.target.value })}
                 >
                   Project
                 </CustomRadio>
@@ -725,7 +792,7 @@ function Step02({ goToNextStep, goToPreviousStep, step, formData, updateFormData
                   name="arrangement"
                   value="Hybrid"
                   checked={formData.workArrangement === "Hybrid"}
-                  onChange={(e) => updateFormData({ workArrangement: e.target.value })}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData({ workArrangement: e.target.value })}
                 >
                   Hybrid
                 </CustomRadio>
@@ -733,7 +800,7 @@ function Step02({ goToNextStep, goToPreviousStep, step, formData, updateFormData
                   name="arrangement"
                   value="Onsite"
                   checked={formData.workArrangement === "Onsite"}
-                  onChange={(e) => updateFormData({ workArrangement: e.target.value })}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData({ workArrangement: e.target.value })}
                 >
                   Onsite
                 </CustomRadio>
@@ -741,7 +808,7 @@ function Step02({ goToNextStep, goToPreviousStep, step, formData, updateFormData
                   name="arrangement"
                   value="Remote"
                   checked={formData.workArrangement === "Remote"}
-                  onChange={(e) => updateFormData({ workArrangement: e.target.value })}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData({ workArrangement: e.target.value })}
                 >
                   Remote
                 </CustomRadio>
@@ -749,7 +816,7 @@ function Step02({ goToNextStep, goToPreviousStep, step, formData, updateFormData
             </div>
             <div>
               <label className="text-sm font-medium text-gray-700">Category</label>
-              <Select value={formData.category} onValueChange={(value) => updateFormData({ category: value })}>
+              <Select value={formData.category} onValueChange={(value: string) => updateFormData({ category: value })}>
                 <SelectTrigger>
                   <SelectValue placeholder="All Job Title" />
                 </SelectTrigger>
@@ -762,7 +829,7 @@ function Step02({ goToNextStep, goToPreviousStep, step, formData, updateFormData
             </div>
             <div>
               <label className="text-sm font-medium text-gray-700">Position</label>
-              <Select value={formData.position} onValueChange={(value) => updateFormData({ position: value })}>
+              <Select value={formData.position} onValueChange={(value: string) => updateFormData({ position: value })}>
                 <SelectTrigger>
                   <SelectValue placeholder="All Job Title" />
                 </SelectTrigger>
@@ -777,13 +844,13 @@ function Step02({ goToNextStep, goToPreviousStep, step, formData, updateFormData
               label="Working Site"
               placeholder="Makati"
               value={formData.workingSite}
-              onChange={(e) => updateFormData({ workingSite: e.target.value })}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData({ workingSite: e.target.value })}
             />
             <InputField
               label="Work Schedule"
               placeholder="8:00 am - 5:00 pm"
               value={formData.workSchedule}
-              onChange={(e) => updateFormData({ workSchedule: e.target.value })}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData({ workSchedule: e.target.value })}
             />
           </div>
         </div>
@@ -805,7 +872,7 @@ function Step02({ goToNextStep, goToPreviousStep, step, formData, updateFormData
                     placeholder="Input text"
                     className="min-h-[90px] pr-20 resize-none"
                     value={formData[key as keyof FormData] as string}
-                    onChange={(e) => updateFormData({ [key]: e.target.value })}
+                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => updateFormData({ [key]: e.target.value })}
                   />
                   <Button
                     variant="ghost"
@@ -828,7 +895,7 @@ function Step02({ goToNextStep, goToPreviousStep, step, formData, updateFormData
             label="Salary Budget"
             placeholder="₱ 20,000 - 25,000"
             value={formData.salaryBudget}
-            onChange={(e) => updateFormData({ salaryBudget: e.target.value })}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData({ salaryBudget: e.target.value })}
           />
         </div>
         <div className="flex justify-between mt-10">
@@ -887,7 +954,7 @@ function Step03({ goToNextStep, goToPreviousStep, step, formData, updateFormData
               name="assessmentRequired"
               value="Yes"
               checked={formData.assessmentRequired === "Yes"}
-              onChange={(e) => updateFormData({ assessmentRequired: e.target.value })}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData({ assessmentRequired: e.target.value })}
             >
               Yes
             </CustomRadio>
@@ -895,7 +962,7 @@ function Step03({ goToNextStep, goToPreviousStep, step, formData, updateFormData
               name="assessmentRequired"
               value="No"
               checked={formData.assessmentRequired === "No"}
-              onChange={(e) => updateFormData({ assessmentRequired: e.target.value })}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData({ assessmentRequired: e.target.value })}
             >
               No
             </CustomRadio>
@@ -909,37 +976,37 @@ function Step03({ goToNextStep, goToPreviousStep, step, formData, updateFormData
             <div className="space-y-2 mt-1">
               <CustomCheckbox
                 checked={formData.assessmentTypes.technical}
-                onChange={() => handleAssessmentTypeChange("technical")}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleAssessmentTypeChange("technical")}
               >
                 Technical Test
               </CustomCheckbox>
               <CustomCheckbox
                 checked={formData.assessmentTypes.language}
-                onChange={() => handleAssessmentTypeChange("language")}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleAssessmentTypeChange("language")}
               >
                 Language Proficiency Test
               </CustomCheckbox>
               <CustomCheckbox
                 checked={formData.assessmentTypes.cognitive}
-                onChange={() => handleAssessmentTypeChange("cognitive")}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleAssessmentTypeChange("cognitive")}
               >
                 Cognitive Test
               </CustomCheckbox>
               <CustomCheckbox
                 checked={formData.assessmentTypes.personality}
-                onChange={() => handleAssessmentTypeChange("personality")}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleAssessmentTypeChange("personality")}
               >
                 Personality Test
               </CustomCheckbox>
               <CustomCheckbox
                 checked={formData.assessmentTypes.behavioral}
-                onChange={() => handleAssessmentTypeChange("behavioral")}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleAssessmentTypeChange("behavioral")}
               >
                 Behavioral Test
               </CustomCheckbox>
               <CustomCheckbox
                 checked={formData.assessmentTypes.cultural}
-                onChange={() => handleAssessmentTypeChange("cultural")}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleAssessmentTypeChange("cultural")}
               >
                 Cultural Test
               </CustomCheckbox>
@@ -959,7 +1026,7 @@ function Step03({ goToNextStep, goToPreviousStep, step, formData, updateFormData
             <input
               type="text"
               value={formData.otherAssessment}
-              onChange={(e) => updateFormData({ otherAssessment: e.target.value })}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData({ otherAssessment: e.target.value })}
               className="max-w-xs px-3 py-1.5 border border-gray-300 rounded text-sm text-gray-700 bg-white placeholder:text-gray-400"
               placeholder="Psychological Test"
             />
@@ -985,25 +1052,25 @@ function Step03({ goToNextStep, goToPreviousStep, step, formData, updateFormData
               <div className="space-y-2 mt-1">
                 <CustomCheckbox
                   checked={formData.hardwareRequired.desktop}
-                  onChange={() => handleHardwareChange("desktop")}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleHardwareChange("desktop")}
                 >
                   Desktop
                 </CustomCheckbox>
                 <CustomCheckbox
                   checked={formData.hardwareRequired.handset}
-                  onChange={() => handleHardwareChange("handset")}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleHardwareChange("handset")}
                 >
                   Handset
                 </CustomCheckbox>
                 <CustomCheckbox
                   checked={formData.hardwareRequired.headset}
-                  onChange={() => handleHardwareChange("headset")}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleHardwareChange("headset")}
                 >
                   Headset
                 </CustomCheckbox>
                 <CustomCheckbox
                   checked={formData.hardwareRequired.laptop}
-                  onChange={() => handleHardwareChange("laptop")}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleHardwareChange("laptop")}
                 >
                   Laptop
                 </CustomCheckbox>
@@ -1037,7 +1104,7 @@ function Step03({ goToNextStep, goToPreviousStep, step, formData, updateFormData
                   <CustomCheckbox
                     key={index}
                     checked={formData.softwareRequired[software]}
-                    onChange={() => handleSoftwareChange(software)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleSoftwareChange(software)}
                   >
                     {software}
                   </CustomCheckbox>
@@ -1057,7 +1124,9 @@ function Step03({ goToNextStep, goToPreviousStep, step, formData, updateFormData
         </div>
       </div>
       {/* Preview Sidebar */}
-      <PreviewInfo step={step} formData={formData} />
+      <div>
+        <PreviewInfo step={step} formData={formData} />
+      </div>
     </div>
   )
 }

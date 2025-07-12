@@ -210,3 +210,10 @@ h1 {
     margin-bottom: 32px !important;
   }
 }
+
+.table-id-column {
+  width: 40px !important;
+  min-width: 40px !important;
+  max-width: 40px !important;
+}
+

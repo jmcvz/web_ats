@@ -140,8 +140,16 @@ export default function CreateNewPosition() {
   }, [])
 
   const [currentStep, setCurrentStep] = useState(1)
-
+  const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate()
+
+   const handleCancel = () => {
+    setShowModal(true);
+  };
+
+  const handleConfirmCancel = () => {
+    navigate("/requests");
+  };
 
   const [formData, setFormData] = useState({
     jobTitle: "",
@@ -498,6 +506,8 @@ export default function CreateNewPosition() {
       setCurrentStep(currentStep - 1)
     }
   }
+
+
 
   const addStepToStage = (stageId: number) => {
     setCurrentStageId(stageId)
@@ -3305,22 +3315,97 @@ export default function CreateNewPosition() {
           </div>
 
           {/* Steps Navigation */}
-<div className="flex flex-col items-center gap-6 border-b pb-4 sm:flex-row sm:items-start sm:gap-8">
-  {steps.map((step) => (
-    <div key={step.number} className="flex items-center gap-2">
-      <div
-        className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
-          step.active ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-500"
-        }`}
-      >
-        {step.number}
+<div className="flex flex-col sm:flex-row sm:items-start sm:justify-between border-b pb-4">
+  {/* Progress steps */}
+  <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start sm:gap-8">
+    {steps.map((step) => (
+      <div key={step.number} className="flex items-center gap-2">
+        <div
+          className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
+            step.active ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-500"
+          }`}
+        >
+          {step.number}
+        </div>
+        <span className={`text-sm font-medium ${step.active ? "text-blue-600" : "text-gray-500"}`}>
+          {step.title}
+        </span>
       </div>
-      <span className={`text-sm font-medium ${step.active ? "text-blue-600" : "text-gray-500"}`}>
-        {step.title}
-      </span>
-    </div>
-  ))}
+    ))}
+  </div>
+
+  {/* Cancel Button */}
+  <div className="mt-4 sm:mt-0">
+  <Button
+    onClick={handleCancel}
+    variant="ghost"
+    className="
+      px-4 py-2 
+      bg-white 
+      text-red-600 
+      border border-red-600 
+      rounded 
+      hover:bg-red-600 
+      hover:text-white
+      transition-colors duration-200
+    "
+  >
+    Cancel
+  </Button>
 </div>
+
+</div>
+
+{/* MODAL CODE HERE */}
+      {showModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+            {/* Modal Title */}
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              Cancel Position Creation
+            </h2>
+
+            {/* Modal Body */}
+            <p className="text-center text-gray-700 mb-6">
+              Do you want to cancel the position creation?
+            </p>
+
+            {/* Modal Actions */}
+            <div className="flex justify-end gap-2">
+              <Button
+                onClick={() => setShowModal(false)}
+                variant="ghost"
+                className="
+                  px-4 py-2
+                  border border-gray-300
+                  text-gray-700
+                  rounded
+                  hover:bg-gray-100
+                  transition-colors duration-200
+                "
+              >
+                No
+              </Button>
+              <Button
+                onClick={handleConfirmCancel}
+                className="
+                  px-4 py-2
+                  bg-red-600
+                  text-white
+                  rounded
+                  hover:bg-red-700
+                  transition-colors duration-200
+                "
+              >
+                Yes
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    
+
+
 
 
           {/* Main Content */}

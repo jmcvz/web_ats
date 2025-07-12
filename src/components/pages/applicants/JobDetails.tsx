@@ -65,8 +65,8 @@ export default function JobDetails() {
 
   // Build path conditionally
   const path = isCustomStage
-  ? `/applicants/job/stage/${stageSlug}`
-  : `/applicants/job/${jobSlug}/${stageSlug}`
+  ? `/job/stage/${stageSlug}`
+  : `/job/${jobSlug}/${stageSlug}`
 
 
   // Navigate
@@ -109,7 +109,7 @@ export default function JobDetails() {
           {/* Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" onClick={() => navigate(`/applicants/job/`)}>
+              <Button variant="ghost" size="icon" onClick={() => navigate(`/job/`)}>
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <h2 className="text-3xl font-bold text-gray-800">{currentJobTitle || "Job Details"}</h2>
@@ -119,15 +119,15 @@ export default function JobDetails() {
                 variant="ghost"
                 size="icon"
                 onClick={() =>
-                  navigate(`/applicants/job/${currentJobTitle?.toLowerCase().replace(/\s+/g, "")}/weekly`, {
+                  navigate(`/job/${currentJobTitle?.toLowerCase().replace(/\s+/g, "")}/weekly`, {
                     state: { jobTitle: currentJobTitle, jobData },
                   })
                 }
               >
-                <LayoutGrid className="text-blue-800" />
+                <LayoutGrid className="text-gray-600" />
               </Button>
               <Button variant="ghost" size="icon">
-                <List className="text-gray-600" />
+                <List className="text-blue-800" />
               </Button>
             </div>
           </div>

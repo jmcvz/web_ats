@@ -32,7 +32,7 @@ export function Navbar() {
       icon: LayoutDashboard,
     },
     {
-      path: "/applicants",
+      path: "/job",
       label: "Applicants",
       icon: Users,
     },
