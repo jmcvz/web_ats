@@ -75,7 +75,7 @@ export default function PoolApplicants() {
     // Convert name to URL-friendly format (lowercase, replace spaces with hyphens)
     const urlFriendlyName = applicantName.toLowerCase().replace(/\s+/g, "-")
     // Use window.location to navigate
-    window.location.href = `/applicants/${urlFriendlyName}`
+    window.location.href = `/job/list/applicants/${urlFriendlyName}`
   }
 
   const handleCancel = () => {

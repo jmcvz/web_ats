@@ -667,7 +667,7 @@ const previousPath = location.state?.from
   variant="outline"
   size="sm"
   className="w-full px-1 lg:px-3 text-xs lg:text-sm h-7 lg:h-10 lg:whitespace-nowrap"
-  onClick={() => navigate(`/applicants/${applicant.id}/IEForm`)}
+  onClick={() => navigate(`/job/list/applicants/${applicant.id}/IEForm`)}
 >
   View
 </Button>

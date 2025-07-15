@@ -13,6 +13,8 @@ import {
 import { ChevronRightCircle } from "lucide-react"
 import { useEffect } from "react"
 import { Link, useNavigate } from "react-router-dom"
+import { Badge } from "@/components/ui/badge"
+
 
 export default function Applicants() {
   useEffect(() => {
@@ -20,6 +22,16 @@ export default function Applicants() {
   }, [])
 
   const navigate = useNavigate()
+
+  const statusColor = {
+    Hired: "bg-green-100 text-green-800",
+    Failed: "bg-red-100 text-red-800",
+    Warm: "bg-yellow-100 text-yellow-800",
+    "For Interview": "bg-orange-100 text-orange-800",
+    "For Job Offer": "bg-blue-100 text-blue-800",
+    Onboarding: "bg-purple-100 text-purple-800",
+    // Add other statuses as needed
+  }
 
   return (
     <>
@@ -66,152 +78,145 @@ export default function Applicants() {
 
       {/* Main Content (with top padding to offset fixed header) */}
       <div className="min-h-screen bg-gray-50 px-6 pt-[220px] pb-[80px]">
-        <div className="mx-auto max-w-7xl">
-          <div className="overflow-x-auto">
-            <div className="min-w-[800px] rounded-md border bg-white">
-              <table className="min-w-full text-sm text-left">
-                <thead className="bg-gray-100">
-                  <tr className="text-xs text-muted-foreground uppercase">
-                    <th className="px-6 py-4 font-medium">Applicants</th>
-                    <th className="px-6 py-4 font-medium text-center">Status</th>
-                    <th className="px-6 py-4 font-medium text-center">
-                      Position applying for
-                    </th>
-                    <th className="px-6 py-4 font-medium text-center">Department</th>
-                    <th className="px-6 py-4 font-medium text-center">
-                      Employment Type
-                    </th>
+        <div className="mx-auto max-w-7xl w-full">
+          <div className="overflow-x-auto rounded-lg border bg-white">
+            <table className="w-full text-sm text-left"> {/* Changed min-w-full to w-full here */}
+              <thead className="bg-gray-50 text-gray-600 uppercase text-xs">
+                <tr>
+                  <th className="px-4 py-2">Applicants</th>
+                  <th className="px-4 py-2 text-center">Status</th>
+                  <th className="px-4 py-2 text-center">
+                    Position applying for
+                  </th>
+                  <th className="px-4 py-2 text-center">Department</th>
+                  <th className="px-4 py-2 text-center">
+                    Employment Type
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  {
+                    name: "Maria White",
+                    email: "maria.white@email.com",
+                    status: "Hired",
+                    position: "Project Manager",
+                    department: "CI",
+                    type: "Full Time",
+                    avatar: "https://i.pravatar.cc/40?u=1",
+                  },
+                  {
+                    name: "Carmen Martinez",
+                    email: "carmen.martinez@email.com",
+                    status: "Failed",
+                    position: "Social Media Manager",
+                    department: "Marketing",
+                    type: "Full Time",
+                    avatar: "https://i.pravatar.cc/40?u=2",
+                  },
+                  {
+                    name: "Olivia Miller",
+                    email: "olivia.miller@email.com",
+                    status: "Warm",
+                    position: "Senior UI/UX Designer",
+                    department: "CI",
+                    type: "Full Time",
+                    avatar: "https://i.pravatar.cc/40?u=3",
+                  },
+                  {
+                    name: "Jessica Gonzalez",
+                    email: "jessica.gonzalez@email.com",
+                    status: "Hired",
+                    position: "Lead Developer",
+                    department: "CI",
+                    type: "Full Time",
+                    avatar: "https://i.pravatar.cc/40?u=4",
+                  },
+                  {
+                    name: "Rachel Miller",
+                    email: "rachel.miller@email.com",
+                    status: "Hired",
+                    position: "Lead Developer",
+                    department: "CI",
+                    type: "Full Time",
+                    avatar: "https://i.pravatar.cc/40?u=5",
+                  },
+                  {
+                    name: "Olivia Miller",
+                    email: "olivia.miller2@email.com",
+                    status: "For Interview",
+                    position: "Lead Developer",
+                    department: "CI",
+                    type: "Full Time",
+                    avatar: "https://i.pravatar.cc/40?u=6",
+                  },
+                  {
+                    name: "Nathan Wood",
+                    email: "nathan.wood@email.com",
+                    status: "For Interview",
+                    position: "QA Engineer",
+                    department: "CI",
+                    type: "Full Time",
+                    avatar: "https://i.pravatar.cc/40?u=7",
+                  },
+                  {
+                    name: "Sarah White",
+                    email: "sarah.white@email.com",
+                    status: "For Job Offer",
+                    position: "QA Engineer",
+                    department: "CI",
+                    type: "Full Time",
+                    avatar: "https://i.pravatar.cc/40?u=8",
+                  },
+                  {
+                    name: "Michael Taylor",
+                    email: "michael.taylor@email.com",
+                    status: "Onboarding",
+                    position: "Operations Manager",
+                    department: "HR",
+                    type: "Full Time",
+                    avatar: "https://i.pravatar.cc/40?u=9",
+                  },
+                ].map((applicant, index) => (
+                  <tr key={index} className="border-t text-sm text-gray-800">
+                    <td className="px-4 py-3">
+                      <Link
+                        to={`/job/list/applicants/${encodeURIComponent(
+                          applicant.name.replace(/\s+/g, "-").toLowerCase()
+                        )}`}
+                        className="flex items-center gap-3 hover:underline hover:text-blue-600 transition-colors cursor-pointer"
+                      >
+                        <img
+                          src={applicant.avatar || "/placeholder.svg"}
+                          alt={applicant.name}
+                          className="w-8 h-8 rounded-full"
+                        />
+                        <span>{applicant.name}</span>
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <span
+                        className={`text-xs font-medium px-2 py-0.5 rounded ${
+                          statusColor[applicant.status as keyof typeof statusColor] || "bg-gray-100 text-gray-800"
+                        }`}
+                      >
+                        {applicant.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-center">{applicant.position}</td>
+                    <td className="px-4 py-3 text-center">{applicant.department}</td>
+                    <td className="px-4 py-3 text-center">
+                      <Badge
+                        className="bg-blue-100 text-blue-600 text-xs font-medium px-2 py-0.5"
+                        variant="outline"
+                      >
+                        {applicant.type}
+                      </Badge>
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {[
-                    {
-                      name: "Maria White",
-                      email: "maria.white@email.com",
-                      status: "Hired",
-                      position: "Project Manager",
-                      department: "CI",
-                      type: "Full Time",
-                      avatar: "https://i.pravatar.cc/40?u=1",
-                    },
-                    {
-                      name: "Carmen Martinez",
-                      email: "carmen.martinez@email.com",
-                      status: "Failed",
-                      position: "Social Media Manager",
-                      department: "Marketing",
-                      type: "Full Time",
-                      avatar: "https://i.pravatar.cc/40?u=2",
-                    },
-                    {
-                      name: "Olivia Miller",
-                      email: "olivia.miller@email.com",
-                      status: "Warm",
-                      position: "Senior UI/UX Designer",
-                      department: "CI",
-                      type: "Full Time",
-                      avatar: "https://i.pravatar.cc/40?u=3",
-                    },
-                    {
-                      name: "Jessica Gonzalez",
-                      email: "jessica.gonzalez@email.com",
-                      status: "Hired",
-                      position: "Lead Developer",
-                      department: "CI",
-                      type: "Full Time",
-                      avatar: "https://i.pravatar.cc/40?u=4",
-                    },
-                    {
-                      name: "Rachel Miller",
-                      email: "rachel.miller@email.com",
-                      status: "Hired",
-                      position: "Lead Developer",
-                      department: "CI",
-                      type: "Full Time",
-                      avatar: "https://i.pravatar.cc/40?u=5",
-                    },
-                    {
-                      name: "Olivia Miller",
-                      email: "olivia.miller2@email.com",
-                      status: "For Interview",
-                      position: "Lead Developer",
-                      department: "CI",
-                      type: "Full Time",
-                      avatar: "https://i.pravatar.cc/40?u=6",
-                    },
-                    {
-                      name: "Nathan Wood",
-                      email: "nathan.wood@email.com",
-                      status: "For Interview",
-                      position: "QA Engineer",
-                      department: "CI",
-                      type: "Full Time",
-                      avatar: "https://i.pravatar.cc/40?u=7",
-                    },
-                    {
-                      name: "Sarah White",
-                      email: "sarah.white@email.com",
-                      status: "For Job Offer",
-                      position: "QA Engineer",
-                      department: "CI",
-                      type: "Full Time",
-                      avatar: "https://i.pravatar.cc/40?u=8",
-                    },
-                    {
-                      name: "Michael Taylor",
-                      email: "michael.taylor@email.com",
-                      status: "Onboarding",
-                      position: "Operations Manager",
-                      department: "HR",
-                      type: "Full Time",
-                      avatar: "https://i.pravatar.cc/40?u=9",
-                    },
-                  ].map((applicant, index) => (
-                    <tr key={index} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 flex items-center gap-3">
-                        <Link
-                          to={`/applicants/${encodeURIComponent(
-                            applicant.name.replace(/\s+/g, "-").toLowerCase()
-                          )}`}
-                          className="flex items-center gap-3 hover:underline text-blue-600"
-                        >
-                          <img
-                            src={applicant.avatar || "/placeholder.svg"}
-                            alt={applicant.name}
-                            className="w-8 h-8 rounded-full"
-                          />
-                          <span>{applicant.name}</span>
-                        </Link>
-                      </td>
-                      <td className="px-6 py-4 text-center align-middle">
-                        <span
-                          className={`text-xs font-medium px-2 py-1 rounded-full ${
-                            applicant.status === "Hired"
-                              ? "bg-green-100 text-green-800"
-                              : applicant.status === "Failed"
-                              ? "bg-red-100 text-red-800"
-                              : applicant.status === "Warm"
-                              ? "bg-yellow-100 text-yellow-800"
-                              : applicant.status === "For Interview"
-                              ? "bg-orange-100 text-orange-800"
-                              : applicant.status === "For Job Offer"
-                              ? "bg-blue-100 text-blue-800"
-                              : applicant.status === "Onboarding"
-                              ? "bg-purple-100 text-purple-800"
-                              : "bg-gray-100 text-gray-800"
-                          }`}
-                        >
-                          {applicant.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-center">{applicant.position}</td>
-                      <td className="px-6 py-4 text-center">{applicant.department}</td>
-                      <td className="px-6 py-4 text-center">{applicant.type}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -223,7 +228,7 @@ export default function Applicants() {
           size="sm"
           className="w-full sm:w-auto"
           style={{ backgroundColor: "#0056D2", color: "white" }}
-          onClick={() => navigate("/applicants/pool")}
+          onClick={() => navigate("/job/applicants/pool")}
         >
           Pool Applicant
         </Button>

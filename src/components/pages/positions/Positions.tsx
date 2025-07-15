@@ -1,15 +1,13 @@
-"use client"
-
-import { Navbar } from "@/components/reusables/Navbar"
-import { useEffect, useState } from "react"
-import { useNavigate } from "react-router-dom"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Pencil, ExternalLink, RotateCcw, Archive, Trash2, Pause } from "lucide-react"
-import { ShareModal } from "@/components/ui/ShareModal"
+import { Navbar } from "@/components/reusables/Navbar";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Pencil, ExternalLink, RotateCcw, Archive, Trash2, Pause, Unlock } from "lucide-react"; // Import Unlock icon
+import { ShareModal } from "@/components/ui/ShareModal";
 import {
   Dialog,
   DialogTrigger,
@@ -18,26 +16,26 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from "@/components/ui/dialog"
-import { User, Users2 } from "lucide-react"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+} from "@/components/ui/dialog";
+import { User, Users2 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface BaseJobPosting {
-  id: number
-  title: string
-  department: string
-  description: string
-  status?: string
-  assignee?: string
-  progress?: { completed: number; total: number }
-  link?: string
-  type?: "internal" | "external"
+  id: number;
+  title: string;
+  department: string;
+  description: string;
+  status?: string;
+  assignee?: string;
+  progress?: { completed: number; total: number };
+  link?: string;
+  type?: "Internal" | "External";
 }
 
-type JobPosting = BaseJobPosting
+type JobPosting = BaseJobPosting;
 
 // Dummy data (different data per tab)
-const jobData = {
+const initialJobData = {
   drafts: [
     {
       id: 1,
@@ -130,14 +128,14 @@ const jobData = {
   ],
 
   published: {
-    internal: [
+    Internal: [
       {
         id: 31,
         title: "Senior Account Executive",
         department: "Sales",
         description:
           "Internal promotion opportunity for Account Executive to manage enterprise client relationships and drive revenue growth...",
-        type: "internal" as const,
+        type: "Internal" as const,
       },
       {
         id: 32,
@@ -145,7 +143,7 @@ const jobData = {
         department: "Engineering",
         description:
           "Internal advancement opportunity for Software Engineer to lead technical initiatives and mentor junior developers...",
-        type: "internal" as const,
+        type: "Internal" as const,
       },
       {
         id: 33,
@@ -153,7 +151,7 @@ const jobData = {
         department: "Marketing",
         description:
           "Internal leadership role for Digital Marketing Manager to lead our online marketing efforts and team expansion...",
-        type: "internal" as const,
+        type: "Internal" as const,
       },
       {
         id: 34,
@@ -161,7 +159,7 @@ const jobData = {
         department: "Product",
         description:
           "Internal promotion for Product Manager to define product roadmap and lead cross-functional initiatives...",
-        type: "internal" as const,
+        type: "Internal" as const,
       },
       {
         id: 35,
@@ -169,7 +167,7 @@ const jobData = {
         department: "Analytics",
         description:
           "Internal advancement for Data Scientist to lead analytics strategy and advanced modeling projects...",
-        type: "internal" as const,
+        type: "Internal" as const,
       },
       {
         id: 36,
@@ -177,7 +175,7 @@ const jobData = {
         department: "Design",
         description:
           "Internal promotion for UX Designer to lead design team and establish design systems across products...",
-        type: "internal" as const,
+        type: "Internal" as const,
       },
       {
         id: 37,
@@ -185,21 +183,21 @@ const jobData = {
         department: "Engineering",
         description:
           "Internal advancement for DevOps Engineer to architect cloud infrastructure and lead automation initiatives...",
-        type: "internal" as const,
+        type: "Internal" as const,
       },
       {
         id: 38,
         title: "Customer Success Team Lead",
         department: "Customer Success",
         description: "Internal promotion to lead customer success team and develop retention strategies...",
-        type: "internal" as const,
+        type: "Internal" as const,
       },
       {
         id: 39,
         title: "Senior Business Analyst",
         department: "Operations",
         description: "Internal advancement for Business Analyst to lead process optimization and strategic planning...",
-        type: "internal" as const,
+        type: "Internal" as const,
       },
       {
         id: 40,
@@ -207,17 +205,17 @@ const jobData = {
         department: "Human Resources",
         description:
           "Internal promotion for HR Business Partner to manage HR operations and talent development programs...",
-        type: "internal" as const,
+        type: "Internal" as const,
       },
     ],
-    external: [
+    External: [
       {
         id: 41,
         title: "Technical Writer",
         department: "Documentation",
         description:
           "External hire for Technical Writer to create comprehensive documentation and user guides for our products and APIs...",
-        type: "external" as const,
+        type: "External" as const,
       },
       {
         id: 42,
@@ -225,7 +223,7 @@ const jobData = {
         department: "Engineering",
         description:
           "External SRE position to ensure system reliability, performance monitoring, and incident response management...",
-        type: "external" as const,
+        type: "External" as const,
       },
       {
         id: 43,
@@ -233,7 +231,7 @@ const jobData = {
         department: "Marketing",
         description:
           "External hire for Growth Marketing Manager to drive user acquisition, retention, and revenue growth through data-driven campaigns...",
-        type: "external" as const,
+        type: "External" as const,
       },
       {
         id: 44,
@@ -241,7 +239,7 @@ const jobData = {
         department: "Engineering",
         description:
           "External Solutions Architect to design scalable system architectures for enterprise clients and complex integrations...",
-        type: "external" as const,
+        type: "External" as const,
       },
       {
         id: 45,
@@ -249,7 +247,7 @@ const jobData = {
         department: "Customer Success",
         description:
           "External hire to lead customer experience initiatives, improve satisfaction metrics, and develop customer journey optimization...",
-        type: "external" as const,
+        type: "External" as const,
       },
       {
         id: 46,
@@ -257,7 +255,7 @@ const jobData = {
         department: "Analytics",
         description:
           "External manager position to lead data analytics team, drive insights, and establish data governance practices...",
-        type: "external" as const,
+        type: "External" as const,
       },
       {
         id: 47,
@@ -265,7 +263,7 @@ const jobData = {
         department: "Security",
         description:
           "External cybersecurity expert to implement security protocols, conduct risk assessments, and manage compliance requirements...",
-        type: "external" as const,
+        type: "External" as const,
       },
       {
         id: 48,
@@ -273,7 +271,7 @@ const jobData = {
         department: "Finance",
         description:
           "External hire for Financial Controller to oversee financial reporting, budgeting, and compliance with regulatory requirements...",
-        type: "external" as const,
+        type: "External" as const,
       },
       {
         id: 49,
@@ -281,7 +279,7 @@ const jobData = {
         department: "Legal",
         description:
           "External Legal Counsel to handle contracts, intellectual property, regulatory compliance, and corporate governance matters...",
-        type: "external" as const,
+        type: "External" as const,
       },
       {
         id: 50,
@@ -289,7 +287,7 @@ const jobData = {
         department: "Human Resources",
         description:
           "External hire for Talent Acquisition Manager to lead recruitment strategy, build talent pipelines, and enhance employer branding...",
-        type: "external" as const,
+        type: "External" as const,
       },
       {
         id: 51,
@@ -297,7 +295,7 @@ const jobData = {
         department: "Marketing",
         description:
           "External Product Marketing Manager to develop go-to-market strategies, competitive analysis, and product positioning...",
-        type: "external" as const,
+        type: "External" as const,
       },
       {
         id: 52,
@@ -305,7 +303,7 @@ const jobData = {
         department: "Engineering",
         description:
           "External Cloud Engineer to design and implement scalable cloud solutions, optimize costs, and ensure high availability...",
-        type: "external" as const,
+        type: "External" as const,
       },
       {
         id: 53,
@@ -313,7 +311,7 @@ const jobData = {
         department: "Business Development",
         description:
           "External BD Manager to identify partnership opportunities, negotiate strategic alliances, and drive revenue growth...",
-        type: "external" as const,
+        type: "External" as const,
       },
       {
         id: 54,
@@ -321,7 +319,7 @@ const jobData = {
         department: "Quality Assurance",
         description:
           "External QA Manager to establish testing frameworks, lead quality initiatives, and ensure product reliability...",
-        type: "external" as const,
+        type: "External" as const,
       },
       {
         id: 55,
@@ -329,7 +327,7 @@ const jobData = {
         department: "R&D",
         description:
           "External R&D Lead to drive innovation initiatives, explore emerging technologies, and lead experimental projects...",
-        type: "external" as const,
+        type: "External" as const,
       },
     ],
   },
@@ -445,101 +443,71 @@ const jobData = {
       description: "Planning and execution of company events (deleted due to shift to virtual events).",
     },
   ],
-}
+};
 
 // Interviewers for pending jobs
-const assignees = ["Joseph Santos", "Virla Getalado", "Choi Beomgyu", "Kang Taehyun", "Flynn Rider", "Choi Yeonjun"]
+const assignees = ["Joseph Santos", "Virla Getalado", "Choi Beomgyu", "Kang Taehyun", "Flynn Rider", "Choi Yeonjun"];
 
 const getRandomProgress = () => {
   // Generate a random total number of interviews (1 to 5)
-  const totalSteps = Math.floor(Math.random() * 5) + 1
+  const totalSteps = Math.floor(Math.random() * 5) + 1;
 
   // Generate a random completion level (0 to totalSteps completed)
-  const completedSteps = Math.floor(Math.random() * (totalSteps + 1))
+  const completedSteps = Math.floor(Math.random() * (totalSteps + 1));
 
-  return { completed: completedSteps, total: totalSteps }
-}
+  return { completed: completedSteps, total: totalSteps };
+};
 
 const generateJobLink = (title: string) => {
   const slug = title
     .toLowerCase()
     .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9-]/g, "")
-  return `https://oodc.yourcompany.com/jobs/${slug}`
-}
-
-const generatePositionsData = () => {
-  return {
-    drafts: jobData.drafts,
-
-    "on-hold": jobData["on-hold"],
-
-    published: {
-      all: [...jobData.published.internal, ...jobData.published.external].map((job) => ({
-        ...job,
-        link: generateJobLink(job.title),
-      })),
-      internal: jobData.published.internal.map((job) => ({
-        ...job,
-        link: generateJobLink(job.title),
-      })),
-      external: jobData.published.external.map((job) => ({
-        ...job,
-        link: generateJobLink(job.title),
-      })),
-    },
-
-    closed: jobData.closed,
-
-    archive: jobData.archive,
-    deleted: jobData.deleted, // Add deleted data
-  }
-}
-
-const positionsData = generatePositionsData()
+    .replace(/[^a-z0-9-]/g, "");
+  return `https://oodc.yourcompany.com/jobs/${slug}`;
+};
 
 const getDepartmentColor = (department: string) => {
   switch (department) {
     case "Marketing":
-      return "bg-blue-100 text-blue-700"
+      return "bg-blue-100 text-blue-700";
     case "Engineering":
-      return "bg-purple-100 text-purple-700"
+      return "bg-purple-100 text-purple-700";
     case "Sales":
-      return "bg-green-100 text-green-700"
+      return "bg-green-100 text-green-700";
     case "Design":
-      return "bg-pink-100 text-pink-700"
+      return "bg-pink-100 text-pink-700";
     case "Analytics":
-      return "bg-orange-100 text-orange-700"
+      return "bg-orange-100 text-orange-700";
     case "Customer Success":
-      return "bg-teal-100 text-teal-700"
+      return "bg-teal-100 text-teal-700";
     case "Finance":
-      return "bg-yellow-100 text-yellow-700"
+      return "bg-yellow-100 text-yellow-700";
     case "Human Resources":
-      return "bg-indigo-100 text-indigo-700"
+      return "bg-indigo-100 text-indigo-700";
     case "Operations":
-      return "bg-gray-100 text-gray-700"
+      return "bg-gray-100 text-gray-700";
     case "Product":
-      return "bg-red-100 text-red-700"
+      return "bg-red-100 text-red-700";
     case "Documentation":
-      return "bg-cyan-100 text-cyan-700"
+      return "bg-cyan-100 text-cyan-700";
     case "IT":
-      return "bg-slate-100 text-slate-700"
+      return "bg-slate-100 text-slate-700";
     case "Business Development":
-      return "bg-emerald-100 text-emerald-700"
+      return "bg-emerald-100 text-emerald-700";
     case "Legal":
-      return "bg-amber-100 text-amber-700"
+      return "bg-amber-100 text-amber-700";
     case "R&D":
-      return "bg-violet-100 text-violet-700"
+      return "bg-violet-100 text-violet-700";
     case "Security":
-      return "bg-red-100 text-red-800"
+      return "bg-red-100 text-red-800";
     case "Quality Assurance":
-      return "bg-green-100 text-green-800"
+      return "bg-green-100 text-green-800";
     case "Administration":
-      return "bg-stone-100 text-stone-700" // New color for Administration
+      return "bg-stone-100 text-stone-700"; // New color for Administration
     default:
-      return "bg-gray-100 text-gray-700"
+      return "bg-gray-100 text-gray-700";
   }
-}
+};
 
 const ProgressBar = ({ progress, assignee }: { progress: { completed: number; total: number }; assignee: string }) => {
   // Colors for each interview
@@ -549,17 +517,17 @@ const ProgressBar = ({ progress, assignee }: { progress: { completed: number; to
     "bg-blue-700", // Step 3
     "bg-blue-800", // Step 4
     "bg-blue-900", // Step 5
-  ]
+  ];
 
   // Use actual total for number of interview
-  const numberOfSegments = progress.total
+  const numberOfSegments = progress.total;
 
   // Fixed total width for all progress bars
-  const totalWidth = 90 // pixels
-  const segmentWidth = Math.floor(totalWidth / numberOfSegments)
+  const totalWidth = 90; // pixels
+  const segmentWidth = Math.floor(totalWidth / numberOfSegments);
 
   // Find the index of the last completed segment for hover functionality
-  const lastCompletedIndex = progress.completed > 0 ? progress.completed - 1 : -1
+  const lastCompletedIndex = progress.completed > 0 ? progress.completed - 1 : -1;
 
   return (
     <div className="flex flex-col items-end gap-1 mt-1">
@@ -588,98 +556,235 @@ const ProgressBar = ({ progress, assignee }: { progress: { completed: number; to
         ))}
       </div>
     </div>
-  )
-}
+  );
+};
 
 export default function Positions() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   // Get current tab from URL path or default to 'drafts'
   const getCurrentTab = () => {
-    const path = window.location.pathname
-    const tabFromPath = path.split("/positions/")[1] || "drafts"
-    return tabFromPath
-  }
+    const path = window.location.pathname;
+    const tabFromPath = path.split("/positions/")[1] || "drafts";
+    return tabFromPath;
+  };
 
-  const [currentTab, setCurrentTab] = useState(getCurrentTab())
-  const [publishedSubTab, setPublishedSubTab] = useState<"all" | "internal" | "external">("all")
-  const [search, setSearch] = useState("")
-  const [selected, setSelected] = useState<number[]>([])
-  const [shareOpen, setShareOpen] = useState(false)
-  const [selectedLink, setSelectedLink] = useState("")
-  const [showCancelDialog, setShowCancelDialog] = useState(false)
-  const [deletedPostings, setDeletedPostings] = useState<JobPosting[]>(positionsData.deleted);
-  const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false); // New state for delete confirmation
+  const [currentTab, setCurrentTab] = useState(getCurrentTab());
+  const [publishedSubTab, setPublishedSubTab] = useState<"all" | "Internal" | "External">("all");
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState<number[]>([]);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [selectedLink, setSelectedLink] = useState("");
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
 
+  // State to hold all job postings, allowing modifications
+  const [allPositions, setAllPositions] = useState(() => {
+    // Initialize with generated data, ensuring published 'all' is correctly set
+    const generated = {
+      drafts: initialJobData.drafts,
+      "on-hold": initialJobData["on-hold"],
+      published: {
+        Internal: initialJobData.published.Internal.map((job) => ({
+          ...job,
+          link: generateJobLink(job.title),
+        })),
+        External: initialJobData.published.External.map((job) => ({
+          ...job,
+          link: generateJobLink(job.title),
+        })),
+        all: [] as JobPosting[], // Explicitly type 'all' as an array of JobPosting
+      },
+      closed: initialJobData.closed,
+      archive: initialJobData.archive,
+      deleted: initialJobData.deleted,
+    };
+    generated.published.all = [...generated.published.Internal, ...generated.published.External];
+    return generated;
+  });
+
+  // Dialog states for various actions
+  const [showMoveToDeletedDialog, setShowMoveToDeletedDialog] = useState(false);
+  const [showOpenPositionsDialog, setShowOpenPositionsDialog] = useState(false);
+  const [showArchivePositionsDialog, setShowArchivePositionsDialog] = useState(false);
+  const [showHoldPositionsDialog, setShowHoldPositionsDialog] = useState(false);
+  const [showRestorePositionsDialog, setShowRestorePositionsDialog] = useState(false);
+  const [showDeletePermanentlyDialog, setShowDeletePermanentlyDialog] = useState(false);
 
   // Update current tab when URL changes
   useEffect(() => {
-    const newTab = getCurrentTab()
-    setCurrentTab(newTab)
-    document.title = `Positions | ${newTab.charAt(0).toUpperCase() + newTab.slice(1).replace("-", " ")}`
-  }, [currentTab])
+    const newTab = getCurrentTab();
+    setCurrentTab(newTab);
+    document.title = `Positions | ${newTab.charAt(0).toUpperCase() + newTab.slice(1).replace("-", " ")}`;
+  }, [currentTab]);
 
   const handleTabChange = (value: string) => {
-    setCurrentTab(value)
-    navigate(`/positions/${value}`)
-    setSelected([])
+    setCurrentTab(value);
+    navigate(`/positions/${value}`);
+    setSelected([]); // Clear selection when changing tabs
     // Reset published subtab when changing main tabs
     if (value !== "published") {
-      setPublishedSubTab("all")
+      setPublishedSubTab("all");
     }
-    document.title = `Positions | ${value.charAt(0).toUpperCase() + value.slice(1).replace("-", " ")}`
-  }
+    document.title = `Positions | ${value.charAt(0).toUpperCase() + value.slice(1).replace("-", " ")}`;
+  };
 
   const getCurrentData = (): JobPosting[] => {
     if (currentTab === "published") {
-      return positionsData.published?.[publishedSubTab] ?? []
+      return allPositions.published?.[publishedSubTab] ?? [];
     }
-    if (currentTab === "deleted") {
-      return deletedPostings;
-    }
+    const tabData = allPositions[currentTab as keyof typeof allPositions];
+    return Array.isArray(tabData) ? tabData : [];
+  };
 
-    const tabData = positionsData[currentTab as keyof typeof positionsData]
-
-
-    return Array.isArray(tabData) ? tabData : []
-  }
-
-
-  const currentData: JobPosting[] = getCurrentData()
+  const currentData: JobPosting[] = getCurrentData();
 
   const filteredPostings = currentData.filter((posting: JobPosting) =>
     posting.title.toLowerCase().includes(search.toLowerCase()),
-  )
+  );
 
   const handleSelectAllToggle = () => {
     if (selected.length === filteredPostings.length && filteredPostings.length > 0) {
-      setSelected([])
+      setSelected([]);
     } else {
-      setSelected(filteredPostings.map((_, idx) => idx))
+      setSelected(filteredPostings.map((_, idx) => idx));
     }
-  }
+  };
 
   const handleShareClick = (link: string) => {
-    setSelectedLink(link)
-    setShareOpen(true)
-  }
+    setSelectedLink(link);
+    setShareOpen(true);
+  };
 
   const handleCancelRequest = () => {
-    setSelected([])
-    setShowCancelDialog(false)
-  }
+    setSelected([]);
+    setShowCancelDialog(false);
+  };
+
+  // --- Action Handlers for moving jobs between tabs ---
+
+  const moveSelectedJobs = (
+    sourceTabName: keyof typeof allPositions | "publishedInternal" | "publishedExternal",
+    destinationTabName: keyof typeof allPositions | "publishedInternal" | "publishedExternal" | "published",
+  ) => {
+    setAllPositions((prevPositions) => {
+      const newPositions = JSON.parse(JSON.stringify(prevPositions)); // Deep copy to avoid direct mutation issues
+      const selectedJobsToMove: JobPosting[] = selected.map(idx => filteredPostings[idx]);
+      const selectedJobIds = new Set(selectedJobsToMove.map(job => job.id));
+
+      // Remove selected jobs from their original source arrays
+      if (sourceTabName === "publishedInternal") {
+        newPositions.published.Internal = newPositions.published.Internal.filter(
+          (job: JobPosting) => !selectedJobIds.has(job.id)
+        );
+      } else if (sourceTabName === "publishedExternal") {
+        newPositions.published.External = newPositions.published.External.filter(
+          (job: JobPosting) => !selectedJobIds.has(job.id)
+        );
+      } else if (sourceTabName === "published") { // This case is for when 'all' subtab is active in Published
+        newPositions.published.Internal = newPositions.published.Internal.filter(
+          (job: JobPosting) => !selectedJobIds.has(job.id)
+        );
+        newPositions.published.External = newPositions.published.External.filter(
+          (job: JobPosting) => !selectedJobIds.has(job.id)
+        );
+      }
+      else { // For other top-level tabs like 'drafts', 'on-hold', 'closed', 'archive', 'deleted'
+        if (Array.isArray(newPositions[sourceTabName])) {
+            newPositions[sourceTabName] = (newPositions[sourceTabName] as JobPosting[]).filter(
+            (job: JobPosting) => !selectedJobIds.has(job.id)
+          );
+        }
+      }
+
+      // Add selected jobs to the destination tab
+      if (destinationTabName === "publishedInternal" || destinationTabName === "publishedExternal" || destinationTabName === "published") {
+        selectedJobsToMove.forEach(job => {
+          // Preserve original type if available, otherwise default to Internal
+          const targetType = job.type || "Internal"; 
+          const jobWithLink = { ...job, type: targetType, link: generateJobLink(job.title) };
+
+          if (targetType === "Internal") {
+            newPositions.published.Internal.push(jobWithLink);
+          } else { // targetType === "External"
+            newPositions.published.External.push(jobWithLink);
+          }
+        });
+      } else if (destinationTabName === "deleted" || destinationTabName === "archive" || destinationTabName === "on-hold") {
+        newPositions[destinationTabName] = [...(newPositions[destinationTabName] as JobPosting[]), ...selectedJobsToMove];
+      }
+
+      // Re-calculate the 'all' sub-tab for published
+      newPositions.published.all = [...newPositions.published.Internal, ...newPositions.published.External];
+
+      return newPositions;
+    });
+    setSelected([]); // Clear selection after action
+  };
+
+  // Handlers for specific dialogs
+  const handleMoveToDeleted = () => {
+    moveSelectedJobs(currentTab as keyof typeof allPositions, "deleted");
+    setShowMoveToDeletedDialog(false);
+  };
+
+  const handleOpenPositions = () => {
+    // No need to pass newType, it's handled by preserving original job.type
+    moveSelectedJobs("on-hold", "published");
+    setShowOpenPositionsDialog(false);
+  };
+
+  const handleArchivePositions = () => {
+    // Determine the correct source sub-tab for published based on current sub-tab
+    let sourceTab: keyof typeof allPositions | "publishedInternal" | "publishedExternal" = "published"; // Default to 'published' if not internal/external
+    if (publishedSubTab === "Internal") {
+      sourceTab = "publishedInternal";
+    } else if (publishedSubTab === "External") {
+      sourceTab = "publishedExternal";
+    } else if (publishedSubTab === "all") {
+      sourceTab = "published";
+    }
+
+    moveSelectedJobs(sourceTab, "archive");
+    setShowArchivePositionsDialog(false);
+  };
+
+  const handleHoldPositions = () => {
+    // Determine the correct source sub-tab for published based on current sub-tab
+    let sourceTab: keyof typeof allPositions | "publishedInternal" | "publishedExternal" = "published"; // Default to 'published' if not internal/external
+    if (publishedSubTab === "Internal") {
+      sourceTab = "publishedInternal";
+    } else if (publishedSubTab === "External") {
+      sourceTab = "publishedExternal";
+    } else if (publishedSubTab === "all") {
+      sourceTab = "published";
+    }
+    moveSelectedJobs(sourceTab, "on-hold");
+    setShowHoldPositionsDialog(false);
+  };
+
+  const handleRestorePositions = () => {
+    // Restore from archive or deleted to On Hold tab
+    moveSelectedJobs(currentTab as keyof typeof allPositions, "on-hold");
+    setShowRestorePositionsDialog(false);
+  };
 
   const handleDeletePermanently = () => {
-    const remainingPostings = filteredPostings.filter((_, idx) => !selected.includes(idx));
-    setDeletedPostings(remainingPostings);
+    setAllPositions((prevPositions) => {
+      const newPositions = { ...prevPositions };
+      const remainingPostings = (newPositions.deleted as JobPosting[]).filter(
+        (_, idx) => !selected.includes(idx),
+      );
+      newPositions.deleted = remainingPostings;
+      return newPositions;
+    });
     setSelected([]); // Clear selection after deletion
-    setShowDeleteConfirmDialog(false); // Close the dialog after deletion
+    setShowDeletePermanentlyDialog(false); // Close the dialog after deletion
   };
 
   const renderActionButton = (posting: JobPosting) => {
     // Only show default actions when no items are selected
     if (selected.length > 0) {
-      return null
+      return null;
     }
     switch (currentTab) {
       case "drafts":
@@ -693,7 +798,7 @@ export default function Positions() {
             <Pencil className="w-4 h-4" />
             Edit
           </Button>
-        )
+        );
       case "published":
         return (
           <div
@@ -702,7 +807,7 @@ export default function Positions() {
           >
             <ExternalLink className="w-4 h-4 text-gray-500 hover:text-blue-600" />
           </div>
-        )
+        );
       case "closed":
         return (
           <Button
@@ -714,20 +819,20 @@ export default function Positions() {
             <Pencil className="w-4 h-4" />
             Edit
           </Button>
-        )
+        );
       default:
-        return null
+        return null;
     }
-  }
+  };
 
   const renderRightContent = (posting: JobPosting, idx: number) => {
     // Only show default actions when no items are selected
     if (selected.length > 0) {
-      return null
+      return null;
     }
 
-    return renderActionButton(posting)
-  }
+    return renderActionButton(posting);
+  };
 
   return (
     <>
@@ -801,9 +906,9 @@ export default function Positions() {
               <label className="flex items-center gap-2 text-sm text-gray-700 font-medium cursor-pointer">
                 <input
                   type="checkbox"
+                  className="w-4 h-4 bg-white border-2 border-gray-400 rounded focus:ring-2 focus:ring-blue-500 checked:bg-blue-600 checked:border-blue-600 appearance-none relative checked:after:content-['✓'] checked:after:absolute checked:after:inset-0 checked:after:flex checked:after:items-center checked:after:justify-center checked:after:text-white checked:after:text-xs checked:after:font-bold"
                   checked={selected.length === filteredPostings.length && filteredPostings.length > 0}
                   onChange={handleSelectAllToggle}
-                  className="w-4 h-4 bg-white border-2 border-gray-400 rounded focus:ring-2 focus:ring-blue-500 checked:bg-blue-600 checked:border-blue-600 appearance-none relative checked:after:content-['✓'] checked:after:absolute checked:after:inset-0 checked:after:flex checked:after:items-center checked:after:justify-center checked:after:text-white checked:after:text-xs checked:after:font-bold"
                 />
                 Select All
               </label>
@@ -832,11 +937,11 @@ export default function Positions() {
               {currentTab === "published" && (
                 <Tabs
                   value={publishedSubTab}
-                  onValueChange={(value) => setPublishedSubTab(value as "all" | "internal" | "external")}
+                  onValueChange={(value) => setPublishedSubTab(value as "all" | "Internal" | "External")}
                   className="w-auto"
                 >
                   <TabsList className="flex gap-4 bg-transparent border-b-0 ml-4">
-                    {["all", "internal", "external"].map((subtab) => (
+                    {["all", "Internal", "External"].map((subtab) => (
                       <TabsTrigger
                         key={subtab}
                         value={subtab}
@@ -855,10 +960,15 @@ export default function Positions() {
             {selected.length > 0 && (
               <TooltipProvider>
                 <div className="flex items-center gap-2">
-                  {currentTab === "drafts" && (
+                  {(currentTab === "drafts" || currentTab === "closed" || currentTab === "archive") && (
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Button variant="ghost" size="sm" className="text-red-600 hover:bg-red-50">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-600 hover:bg-red-50"
+                          onClick={() => setShowMoveToDeletedDialog(true)}
+                        >
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </TooltipTrigger>
@@ -869,20 +979,33 @@ export default function Positions() {
                   )}
 
                   {currentTab === "on-hold" && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-blue-600 border-blue-600 hover:bg-blue-50 bg-transparent"
-                    >
-                      Open
-                    </Button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-blue-600 hover:bg-blue-50"
+                          onClick={() => setShowOpenPositionsDialog(true)}
+                        >
+                          <Unlock className="w-4 h-4" /> {/* Open-lock icon */}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Open</p>
+                      </TooltipContent>
+                    </Tooltip>
                   )}
 
                   {currentTab === "published" && (
                     <>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Button variant="ghost" size="sm" className="text-gray-600 hover:bg-gray-50">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-gray-600 hover:bg-gray-50"
+                            onClick={() => setShowArchivePositionsDialog(true)}
+                          >
                             <Archive className="w-4 h-4" />
                           </Button>
                         </TooltipTrigger>
@@ -892,7 +1015,12 @@ export default function Positions() {
                       </Tooltip>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Button variant="ghost" size="sm" className="text-gray-600 hover:bg-gray-50">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-gray-600 hover:bg-gray-50"
+                            onClick={() => setShowHoldPositionsDialog(true)}
+                          >
                             <Pause className="w-4 h-4" />
                           </Button>
                         </TooltipTrigger>
@@ -903,49 +1031,34 @@ export default function Positions() {
                     </>
                   )}
 
-                  {currentTab === "closed" && (
+                  {currentTab === "archive" && (
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Button variant="ghost" size="sm" className="text-red-600 hover:bg-red-50">
-                          <Trash2 className="w-4 h-4" />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-blue-600 hover:bg-blue-50"
+                          onClick={() => setShowRestorePositionsDialog(true)}
+                        >
+                          <RotateCcw className="w-4 h-4" />
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Delete</p>
+                        <p>Restore</p>
                       </TooltipContent>
                     </Tooltip>
-                  )}
-
-                  {currentTab === "archive" && (
-                    <>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button variant="ghost" size="sm" className="text-blue-600 hover:bg-blue-50">
-                            <RotateCcw className="w-4 h-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Restore</p>
-                        </TooltipContent>
-                      </Tooltip>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button variant="ghost" size="sm" className="text-red-600 hover:bg-red-50">
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Delete</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </>
                   )}
 
                   {currentTab === "deleted" && (
                     <>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Button variant="ghost" size="sm" className="text-blue-600 hover:bg-blue-50">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-blue-600 hover:bg-blue-50"
+                            onClick={() => setShowRestorePositionsDialog(true)} // Restore from deleted to on-hold
+                          >
                             <RotateCcw className="w-4 h-4" />
                           </Button>
                         </TooltipTrigger>
@@ -955,7 +1068,12 @@ export default function Positions() {
                       </Tooltip>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Button variant="ghost" size="sm" className="text-red-600 hover:bg-red-50" onClick={() => setShowDeleteConfirmDialog(true)}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-600 hover:bg-red-50"
+                            onClick={() => setShowDeletePermanentlyDialog(true)}
+                          >
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </TooltipTrigger>
@@ -998,7 +1116,7 @@ export default function Positions() {
                           )}
                           {currentTab === "published" && posting.type && (
                             <Badge
-                              className={`text-xs ${posting.type === "internal" ? "bg-blue-100 text-blue-700" : "bg-green-100 text-green-700"}`}
+                              className={`text-xs ${posting.type === "Internal" ? "bg-blue-100 text-blue-700" : "bg-green-100 text-green-700"}`}
                             >
                               {posting.type}
                             </Badge>
@@ -1029,7 +1147,7 @@ export default function Positions() {
 
       <ShareModal open={shareOpen} onOpenChange={setShareOpen} link={selectedLink} />
 
-      {/* Cancel Request Dialog */}
+      {/* Cancel Request Dialog (Existing) */}
       <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -1047,8 +1165,8 @@ export default function Positions() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={showDeleteConfirmDialog} onOpenChange={setShowDeleteConfirmDialog}>
+      {/* Delete Permanently Dialog (Existing, now used for 'deleted' tab's Trash2) */}
+      <Dialog open={showDeletePermanentlyDialog} onOpenChange={setShowDeletePermanentlyDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-lg font-medium text-gray-800">Delete Permanently</DialogTitle>
@@ -1057,7 +1175,7 @@ export default function Positions() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="mt-4 flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setShowDeleteConfirmDialog(false)}>
+            <Button variant="outline" onClick={() => setShowDeletePermanentlyDialog(false)}>
               No
             </Button>
             <Button variant="destructive" onClick={handleDeletePermanently}>
@@ -1066,6 +1184,108 @@ export default function Positions() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* New Dialogs */}
+
+      {/* Move to Deleted Dialog (for Drafts, Closed, Archive Trash2) */}
+      <Dialog open={showMoveToDeletedDialog} onOpenChange={setShowMoveToDeletedDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-medium text-gray-800">Move to Deleted</DialogTitle>
+            <DialogDescription className="text-sm text-gray-600">
+              Do you want to send the selected position/s to the Deleted tab?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4 flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setShowMoveToDeletedDialog(false)}>
+              No
+            </Button>
+            <Button variant="destructive" onClick={handleMoveToDeleted}>
+              Yes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Open Positions Dialog (for On Hold tab) */}
+      <Dialog open={showOpenPositionsDialog} onOpenChange={setShowOpenPositionsDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-medium text-gray-800">Open Positions</DialogTitle>
+            <DialogDescription className="text-sm text-gray-600">
+              Do you want to open this position/s?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4 flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setShowOpenPositionsDialog(false)}>
+              No
+            </Button>
+            <Button variant="default" onClick={handleOpenPositions}>
+              Yes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Archive Positions Dialog (for Published tab) */}
+      <Dialog open={showArchivePositionsDialog} onOpenChange={setShowArchivePositionsDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-medium text-gray-800">Archive Positions</DialogTitle>
+            <DialogDescription className="text-sm text-gray-600">
+              Do you want to send the selected position/s to the Archive Tab?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4 flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setShowArchivePositionsDialog(false)}>
+              No
+            </Button>
+            <Button variant="destructive" onClick={handleArchivePositions}>
+              Yes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Hold Positions Dialog (for Published tab) */}
+      <Dialog open={showHoldPositionsDialog} onOpenChange={setShowHoldPositionsDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-medium text-gray-800">Hold Positions</DialogTitle>
+            <DialogDescription className="text-sm text-gray-600">
+              Do you want to send the selected position/s to the On Hold Tab?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4 flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setShowHoldPositionsDialog(false)}>
+              No
+            </Button>
+            <Button variant="default" onClick={handleHoldPositions}>
+              Yes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Restore Positions Dialog (for Archive and Deleted tabs) */}
+      <Dialog open={showRestorePositionsDialog} onOpenChange={setShowRestorePositionsDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-medium text-gray-800">Restore Positions</DialogTitle>
+            <DialogDescription className="text-sm text-gray-600">
+              Do you want to restore the selected position/s?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4 flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setShowRestorePositionsDialog(false)}>
+              No
+            </Button>
+            <Button variant="default" onClick={handleRestorePositions}>
+              Yes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
-  )
+  );
 }
