@@ -187,7 +187,7 @@ export function FullExamResultPage() {
   const totalScore = mcqScore + codingScore + checkboxScore
   const percentage = Math.round((totalScore / 50) * 100)
  
-  const backTo = `/applicants/job/${jobtitle}/initialinterview`
+  const backTo = `/job/${jobtitle}/initialinterview`
 
       
      

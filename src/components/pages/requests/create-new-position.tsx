@@ -3453,7 +3453,7 @@ export default function CreateNewPosition() {
       {/* Stage Popup Modal */}
       {showStagePopup && currentStageId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setShowStagePopup(false)} />
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowStagePopup(false)} />
           <div className="relative bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b shadow-sm bg-white sticky top-0 z-10">
@@ -3832,7 +3832,7 @@ export default function CreateNewPosition() {
       {/* Assessment Popup Modal with higher z-index */}
       {showAssessmentPopup && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center">
-          <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setShowAssessmentPopup(false)} />
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowAssessmentPopup(false)} />
           <div className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
@@ -3925,7 +3925,7 @@ export default function CreateNewPosition() {
       {/* Question Modal for Step 5 */}
       {showAddQuestionModal && (
         <div className="fixed inset-0 z-60 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setShowAddQuestionModal(false)} />
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowAddQuestionModal(false)} />
           <div className="relative bg-white rounded-lg shadow-xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
@@ -4291,7 +4291,7 @@ export default function CreateNewPosition() {
       {/* Non-negotiable Modal */}
       {showNonNegotiableModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setShowNonNegotiableModal(false)} />
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowNonNegotiableModal(false)} />
           <div className="relative bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
@@ -4433,7 +4433,7 @@ export default function CreateNewPosition() {
       {/* Template Confirmation Modal */}
       {showTemplateConfirmModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black bg-opacity-50" onClick={handleTemplateCancel} />
+          <div className="absolute inset-0 bg-black/50" onClick={handleTemplateCancel} />
           <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
@@ -4473,7 +4473,7 @@ export default function CreateNewPosition() {
       {/* Step 3 Questionnaire Modal */}
       {showQuestionnaireModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setShowQuestionnaireModal(false)} />
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowQuestionnaireModal(false)} />
           <div className="relative bg-white rounded-lg shadow-xl max-w-6xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
@@ -4770,7 +4770,7 @@ export default function CreateNewPosition() {
       {showAddQuestionModalStep3 && (
         <div className="fixed inset-0 z-60 flex items-center justify-center">
           <div
-            className="absolute inset-0 bg-black bg-opacity-50"
+            className="absolute inset-0 bg-black/50"
             onClick={() => setShowAddQuestionModalStep3(false)}
           />
           <div className="relative bg-white rounded-lg shadow-xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
@@ -5161,7 +5161,7 @@ export default function CreateNewPosition() {
       {/* Preview Modal */}
       {showPreview && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setShowPreview(false)} />
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowPreview(false)} />
           <div className="relative bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
@@ -5668,7 +5668,7 @@ export default function CreateNewPosition() {
       {/* Pool Applicants Before Publishing Popup */}
       {showPoolApplicantsPopup && (
         <div className="fixed inset-0 z-[80] flex items-center justify-center">
-          <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setShowPoolApplicantsPopup(false)} />
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowPoolApplicantsPopup(false)} />
           <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold text-gray-800">Pool Applicants Before Publishing</h3>

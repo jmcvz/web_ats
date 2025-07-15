@@ -134,7 +134,7 @@ export default function ExamForm() {
             variant="outline"
             size="sm"
             className="flex items-center gap-2"
-            onClick={() => navigate(`/applicants/job/${jobtitle}/assessments`)}
+            onClick={() => navigate(`/job/${jobtitle}/assessments`)}
           >
             <ArrowLeft className="h-4 w-4" />
             Back
