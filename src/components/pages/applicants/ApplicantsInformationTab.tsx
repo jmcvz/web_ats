@@ -651,7 +651,7 @@ export default function ApplicantTracker() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => navigate(`/applicants/${name || "john-doe"}/IEForm`)}
+                        onClick={() => navigate(`/job/list/applicants/${name || "john-doe"}/IEForm`)}
                         className="flex items-center gap-2 text-blue-600 hover:bg-blue-50"
                       >
                         <Scaling className="h-4 w-4" />

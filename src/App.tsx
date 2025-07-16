@@ -38,7 +38,7 @@ export default function App() {
 
       {/* Main Tabs */}
       <Route path="/dashboard/*" element={<Page />} />
-      <Route path="/applicants/" element={<Applicants />} />
+      <Route path="/job/list/applicants/" element={<Applicants />} />
       <Route path="/positions/*" element={<Positions />} />
       <Route path="/library/*" element={<Library />} />
       <Route path="/requests/*" element={<Requests />} />
@@ -48,13 +48,13 @@ export default function App() {
       <Route path="/job/:jobtitle" element={<LeadDeveloper />} />
       <Route path="/ApplicantInformation/" element={<ApplicantInformationTab />} />
       <Route path="/ieform/*" element={<InterviewEvaluationForm/>} />
-      <Route path="/applicants/:name/IEForm" element ={<IEForm2/>} />
-      <Route path="/applicants/:id/IEForm" element={<IEForm2 />} />
+      <Route path="/job/list/applicants/:name/IEForm" element ={<IEForm2/>} />
+      <Route path="/job/list/applicants/:id/IEForm" element={<IEForm2 />} />
       <Route path="/job/:jobtitle/:jobstage" element={<JobStageTemplate />} />
-      <Route path="/applicants/:name" element={<ApplicantInformationTab />} />
+      <Route path="/job/list/applicants/:name" element={<ApplicantInformationTab />} />
       <Route path="/job/stage/:customStage" element={<CustomStages />} />
       <Route path="/job/:jobtitle/exam-form/:applicantId" element={<ExamForm />} />
-      <Route path="/applicants/pool"  element={<PoolApplicants/>} />
+      <Route path="/job/list/applicants/pool"  element={<PoolApplicants/>} />
       <Route path="/job/:jobtitle/applicant/:applicantId/full-result" element={<FullExamResultPage />} />
 
       {/* Applicant View */}
