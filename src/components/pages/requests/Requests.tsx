@@ -262,30 +262,39 @@ export default function Requests() {
         <DropdownMenuContent align="end" className="w-80">
           <div className="p-3">
             <h4 className="font-medium text-sm mb-3">Approval Pipeline</h4>
-            <div className="space-y-2">
-              {pipeline.map((step, index) => (
-                <div key={index} className="flex items-center gap-3">
-                  <div className="flex-shrink-0">
-                    {step.status === "approved" ? (
-                      <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
-                        <Check className="w-3 h-3 text-white" />
+            <div className="relative">
+              {" "}
+              {/* Add relative positioning for the line */}
+              <div className="absolute left-[9px] top-0 bottom-0 w-px bg-gray-400"></div> {/* Vertical gray line */}
+              <div className="space-y-2">
+                {pipeline.map((step, index) => (
+                  <div key={index} className="flex items-center gap-3">
+                    <div className="flex-shrink-0 z-10 bg-white rounded-full">
+                      {" "}
+                      {/* Add z-10 and bg-white to mask the line */}
+                      {step.status === "approved" ? (
+                        <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
+                          <Check className="w-3 h-3 text-white" />
+                        </div>
+                      ) : (
+                        <div className="w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center">
+                          <Clock className="w-3 h-3 text-white" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-xs">
+                        {" "}
+                        {/* Change text size to xs */}
+                        <span className="font-medium">
+                          {step.status === "approved" ? "Approved by" : "Pending Approval by"}
+                        </span>
+                        <span className="ml-1">{step.name}</span>
                       </div>
-                    ) : (
-                      <div className="w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center">
-                        <Clock className="w-3 h-3 text-white" />
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-sm">
-                      <span className="font-medium">
-                        {step.status === "approved" ? "Approved by" : "Pending Approval by"}
-                      </span>
-                      <span className="ml-1">{step.name}</span>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </DropdownMenuContent>
@@ -410,7 +419,7 @@ export default function Requests() {
                     </td>
                     <td className="px-4 py-3 font-medium">{item.title}</td>
                     <td className="px-4 py-3">
-                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColors[item.status]}`}>
+                      <span className={`text-xs px-2 py-1 whitespace-nowrap rounded-full font-medium ${statusColors[item.status]}`}>
                         {item.status}
                       </span>
                     </td>
