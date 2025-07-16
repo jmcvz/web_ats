@@ -362,20 +362,18 @@ export default function Requests() {
             </div>
 
             {/* Action buttons - appear when items are selected */}
-            {selected.length > 0 && (
+            {selected.length > 0 && ( // Changed condition to simply check if any item is selected
               <TooltipProvider>
                 <div className="flex items-center gap-2">
                   {/* Show Cancel button if any selected items are Pending */}
-                  {selected.some((idx) => filtered[idx]?.status === "Pending") && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-red-600 border-red-600 hover:bg-red-50 bg-transparent"
-                      onClick={() => setShowCancelDialog(true)}
-                    >
-                      Cancel
-                    </Button>
-                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-red-600 border-red-600 hover:bg-red-50 bg-transparent"
+                    onClick={() => setShowCancelDialog(true)}
+                  >
+                    Cancel
+                  </Button>
 
                   <Tooltip>
                     <TooltipTrigger asChild>
