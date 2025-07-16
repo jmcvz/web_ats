@@ -1,36 +1,52 @@
 "use client"
 
 import type React from "react"
-
-import { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom" // Import useNavigate
+import { useState, useEffect, useRef } from "react" // Import useRef
+import { useNavigate } from "react-router-dom"
 import { Navbar } from "@/components/reusables/Navbar"
 import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button" // Ensure Button is correctly imported
-import { Textarea } from "@/components/ui/textarea" // Ensure Textarea is correctly imported
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select" // Ensure all Select components are correctly imported
-import { User2, Sparkles, Wand2, Plus } from "lucide-react" // Ensure all Lucide React icons are correctly imported
+import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
+import { User2, Sparkles, Wand2, Plus } from "lucide-react"
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from "@/components/ui/dialog" // Import Dialog components
+} from "@/components/ui/dialog"
 
-// Type definitions
-interface InputFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  label: string
+// Explicitly define nested types for clarity and robustness
+interface AssessmentTypes {
+  technical: boolean
+  language: boolean
+  cognitive: boolean
+  personality: boolean
+  behavioral: boolean
+  cultural: boolean
 }
 
+interface HardwareRequired {
+  desktop: boolean
+  handset: boolean
+  headset: boolean
+  laptop: boolean
+}
+
+interface SoftwareRequired {
+  [key: string]: boolean
+}
+
+// Type definitions for form data
 interface FormData {
   // Step 1 - Position Information
   jobTitle: string
   targetStartDate: string
   numberOfVacancies: string
   reasonForPosting: string
+  otherReasonForPosting: string
 
   // Step 1 - Department Information
   businessUnit: string
@@ -44,7 +60,8 @@ interface FormData {
   category: string
   position: string
   workingSite: string
-  workSchedule: string
+  workScheduleFrom: string // Updated to store 'from' time
+  workScheduleTo: string // Added to store 'to' time
 
   // Step 2 - Job Description
   jobDescription: string
@@ -52,29 +69,24 @@ interface FormData {
   qualifications: string
   nonNegotiables: string
   salaryBudget: string
+  isSalaryRange: boolean
+  minSalary: string
+  maxSalary: string
 
   // Step 3 - Assessments
   assessmentRequired: string
-  assessmentTypes: {
-    technical: boolean
-    language: boolean
-    cognitive: boolean
-    personality: boolean
-    behavioral: boolean
-    cultural: boolean
-  }
+  assessmentTypes: AssessmentTypes
   otherAssessment: string
-  hardwareRequired: {
-    desktop: boolean
-    handset: boolean
-    headset: boolean
-    laptop: boolean
-  }
-  softwareRequired: {
-    [key: string]: boolean
-  }
+  hardwareRequired: HardwareRequired
+  softwareRequired: SoftwareRequired
 }
 
+// Props for InputField
+interface InputFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  label: string
+}
+
+// Props for step components
 interface StepProps {
   step: number
   formData: FormData
@@ -99,12 +111,13 @@ interface Step04Props {
   goToPreviousStep: () => void
   step: number
   formData: FormData
+  handleSubmit: () => void
 }
 
 const InputField = ({ label, ...props }: InputFieldProps) => (
-  <div>
+  <div className="w-full">
     <label className="text-sm font-medium text-gray-700 mb-1 block">{label}</label>
-    <Input {...props} />
+    <Input className="w-full" {...props} />
   </div>
 )
 
@@ -180,189 +193,189 @@ const CustomCheckbox = ({
   </label>
 )
 
-export default function PRF() {
-  const navigate = useNavigate() // Initialize useNavigate
-  const [step, setStep] = useState(1)
-  const [formData, setFormData] = useState<FormData>({
-    // Step 1 - Position Information
-    jobTitle: "",
-    targetStartDate: "",
-    numberOfVacancies: "",
-    reasonForPosting: "",
+// New TimePicker Component
+interface TimePickerProps {
+  label: string // Used for dialog title
+  currentTime: string // Format "HH:MM" (24-hour)
+  onChange: (time: string) => void
+}
 
-    // Step 1 - Department Information
-    businessUnit: "",
-    departmentName: "",
-    interviewLevels: 4,
-    immediateSupervisor: "",
+function TimePicker({ label, currentTime, onChange }: TimePickerProps) {
+  const [isOpen, setIsOpen] = useState(false)
+  const [tempHour, setTempHour] = useState(12) // 1-12 for display
+  const [tempMinute, setTempMinute] = useState(0)
+  const [tempAmPm, setTempAmPm] = useState<"AM" | "PM">("AM")
 
-    // Step 2 - Job Details
-    contractType: "",
-    workArrangement: "",
-    category: "",
-    position: "",
-    workingSite: "",
-    workSchedule: "",
-
-    // Step 2 - Job Description
-    jobDescription: "",
-    responsibilities: "",
-    qualifications: "",
-    nonNegotiables: "",
-    salaryBudget: "",
-
-    // Step 3 - Assessments
-    assessmentRequired: "Yes",
-    assessmentTypes: {
-      technical: true,
-      language: true,
-      cognitive: false,
-      personality: true,
-      behavioral: false,
-      cultural: false,
-    },
-    otherAssessment: "Psychological Test",
-    hardwareRequired: {
-      desktop: false,
-      handset: false,
-      headset: true,
-      laptop: true,
-    },
-    softwareRequired: {
-      "Adobe Photoshop": true,
-      "Google Chrome": false,
-      "MS Teams": false,
-      "Open VPN": false,
-      WinRAR: false,
-      ZOHO: false,
-      Email: false,
-      "Microsoft Office": true,
-      "Nitro Pro 8 PDF": false,
-      Viber: true,
-      Xlite: false,
-      Zoom: false,
-    },
-  })
-  // New state to track the maximum step visited
-  const [maxStepVisited, setMaxStepVisited] = useState(1);
-  // State for the cancel confirmation dialog
-  const [showCancelConfirmDialog, setShowCancelConfirmDialog] = useState(false);
+  const hourRefs = useRef<(HTMLDivElement | null)[]>([])
+  const minuteRefs = useRef<(HTMLDivElement | null)[]>([])
 
   useEffect(() => {
-    document.title = "Personnel Requisition Form"
-  }, [])
+    if (currentTime) {
+      const [h, m] = currentTime.split(":").map(Number)
+      setTempMinute(m)
+      if (h === 0) {
+        // 00:XX (12 AM)
+        setTempHour(12)
+        setTempAmPm("AM")
+      } else if (h === 12) {
+        // 12:XX (12 PM)
+        setTempHour(12)
+        setTempAmPm("PM")
+      } else if (h > 12) {
+        // 13:XX - 23:XX (1 PM - 11 PM)
+        setTempHour(h - 12)
+        setTempAmPm("PM")
+      } else {
+        // 01:XX - 11:XX (1 AM - 11 AM)
+        setTempHour(h)
+        setTempAmPm("AM")
+      }
+    } else {
+      setTempHour(12) // Default to 12
+      setTempMinute(0)
+      setTempAmPm("AM")
+    }
+  }, [currentTime])
 
-  const goToNextStep = () => {
-    setStep((prev) => {
-      const nextStep = Math.min(prev + 1, 4);
-      setMaxStepVisited((currentMax) => Math.max(currentMax, nextStep)); // Update maxStepVisited
-      return nextStep;
-    });
-  };
-  const goToPreviousStep = () => setStep((prev) => Math.max(prev - 1, 1))
+  useEffect(() => {
+    if (isOpen) {
+      // Scroll to selected hour and minute when dialog opens
+      hourRefs.current[tempHour]?.scrollIntoView({ behavior: "smooth", block: "center" })
+      minuteRefs.current[tempMinute]?.scrollIntoView({ behavior: "smooth", block: "center" })
+    }
+  }, [isOpen, tempHour, tempMinute])
 
-  const updateFormData = (updates: Partial<FormData>) => {
-    setFormData((prev) => ({ ...prev, ...updates }))
+  const handleSave = () => {
+    let finalHour24 = tempHour
+    if (tempAmPm === "PM" && tempHour !== 12) {
+      finalHour24 += 12
+    } else if (tempAmPm === "AM" && tempHour === 12) {
+      finalHour24 = 0 // 12 AM is 00 in 24-hour format
+    }
+    const formattedHour = String(finalHour24).padStart(2, "0")
+    const formattedMinute = String(tempMinute).padStart(2, "0")
+    onChange(`${formattedHour}:${formattedMinute}`)
+    setIsOpen(false)
   }
 
-  const handleCancelRequest = () => {
-    setShowCancelConfirmDialog(true);
-  };
+  const handleCancel = () => {
+    if (currentTime) {
+      const [h, m] = currentTime.split(":").map(Number)
+      setTempMinute(m)
+      if (h === 0) {
+        setTempHour(12)
+        setTempAmPm("AM")
+      } else if (h === 12) {
+        setTempHour(12)
+        setTempAmPm("PM")
+      } else if (h > 12) {
+        setTempHour(h - 12)
+        setTempAmPm("PM")
+      } else {
+        setTempHour(h)
+        setTempAmPm("AM")
+      }
+    } else {
+      setTempHour(12)
+      setTempMinute(0)
+      setTempAmPm("AM")
+    }
+    setIsOpen(false)
+  }
 
-  const handleConfirmCancel = () => {
-    setShowCancelConfirmDialog(false);
-    navigate("/positions");
-  };
+  const formatTimeForDisplay = (time24: string) => {
+    if (!time24) return `Select ${label}`
+    const [h, m] = time24.split(":").map(Number)
+    const period = h >= 12 ? "PM" : "AM"
+    const hour12 = h % 12 === 0 ? 12 : h % 12
+    return `${String(hour12).padStart(2, "0")}:${String(m).padStart(2, "0")} ${period}`
+  }
 
-  const handleSaveAsDraft = () => {
-    // In a real application, you would send formData to your backend or a global state management system
-    // to save it as a draft. For this example, we'll just log it.
-    console.log("Saving form data as draft:", formData);
-    setShowCancelConfirmDialog(false);
-    navigate("/positions"); // Navigate to positions after "saving"
-  };
+  const displayValue = formatTimeForDisplay(currentTime)
 
   return (
-    <>
-      <Navbar />
-      <div className="min-h-screen bg-white p-6 pt-[100px]">
-        <div className="mx-auto max-w-7xl space-y-4">
-          <h1 className="text-lg font-bold text-gray-800 mb-6">Personnel Requisition Form</h1>
-          <div className="flex justify-between items-center mb-4">
-            {/* Modified to open dialog */}
-            <a href="#" className="text-[#0056D2] text-sm hover:underline" onClick={handleCancelRequest}>
-              &larr; Cancel Request
-            </a>
-          </div>
-          <div className="flex space-x-0 border border-gray-300 rounded-md overflow-hidden mb-8">
-            {["Step 01", "Step 02", "Step 03", "Step 04"].map((label, i) => (
-              <div
-                key={i}
-                // Add conditional clickability based on maxStepVisited
-                className={`flex-1 text-center py-2 text-sm font-semibold relative ${
-                  i + 1 === step ? "bg-[#0056D2] text-white" : "bg-white text-gray-500"
-                } ${i + 1 <= maxStepVisited && i + 1 !== step ? "cursor-pointer hover:bg-gray-100" : ""}`}
-                onClick={() => {
-                  // Allow clicking on steps that have been visited, but not the current step
-                  if (i + 1 <= maxStepVisited && i + 1 !== step) {
-                    setStep(i + 1)
-                  }
-                }}
-              >
-                {label}
-                {i < 3 && <span className="absolute right-0 top-0 h-full w-px bg-gray-300" />}
-              </div>
-            ))}
-          </div>
+    <div className="w-full">
+      <Button
+        variant="outline"
+        className="w-full justify-start text-left font-normal text-gray-700 bg-transparent"
+        onClick={() => setIsOpen(true)}
+        aria-label={`Select ${label} time`}
+      >
+        {displayValue}
+      </Button>
 
-          {step === 1 && (
-            <Step01 goToNextStep={goToNextStep} step={step} formData={formData} updateFormData={updateFormData} />
-          )}
-          {step === 2 && (
-            <Step02
-              goToNextStep={goToNextStep}
-              goToPreviousStep={goToPreviousStep}
-              step={step}
-              formData={formData}
-              updateFormData={updateFormData}
-            />
-          )}
-          {step === 3 && (
-            <Step03
-              goToNextStep={goToNextStep}
-              goToPreviousStep={goToPreviousStep}
-              step={step}
-              formData={formData}
-              updateFormData={updateFormData}
-            />
-          )}
-          {step === 4 && <Step04 goToPreviousStep={goToPreviousStep} step={step} formData={formData} />}
-        </div>
-      </div>
-
-      {/* Cancel Confirmation Dialog */}
-      <Dialog open={showCancelConfirmDialog} onOpenChange={setShowCancelConfirmDialog}>
-        <DialogContent className="sm:max-w-md">
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent className="sm:max-w-[480px]">
           <DialogHeader>
-            <DialogTitle className="text-lg font-medium text-gray-800">Cancel Request</DialogTitle>
-            <DialogDescription className="text-sm text-gray-600">
-              Do you want to cancel the request form for this position?
-            </DialogDescription>
+            <DialogTitle>Select {label}</DialogTitle>
           </DialogHeader>
-          <DialogFooter className="mt-4 flex justify-end gap-2">
-            <Button variant="outline" onClick={handleSaveAsDraft}>
-              Save as Draft
+          <div className="grid grid-cols-3 gap-4 py-4">
+            {/* Hours */}
+            <div className="flex flex-col items-center">
+              <h3 className="text-sm font-medium mb-2">Hour</h3>
+              <div className="h-48 overflow-y-auto w-20 border rounded-md p-1 text-center scrollbar-hide">
+                {Array.from({ length: 12 }, (_, i) => {
+                  const hourValue = i === 0 ? 12 : i // Display 12 for index 0, then 1-11
+                  return (
+                    <div
+                      key={hourValue} // Use hourValue as key
+                      ref={(el) => (hourRefs.current[hourValue] = el)}
+                      className={`py-1 cursor-pointer rounded-sm ${
+                        tempHour === hourValue ? "bg-[#0056D2] text-white" : "hover:bg-gray-100"
+                      }`}
+                      onClick={() => setTempHour(hourValue)}
+                    >
+                      {String(hourValue).padStart(2, "0")}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+            {/* Minutes */}
+            <div className="flex flex-col items-center">
+              <h3 className="text-sm font-medium mb-2">Minute</h3>
+              <div className="h-48 overflow-y-auto w-20 border rounded-md p-1 text-center scrollbar-hide">
+                {Array.from({ length: 60 }, (_, i) => (
+                  <div
+                    key={i}
+                    ref={(el) => (minuteRefs.current[i] = el)}
+                    className={`py-1 cursor-pointer rounded-sm ${
+                      tempMinute === i ? "bg-[#0056D2] text-white" : "hover:bg-gray-100"
+                    }`}
+                    onClick={() => setTempMinute(i)}
+                  >
+                    {String(i).padStart(2, "0")}
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* AM/PM */}
+            <div className="flex flex-col items-center">
+              <h3 className="text-sm font-medium mb-2">AM/PM</h3>
+              <div className="h-48 overflow-y-auto w-20 border rounded-md p-1 text-center scrollbar-hide">
+                {["AM", "PM"].map((period) => (
+                  <div
+                    key={period}
+                    className={`py-1 cursor-pointer rounded-sm ${
+                      tempAmPm === period ? "bg-[#0056D2] text-white" : "hover:bg-gray-100"
+                    }`}
+                    onClick={() => setTempAmPm(period as "AM" | "PM")}
+                  >
+                    {period}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCancel}>
+              Cancel
             </Button>
-            <Button variant="outline" onClick={() => setShowCancelConfirmDialog(false)}>
-              No
-            </Button>
-            <Button variant="destructive" onClick={handleConfirmCancel}>
-              Yes
-            </Button>
+            <Button onClick={handleSave}>Set Time</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   )
 }
 
@@ -371,8 +384,8 @@ function PreviewInfo({ step, formData }: StepProps) {
 
   // Get selected assessment types
   const selectedAssessments = Object.entries(formData.assessmentTypes)
-    .filter(([_, selected]) => selected)
-    .map(([type, _]) => {
+    .filter(([, selected]) => selected)
+    .map(([type]) => {
       const typeMap: { [key: string]: string } = {
         technical: "Technical Test",
         language: "Language Proficiency Test",
@@ -386,13 +399,22 @@ function PreviewInfo({ step, formData }: StepProps) {
 
   // Get selected hardware
   const selectedHardware = Object.entries(formData.hardwareRequired)
-    .filter(([_, selected]) => selected)
-    .map(([hardware, _]) => hardware.charAt(0).toUpperCase() + hardware.slice(1))
+    .filter(([, selected]) => selected)
+    .map(([hardware]) => hardware.charAt(0).toUpperCase() + hardware.slice(1))
 
   // Get selected software
   const selectedSoftware = Object.entries(formData.softwareRequired)
-    .filter(([_, selected]) => selected)
-    .map(([software, _]) => software)
+    .filter(([, selected]) => selected)
+    .map(([software]) => software)
+
+  const displaySalary = formData.isSalaryRange
+    ? `${formData.minSalary || "N/A"} - ${formData.maxSalary || "N/A"}`
+    : formData.salaryBudget || "Not specified"
+
+  const displayWorkSchedule =
+    formData.workScheduleFrom && formData.workScheduleTo
+      ? `${formData.workScheduleFrom} - ${formData.workScheduleTo}`
+      : "Not specified"
 
   return (
     <div className="border rounded-md p-4 bg-white text-sm h-fit sticky top-28 space-y-4">
@@ -413,7 +435,10 @@ function PreviewInfo({ step, formData }: StepProps) {
               <strong>Number of Vacancies:</strong> {formData.numberOfVacancies || "Not specified"}
             </p>
             <p>
-              <strong>Reason for Posting Position:</strong> {formData.reasonForPosting || "Not specified"}
+              <strong>Reason for Posting Position:</strong>{" "}
+              {formData.reasonForPosting === "Other"
+                ? formData.otherReasonForPosting
+                : formData.reasonForPosting || "Not specified"}
             </p>
           </div>
           {/* DEPARTMENT INFORMATION */}
@@ -457,7 +482,7 @@ function PreviewInfo({ step, formData }: StepProps) {
                   <strong>Working Site:</strong> {formData.workingSite || "Not specified"}
                 </p>
                 <p>
-                  <strong>Working Schedule:</strong> {formData.workSchedule || "Not specified"}
+                  <strong>Working Schedule:</strong> {displayWorkSchedule}
                 </p>
               </div>
               {/* JOB DESCRIPTION */}
@@ -508,7 +533,36 @@ function PreviewInfo({ step, formData }: StepProps) {
                     <h2 className="text-[#0056D2] font-bold text-sm border-l-4 border-[#0056D2] pl-2 uppercase">
                       SALARY BUDGET
                     </h2>
-                    <p className="font-semibold text-gray-800">{formData.salaryBudget || "Not specified"}</p>
+                    <p className="font-semibold text-gray-800">{displaySalary}</p>
+                  </div>
+                  {/* ASSET REQUEST */}
+                  <div className="space-y-2">
+                    <h2 className="text-[#0056D2] font-bold text-sm border-l-4 border-[#0056D2] pl-2 uppercase">
+                      ASSET REQUEST
+                    </h2>
+                    {selectedHardware.length > 0 && (
+                      <>
+                        <p className="font-semibold text-sm">Hardware Required:</p>
+                        <ul className="list-disc list-inside space-y-1">
+                          {selectedHardware.map((hardware, index) => (
+                            <li key={index}>{hardware}</li>
+                          ))}
+                        </ul>
+                      </>
+                    )}
+                    {selectedSoftware.length > 0 && (
+                      <>
+                        <p className="font-semibold text-sm mt-2">Software Required:</p>
+                        <ul className="list-disc list-inside space-y-1">
+                          {selectedSoftware.map((software, index) => (
+                            <li key={index}>{software}</li>
+                          ))}
+                        </ul>
+                      </>
+                    )}
+                    {selectedHardware.length === 0 && selectedSoftware.length === 0 && (
+                      <p className="text-sm text-gray-500">No hardware or software specified.</p>
+                    )}
                   </div>
                 </>
               )}
@@ -577,7 +631,7 @@ function PreviewInfo({ step, formData }: StepProps) {
                     <label className="text-sm font-semibold block mb-1">Budget Allocation</label>
                     <input
                       type="text"
-                      value={formData.salaryBudget || "₱ 20,000 - 25,000"}
+                      value={displaySalary}
                       disabled
                       className="w-full border border-gray-300 rounded px-3 py-1.5 text-sm text-gray-500 bg-white"
                     />
@@ -616,8 +670,18 @@ function PreviewInfo({ step, formData }: StepProps) {
 
 function Step01({ goToNextStep, step, formData, updateFormData }: Step01Props) {
   const handleInterviewLevelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = Number.parseInt(e.target.value)
-    updateFormData({ interviewLevels: Number.isNaN(value) ? 0 : value })
+    // Remove leading zeros and parse as integer
+    const value = e.target.value.replace(/^0+/, "")
+    const parsedValue = Number.parseInt(value)
+    // Ensure value is not negative, default to 0 if NaN (empty string)
+    updateFormData({ interviewLevels: Number.isNaN(parsedValue) ? 0 : Math.max(0, parsedValue) })
+  }
+
+  const handleReasonForPostingChange = (value: string) => {
+    updateFormData({
+      reasonForPosting: value,
+      otherReasonForPosting: value === "Other" ? "" : formData.otherReasonForPosting,
+    })
   }
 
   return (
@@ -646,14 +710,34 @@ function Step01({ goToNextStep, step, formData, updateFormData }: Step01Props) {
               type="number"
               placeholder="e.g. 3"
               value={formData.numberOfVacancies}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData({ numberOfVacancies: e.target.value })}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                updateFormData({ numberOfVacancies: e.target.value })
+              }
             />
-            <InputField
-              label="Reason for Posting Position"
-              placeholder="e.g. New Role"
-              value={formData.reasonForPosting}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData({ reasonForPosting: e.target.value })}
-            />
+            <div>
+              <label className="text-sm font-medium text-gray-700 block mb-1">Reason for Posting Position</label>
+              <Select value={formData.reasonForPosting} onValueChange={handleReasonForPostingChange}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select a reason" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="New position">New position</SelectItem>
+                  <SelectItem value="Replacement">Replacement</SelectItem>
+                  <SelectItem value="Reliver">Reliver</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+              {formData.reasonForPosting === "Other" && (
+                <Input
+                  className="w-full mt-2"
+                  placeholder="Please specify"
+                  value={formData.otherReasonForPosting}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    updateFormData({ otherReasonForPosting: e.target.value })
+                  }
+                />
+              )}
+            </div>
           </div>
         </div>
         {/* Department Information */}
@@ -669,7 +753,9 @@ function Step01({ goToNextStep, step, formData, updateFormData }: Step01Props) {
                   name="businessUnit"
                   value="OODC"
                   checked={formData.businessUnit === "OODC"}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData({ businessUnit: e.target.value })}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    updateFormData({ businessUnit: e.target.value })
+                  }
                 >
                   OODC
                 </CustomRadio>
@@ -677,7 +763,9 @@ function Step01({ goToNextStep, step, formData, updateFormData }: Step01Props) {
                   name="businessUnit"
                   value="OORS"
                   checked={formData.businessUnit === "OORS"}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData({ businessUnit: e.target.value })}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    updateFormData({ businessUnit: e.target.value })
+                  }
                 >
                   OORS
                 </CustomRadio>
@@ -689,7 +777,7 @@ function Step01({ goToNextStep, step, formData, updateFormData }: Step01Props) {
                 value={formData.departmentName}
                 onValueChange={(value: string) => updateFormData({ departmentName: value })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Ex: Information Technology" />
                 </SelectTrigger>
                 <SelectContent>
@@ -701,7 +789,12 @@ function Step01({ goToNextStep, step, formData, updateFormData }: Step01Props) {
             </div>
             <div>
               <label className="text-sm font-medium text-gray-700 block mb-1">Levels of Interview</label>
-              <Input type="number" value={formData.interviewLevels} onChange={handleInterviewLevelChange} />
+              <Input
+                type="number"
+                className="w-full"
+                value={formData.interviewLevels === 0 ? "" : formData.interviewLevels}
+                onChange={handleInterviewLevelChange}
+              />
             </div>
             <div>
               <label className="text-sm font-medium text-gray-700 block mb-1">Immediate Supervisor</label>
@@ -709,7 +802,7 @@ function Step01({ goToNextStep, step, formData, updateFormData }: Step01Props) {
                 value={formData.immediateSupervisor}
                 onValueChange={(value: string) => updateFormData({ immediateSupervisor: value })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Ex: Ms. Hailey Adams" />
                 </SelectTrigger>
                 <SelectContent>
@@ -731,8 +824,8 @@ function Step01({ goToNextStep, step, formData, updateFormData }: Step01Props) {
                   <User2 className="w-4 h-4 text-gray-500" />
                   Hiring Manager {i + 1}
                 </div>
-                <Select onValueChange={(value: string) => console.log(`Hiring Manager ${i + 1}: ${value}`)}> {/* Added onValueChange for Select */}
-                  <SelectTrigger>
+                <Select onValueChange={(value: string) => console.log(`Hiring Manager ${i + 1}: ${value}`)}>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Name" />
                   </SelectTrigger>
                   <SelectContent>
@@ -756,6 +849,14 @@ function Step01({ goToNextStep, step, formData, updateFormData }: Step01Props) {
 }
 
 function Step02({ goToNextStep, goToPreviousStep, step, formData, updateFormData }: NavigationProps) {
+  const handleFromTimeChange = (time: string) => {
+    updateFormData({ workScheduleFrom: time })
+  }
+
+  const handleToTimeChange = (time: string) => {
+    updateFormData({ workScheduleTo: time })
+  }
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
       <div className="lg:col-span-2 space-y-6">
@@ -771,7 +872,9 @@ function Step02({ goToNextStep, goToPreviousStep, step, formData, updateFormData
                   name="contract"
                   value="Probationary"
                   checked={formData.contractType === "Probationary"}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData({ contractType: e.target.value })}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    updateFormData({ contractType: e.target.value })
+                  }
                 >
                   Probationary
                 </CustomRadio>
@@ -779,7 +882,9 @@ function Step02({ goToNextStep, goToPreviousStep, step, formData, updateFormData
                   name="contract"
                   value="Project"
                   checked={formData.contractType === "Project"}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData({ contractType: e.target.value })}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    updateFormData({ contractType: e.target.value })
+                  }
                 >
                   Project
                 </CustomRadio>
@@ -792,7 +897,9 @@ function Step02({ goToNextStep, goToPreviousStep, step, formData, updateFormData
                   name="arrangement"
                   value="Hybrid"
                   checked={formData.workArrangement === "Hybrid"}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData({ workArrangement: e.target.value })}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    updateFormData({ workArrangement: e.target.value })
+                  }
                 >
                   Hybrid
                 </CustomRadio>
@@ -800,7 +907,9 @@ function Step02({ goToNextStep, goToPreviousStep, step, formData, updateFormData
                   name="arrangement"
                   value="Onsite"
                   checked={formData.workArrangement === "Onsite"}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData({ workArrangement: e.target.value })}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    updateFormData({ workArrangement: e.target.value })
+                  }
                 >
                   Onsite
                 </CustomRadio>
@@ -808,7 +917,9 @@ function Step02({ goToNextStep, goToPreviousStep, step, formData, updateFormData
                   name="arrangement"
                   value="Remote"
                   checked={formData.workArrangement === "Remote"}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData({ workArrangement: e.target.value })}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    updateFormData({ workArrangement: e.target.value })
+                  }
                 >
                   Remote
                 </CustomRadio>
@@ -817,20 +928,20 @@ function Step02({ goToNextStep, goToPreviousStep, step, formData, updateFormData
             <div>
               <label className="text-sm font-medium text-gray-700">Category</label>
               <Select value={formData.category} onValueChange={(value: string) => updateFormData({ category: value })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All Job Title" />
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select Category" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Managerial">Managerial</SelectItem>
-                  <SelectItem value="Technical">Technical</SelectItem>
-                  <SelectItem value="Administrative">Administrative</SelectItem>
+                  <SelectItem value="Supervisory">Supervisory</SelectItem>
+                  <SelectItem value="Rank & File">Rank & File</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
               <label className="text-sm font-medium text-gray-700">Position</label>
               <Select value={formData.position} onValueChange={(value: string) => updateFormData({ position: value })}>
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="All Job Title" />
                 </SelectTrigger>
                 <SelectContent>
@@ -846,12 +957,22 @@ function Step02({ goToNextStep, goToPreviousStep, step, formData, updateFormData
               value={formData.workingSite}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData({ workingSite: e.target.value })}
             />
-            <InputField
-              label="Work Schedule"
-              placeholder="8:00 am - 5:00 pm"
-              value={formData.workSchedule}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData({ workSchedule: e.target.value })}
-            />
+            {/* Combined Work Schedule row */}
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-1 block">Work Schedule</label>
+              <div className="flex gap-4">
+                <TimePicker
+                  label="From" // Label for the dialog
+                  currentTime={formData.workScheduleFrom}
+                  onChange={handleFromTimeChange}
+                />
+                <TimePicker
+                  label="To" // Label for the dialog
+                  currentTime={formData.workScheduleTo}
+                  onChange={handleToTimeChange}
+                />
+              </div>
+            </div>
           </div>
         </div>
         <div>
@@ -860,28 +981,30 @@ function Step02({ goToNextStep, goToPreviousStep, step, formData, updateFormData
           </h2>
           <div className="space-y-6">
             {[
-              { key: "jobDescription", label: "Job Description" },
-              { key: "responsibilities", label: "Responsibilities" },
-              { key: "qualifications", label: "Qualifications" },
-              { key: "nonNegotiables", label: "Non Negotiables" },
-            ].map(({ key, label }) => (
+              { key: "jobDescription", label: "Job Description", hasAI: true },
+              { key: "responsibilities", label: "Responsibilities", hasAI: true },
+              { key: "qualifications", label: "Qualifications", hasAI: true },
+              { key: "nonNegotiables", label: "Non Negotiables", hasAI: false },
+            ].map(({ key, label, hasAI }) => (
               <div key={key}>
                 <label className="block text-sm font-semibold mb-1">{label}</label>
                 <div className="relative">
                   <Textarea
                     placeholder="Input text"
-                    className="min-h-[90px] pr-20 resize-none"
-                    value={formData[key as keyof FormData] as string}
+                    className={`min-h-[90px] resize-none w-full ${hasAI ? "pr-20" : ""}`}
+                    value={formData[key as keyof typeof formData] as string}
                     onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => updateFormData({ [key]: e.target.value })}
                   />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="absolute bottom-2 right-2 text-[#8B8B8B] text-sm hover:bg-transparent flex items-center space-x-1"
-                  >
-                    <span>Ask AI</span>
-                    <Wand2 className="w-4 h-4" />
-                  </Button>
+                  {hasAI && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="absolute bottom-2 right-2 text-[#8B8B8B] text-sm hover:bg-transparent flex items-center space-x-1"
+                    >
+                      <span>Ask AI</span>
+                      <Wand2 className="w-4 h-4" />
+                    </Button>
+                  )}
                 </div>
               </div>
             ))}
@@ -891,12 +1014,37 @@ function Step02({ goToNextStep, goToPreviousStep, step, formData, updateFormData
           <h2 className="text-[#0056D2] font-bold text-sm mb-4 border-l-4 border-[#0056D2] pl-2 uppercase">
             Salary Budget
           </h2>
-          <InputField
-            label="Salary Budget"
-            placeholder="₱ 20,000 - 25,000"
-            value={formData.salaryBudget}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData({ salaryBudget: e.target.value })}
-          />
+          <div className="space-y-4">
+            <CustomCheckbox
+              checked={formData.isSalaryRange}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData({ isSalaryRange: e.target.checked })}
+            >
+              Range
+            </CustomCheckbox>
+            {formData.isSalaryRange ? (
+              <div className="grid grid-cols-2 gap-4">
+                <InputField
+                  label="Minimum Amount"
+                  placeholder="₱ 20,000"
+                  value={formData.minSalary}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData({ minSalary: e.target.value })}
+                />
+                <InputField
+                  label="Maximum Amount"
+                  placeholder="₱ 25,000"
+                  value={formData.maxSalary}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData({ maxSalary: e.target.value })}
+                />
+              </div>
+            ) : (
+              <InputField
+                label="Salary Budget"
+                placeholder="₱ 20,000 - 25,000"
+                value={formData.salaryBudget}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData({ salaryBudget: e.target.value })}
+              />
+            )}
+          </div>
         </div>
         <div className="flex justify-between mt-10">
           <Button variant="outline" onClick={goToPreviousStep}>
@@ -913,20 +1061,20 @@ function Step02({ goToNextStep, goToPreviousStep, step, formData, updateFormData
 }
 
 function Step03({ goToNextStep, goToPreviousStep, step, formData, updateFormData }: NavigationProps) {
-  const handleAssessmentTypeChange = (type: string) => {
+  const handleAssessmentTypeChange = (type: keyof AssessmentTypes) => {
     updateFormData({
       assessmentTypes: {
         ...formData.assessmentTypes,
-        [type]: !formData.assessmentTypes[type as keyof typeof formData.assessmentTypes],
+        [type]: !formData.assessmentTypes[type],
       },
     })
   }
 
-  const handleHardwareChange = (hardware: string) => {
+  const handleHardwareChange = (hardware: keyof HardwareRequired) => {
     updateFormData({
       hardwareRequired: {
         ...formData.hardwareRequired,
-        [hardware]: !formData.hardwareRequired[hardware as keyof typeof formData.hardwareRequired],
+        [hardware]: !formData.hardwareRequired[hardware],
       },
     })
   }
@@ -954,7 +1102,9 @@ function Step03({ goToNextStep, goToPreviousStep, step, formData, updateFormData
               name="assessmentRequired"
               value="Yes"
               checked={formData.assessmentRequired === "Yes"}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData({ assessmentRequired: e.target.value })}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                updateFormData({ assessmentRequired: e.target.value })
+              }
             >
               Yes
             </CustomRadio>
@@ -962,7 +1112,9 @@ function Step03({ goToNextStep, goToPreviousStep, step, formData, updateFormData
               name="assessmentRequired"
               value="No"
               checked={formData.assessmentRequired === "No"}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData({ assessmentRequired: e.target.value })}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                updateFormData({ assessmentRequired: e.target.value })
+              }
             >
               No
             </CustomRadio>
@@ -1027,7 +1179,7 @@ function Step03({ goToNextStep, goToPreviousStep, step, formData, updateFormData
               type="text"
               value={formData.otherAssessment}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData({ otherAssessment: e.target.value })}
-              className="max-w-xs px-3 py-1.5 border border-gray-300 rounded text-sm text-gray-700 bg-white placeholder:text-gray-400"
+              className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm text-gray-700 bg-white placeholder:text-gray-400"
               placeholder="Psychological Test"
             />
           </div>
@@ -1131,11 +1283,11 @@ function Step03({ goToNextStep, goToPreviousStep, step, formData, updateFormData
   )
 }
 
-function Step04({ goToPreviousStep, step, formData }: Step04Props) {
+function Step04({ goToPreviousStep, step, formData, handleSubmit }: Step04Props) {
   // Get selected assessment types
   const selectedAssessments = Object.entries(formData.assessmentTypes)
-    .filter(([_, selected]) => selected)
-    .map(([type, _]) => {
+    .filter(([, selected]) => selected)
+    .map(([type]) => {
       const typeMap: { [key: string]: string } = {
         technical: "Technical Test",
         language: "Language Proficiency Test",
@@ -1149,13 +1301,22 @@ function Step04({ goToPreviousStep, step, formData }: Step04Props) {
 
   // Get selected hardware
   const selectedHardware = Object.entries(formData.hardwareRequired)
-    .filter(([_, selected]) => selected)
-    .map(([hardware, _]) => hardware.charAt(0).toUpperCase() + hardware.slice(1))
+    .filter(([, selected]) => selected)
+    .map(([hardware]) => hardware.charAt(0).toUpperCase() + hardware.slice(1))
 
   // Get selected software
   const selectedSoftware = Object.entries(formData.softwareRequired)
-    .filter(([_, selected]) => selected)
-    .map(([software, _]) => software)
+    .filter(([, selected]) => selected)
+    .map(([software]) => software)
+
+  const displaySalary = formData.isSalaryRange
+    ? `${formData.minSalary || "N/A"} - ${formData.maxSalary || "N/A"}`
+    : formData.salaryBudget || "Not specified"
+
+  const displayWorkSchedule =
+    formData.workScheduleFrom && formData.workScheduleTo
+      ? `${formData.workScheduleFrom} - ${formData.workScheduleTo}`
+      : "Not specified"
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6 text-gray-800">
@@ -1183,7 +1344,11 @@ function Step04({ goToPreviousStep, step, formData }: Step04Props) {
               </div>
               <div>
                 <p className="text-xs text-gray-500 mb-1">Reason for Posting Position</p>
-                <p className="text-sm text-gray-800">{formData.reasonForPosting || "Not specified"}</p>
+                <p className="text-sm text-gray-800">
+                  {formData.reasonForPosting === "Other"
+                    ? formData.otherReasonForPosting
+                    : formData.reasonForPosting || "Not specified"}
+                </p>
               </div>
             </div>
           </div>
@@ -1239,7 +1404,7 @@ function Step04({ goToPreviousStep, step, formData }: Step04Props) {
               </div>
               <div>
                 <p className="text-xs text-gray-500 mb-1">Working Schedule</p>
-                <p className="text-sm text-gray-800">{formData.workSchedule || "Not specified"}</p>
+                <p className="text-sm text-gray-800">{displayWorkSchedule}</p>
               </div>
             </div>
           </div>
@@ -1314,7 +1479,7 @@ function Step04({ goToPreviousStep, step, formData }: Step04Props) {
             <h2 className="text-[#0056D2] font-bold text-sm border-l-4 border-[#0056D2] pl-2 uppercase">
               SALARY BUDGET
             </h2>
-            <p className="font-semibold text-gray-800">{formData.salaryBudget || "Not specified"}</p>
+            <p className="font-semibold text-gray-800">{displaySalary}</p>
           </div>
         </div>
         {/* BUTTONS */}
@@ -1322,7 +1487,9 @@ function Step04({ goToPreviousStep, step, formData }: Step04Props) {
           <Button variant="outline" onClick={goToPreviousStep}>
             &larr; Previous
           </Button>
-          <Button className="bg-[#0056D2] hover:bg-blue-700 text-white">Submit</Button>
+          <Button className="bg-[#0056D2] hover:bg-blue-700 text-white" onClick={handleSubmit}>
+            Submit
+          </Button>
         </div>
       </div>
       {/* Right Content (Preview) */}
@@ -1330,5 +1497,236 @@ function Step04({ goToPreviousStep, step, formData }: Step04Props) {
         <PreviewInfo step={step} formData={formData} />
       </div>
     </div>
+  )
+}
+
+export default function PRF() {
+  const navigate = useNavigate()
+  const [step, setStep] = useState(1)
+  const [formData, setFormData] = useState<FormData>({
+    // Step 1 - Position Information
+    jobTitle: "",
+    targetStartDate: "",
+    numberOfVacancies: "",
+    reasonForPosting: "",
+    otherReasonForPosting: "",
+
+    // Step 1 - Department Information
+    businessUnit: "",
+    departmentName: "",
+    interviewLevels: 4,
+    immediateSupervisor: "",
+
+    // Step 2 - Job Details
+    contractType: "",
+    workArrangement: "",
+    category: "",
+    position: "",
+    workingSite: "",
+    workScheduleFrom: "", // Initialize new field
+    workScheduleTo: "", // Initialize new field
+
+    // Step 2 - Job Description
+    jobDescription: "",
+    responsibilities: "",
+    qualifications: "",
+    nonNegotiables: "",
+    salaryBudget: "",
+    isSalaryRange: false,
+    minSalary: "",
+    maxSalary: "",
+
+    // Step 3 - Assessments
+    assessmentRequired: "Yes",
+    assessmentTypes: {
+      technical: true,
+      language: true,
+      cognitive: false,
+      personality: true,
+      behavioral: false,
+      cultural: false,
+    },
+    otherAssessment: "Psychological Test",
+    hardwareRequired: {
+      desktop: false,
+      handset: false,
+      headset: true,
+      laptop: true,
+    },
+    softwareRequired: {
+      "Adobe Photoshop": true,
+      "Google Chrome": false,
+      "MS Teams": false,
+      "Open VPN": false,
+      WinRAR: false,
+      ZOHO: false,
+      Email: false,
+      "Microsoft Office": true,
+      "Nitro Pro 8 PDF": false,
+      Viber: true,
+      Xlite: false,
+      Zoom: false,
+    },
+  })
+  const [maxStepVisited, setMaxStepVisited] = useState(1)
+  const [showCancelConfirmDialog, setShowCancelConfirmDialog] = useState(false)
+  const [showSubmitConfirmDialog, setShowSubmitConfirmDialog] = useState(false)
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false) // New state for custom popup
+
+  useEffect(() => {
+    document.title = "Personnel Requisition Form"
+  }, [])
+
+  const goToNextStep = () => {
+    setStep((prev) => {
+      const nextStep = Math.min(prev + 1, 4)
+      setMaxStepVisited((currentMax) => Math.max(currentMax, nextStep))
+      return nextStep
+    })
+  }
+  const goToPreviousStep = () => setStep((prev) => Math.max(prev - 1, 1))
+
+  const updateFormData = (updates: Partial<FormData>) => {
+    setFormData((prev) => ({ ...prev, ...updates }))
+  }
+
+  const handleCancelRequest = () => {
+    setShowCancelConfirmDialog(true)
+  }
+
+  const handleConfirmCancel = () => {
+    setShowCancelConfirmDialog(false)
+    navigate("/requests")
+  }
+
+  const handleSaveAsDraft = () => {
+    console.log("Saving form data as draft:", formData)
+    setShowCancelConfirmDialog(false)
+    navigate("/requests")
+  }
+
+  const handleSubmit = () => {
+    setShowSubmitConfirmDialog(true)
+  }
+
+  const handleConfirmSubmit = () => {
+    setShowSubmitConfirmDialog(false)
+    console.log("Submitting form data:", formData)
+
+    // Show custom success popup
+    setShowSuccessPopup(true)
+
+    // Hide popup and navigate after a delay
+    setTimeout(() => {
+      setShowSuccessPopup(false)
+      navigate("/requests")
+    }, 1500)
+  }
+
+  return (
+    <>
+      <Navbar />
+      {showSuccessPopup && (
+        <div className="fixed top-0 left-0 right-0 bg-green-500 text-white text-center py-3 z-50 transition-all duration-300 ease-in-out">
+          Request Sent! Your request has been sent successfully.
+        </div>
+      )}
+      <div className="min-h-screen bg-white p-6 pt-[100px]">
+        <div className="mx-auto max-w-7xl space-y-4">
+          <h1 className="text-lg font-bold text-gray-800 mb-6">Personnel Requisition Form</h1>
+          <div className="flex justify-between items-center mb-4">
+            <a href="#" className="text-[#0056D2] text-sm hover:underline" onClick={handleCancelRequest}>
+              &larr; Cancel Request
+            </a>
+          </div>
+          <div className="flex space-x-0 border border-gray-300 rounded-md overflow-hidden mb-8">
+            {["Step 01", "Step 02", "Step 03", "Step 04"].map((label, i) => (
+              <div
+                key={i}
+                className={`flex-1 text-center py-2 text-sm font-semibold relative ${
+                  i + 1 === step ? "bg-[#0056D2] text-white" : "bg-white text-gray-500"
+                } ${i + 1 <= maxStepVisited && i + 1 !== step ? "cursor-pointer hover:bg-gray-100" : ""}`}
+                onClick={() => {
+                  if (i + 1 <= maxStepVisited && i + 1 !== step) {
+                    setStep(i + 1)
+                  }
+                }}
+              >
+                {label}
+                {i < 3 && <span className="absolute right-0 top-0 h-full w-px bg-gray-300" />}
+              </div>
+            ))}
+          </div>
+
+          {step === 1 && (
+            <Step01 goToNextStep={goToNextStep} step={step} formData={formData} updateFormData={updateFormData} />
+          )}
+          {step === 2 && (
+            <Step02
+              goToNextStep={goToNextStep}
+              goToPreviousStep={goToPreviousStep}
+              step={step}
+              formData={formData}
+              updateFormData={updateFormData}
+            />
+          )}
+          {step === 3 && (
+            <Step03
+              goToNextStep={goToNextStep}
+              goToPreviousStep={goToPreviousStep}
+              step={step}
+              formData={formData}
+              updateFormData={updateFormData}
+            />
+          )}
+          {step === 4 && (
+            <Step04 goToPreviousStep={goToPreviousStep} step={step} formData={formData} handleSubmit={handleSubmit} />
+          )}
+        </div>
+      </div>
+
+      {/* Cancel Confirmation Dialog */}
+      <Dialog open={showCancelConfirmDialog} onOpenChange={setShowCancelConfirmDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-medium text-gray-800">Cancel Request</DialogTitle>
+            <DialogDescription className="text-sm text-gray-600">
+              Do you want to cancel the request form for this position?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4 flex justify-end gap-2">
+            <Button variant="outline" onClick={handleSaveAsDraft}>
+              Save as Draft
+            </Button>
+            <Button variant="outline" onClick={() => setShowCancelConfirmDialog(false)}>
+              No
+            </Button>
+            <Button variant="destructive" onClick={handleConfirmCancel}>
+              Yes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Submit Confirmation Dialog */}
+      <Dialog open={showSubmitConfirmDialog} onOpenChange={setShowSubmitConfirmDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-medium text-gray-800">Submit Request</DialogTitle>
+            <DialogDescription className="text-sm text-gray-600">
+              Are you sure you want to submit this request?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4 flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setShowSubmitConfirmDialog(false)}>
+              No, Go Back
+            </Button>
+            <Button className="bg-[#0056D2] hover:bg-blue-700 text-white" onClick={handleConfirmSubmit}>
+              Submit
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
