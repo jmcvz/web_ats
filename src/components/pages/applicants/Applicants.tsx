@@ -42,7 +42,8 @@ export default function Applicants() {
         <div className="max-w-7xl mx-auto -space-y-2">
 
             <h1 className="text-3xl font-bold text-gray-800">Applicants</h1>
-          <div className="flex justify-end">
+            <p className="text-lg text-gray-700 mt-5">Stores candidate details and tracks their application progress.</p>
+            <div className="flex justify-end">
               <button
                 
                 className="text-sm text-blue-500 hover:underline cursor-pointer pb-2"
@@ -77,7 +78,7 @@ export default function Applicants() {
       </div>
 
       {/* Main Content (with top padding to offset fixed header) */}
-      <div className="min-h-screen bg-gray-50 px-6 pt-[220px] pb-[80px]">
+      <div className="min-h-screen bg-gray-50 px-6 pt-[270px] pb-[80px]">
         <div className="mx-auto max-w-7xl w-full">
           <div className="overflow-x-auto rounded-lg border bg-white">
             <table className="w-full text-sm text-left"> {/* Changed min-w-full to w-full here */}

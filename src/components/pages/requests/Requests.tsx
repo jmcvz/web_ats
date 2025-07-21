@@ -323,7 +323,7 @@ export default function Requests() {
           <div className="max-w-7xl mx-auto space-y-3">
             {/* Title */}
             <h1 className="text-3xl font-bold text-gray-800">Request</h1>
-
+            <p className="text-lg text-gray-700">Handles hiring requests and approvals.</p>
             {/* Filters */}
             <div className="flex flex-wrap justify-between items-center gap-4">
               <Input
@@ -382,7 +382,7 @@ export default function Requests() {
         </div>
 
         {/* Main content section */}
-        <main className="flex-grow px-6 pt-[120px] pb-[80px] max-w-7xl mx-auto w-full"> {/* Adjusted pt for main content */}
+        <main className="flex-grow px-6 pt-[150px] pb-[80px] max-w-7xl mx-auto w-full"> {/* Adjusted pt for main content */}
           <h4 className="text-2xl font-bold mb-4">Requested Positions</h4> {/* Moved here */}
           {/* Select All Row */}
           <div className="flex justify-between items-center pb-2">
