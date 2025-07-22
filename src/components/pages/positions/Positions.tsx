@@ -855,7 +855,7 @@ export default function Positions() {
         <div className="fixed top-[64px] left-0 right-0 z-20 bg-gray-50 border-b border-gray-200 shadow-sm px-6 pt-4 pb-3">
           <div className="max-w-7xl mx-auto space-y-3"> {/* Adjusted space-y */}
             <h1 className="text-3xl font-bold text-gray-800">Positions</h1>
-
+            <p className="text-lg text-gray-700">Manages job openings and related information.</p>
             {/* Filters */}
             <div className="flex flex-wrap justify-between items-center gap-4"> {/* Changed gap to gap-4 */}
               <Input
@@ -936,7 +936,7 @@ export default function Positions() {
         </div>
 
         {/* Main content section */}
-        <main className="flex-grow px-6 pt-[120px] pb-[80px] max-w-7xl mx-auto w-full"> {/* Adjusted pt for main content */}
+        <main className="flex-grow px-6 pt-[150px] pb-[80px] max-w-7xl mx-auto w-full"> {/* Adjusted pt for main content */}
           {/* Select All Row */}
           <div className="flex justify-between items-center pb-2">
             <div className="flex items-center gap-4">
