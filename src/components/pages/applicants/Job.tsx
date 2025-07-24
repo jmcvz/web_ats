@@ -144,13 +144,13 @@ export default function JobDetails() {
     <>
       <Navbar />
 
-      <div className="flex flex-col min-h-screen pt-[100px] bg-gray-50">
+      <div className="flex flex-col min-h-screen pt-[150px] bg-gray-50">
         {/* Fixed top filter/search section */}
         <div className="fixed top-[64px] left-0 right-0 z-20 bg-gray-50 border-b border-gray-200 shadow-sm px-6 pt-4 pb-3">
           <div className="max-w-7xl mx-auto -space-y-2">
 
             <h1 className="text-3xl font-bold text-gray-800">Applicants</h1>
-
+            <p className="text-lg text-gray-700 mt-5">Stores candidate details and tracks their application progress.</p>
             {selectedJobTitle && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                 <p className="text-sm text-blue-700">
