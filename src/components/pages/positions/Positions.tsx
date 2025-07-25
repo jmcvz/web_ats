@@ -937,8 +937,51 @@ export default function Positions() {
 
         {/* Main content section */}
         <main className="flex-grow px-6 pt-[150px] pb-[80px] max-w-7xl mx-auto w-full"> {/* Adjusted pt for main content */}
-          {/* Select All Row */}
-          <div className="flex justify-between items-center pb-2">
+          
+          {/* Tabs Row */}
+          <div className="flex items-center pb-2"> {/* Changed pb-4 to pb-2 */}
+            <Tabs value={currentTab} onValueChange={handleTabChange} className="w-auto">
+              <TabsList className="flex gap-4 bg-transparent border-b-0">
+                {["drafts", "on-hold", "published", "closed", "archive", "deleted"].map((tab) => (
+                  <TabsTrigger
+                    key={tab}
+                    value={tab}
+                    className="relative px-2 pb-2 text-sm font-medium text-gray-500 data-[state=active]:text-blue-600"
+                  >
+                    {tab.charAt(0).toUpperCase() + tab.slice(1).replace("-", " ")}
+                    <span className="absolute left-0 -bottom-0.5 w-full h-0.5 bg-blue-600 scale-x-0 data-[state=active]:scale-x-100 transition-transform origin-left" />
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
+          </div>
+
+          {/* Published Subtabs (moved here) */}
+          {currentTab === "published" && (
+            <div className="flex items-center pb-2"> {/* New div for spacing */}
+              <Tabs
+                value={publishedSubTab}
+                onValueChange={(value) => setPublishedSubTab(value as "all" | "Internal" | "External")}
+                className="w-auto"
+              >
+                <TabsList className="flex gap-4 bg-transparent border-b-0 ml-4">
+                  {["all", "Internal", "External"].map((subtab) => (
+                    <TabsTrigger
+                      key={subtab}
+                      value={subtab}
+                      className="relative px-2 pb-2 text-xs font-medium text-gray-400 data-[state=active]:text-blue-500"
+                    >
+                      {subtab.charAt(0).toUpperCase() + subtab.slice(1)}
+                      <span className="absolute left-0 -bottom-0.5 w-full h-0.5 bg-blue-500 scale-x-0 data-[state=active]:scale-x-100 transition-transform origin-left" />
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
+            </div>
+          )}
+
+          {/* Select All Row and Action Buttons */}
+          <div className="flex justify-between items-center pb-2"> {/* This is now a separate flex row */}
             <div className="flex items-center gap-4">
               <label className="flex items-center gap-2 text-sm text-gray-700 font-medium cursor-pointer">
                 <input
@@ -950,10 +993,10 @@ export default function Positions() {
                 Select All
               </label>
             </div>
-            {/* Action Icons - appear when items are selected, aligned with tabs */}
+            {/* Action Icons - appear when items are selected, aligned to the right */}
             {selected.length > 0 && (
               <TooltipProvider>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2"> {/* Removed ml-auto here, justify-between on parent handles it */}
                   {(currentTab === "drafts" || currentTab === "closed" || currentTab === "archive") && (
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -1080,48 +1123,6 @@ export default function Positions() {
                 </div>
               </TooltipProvider>
             )}
-          </div>
-
-          {/* Tabs Row */}
-          <div className="flex justify-between items-center border-b pb-4">
-            <div className="flex flex-col gap-4">
-              <Tabs value={currentTab} onValueChange={handleTabChange} className="w-auto">
-                <TabsList className="flex gap-4 bg-transparent border-b-0">
-                  {["drafts", "on-hold", "published", "closed", "archive", "deleted"].map((tab) => (
-                    <TabsTrigger
-                      key={tab}
-                      value={tab}
-                      className="relative px-2 pb-2 text-sm font-medium text-gray-500 data-[state=active]:text-blue-600"
-                    >
-                      {tab.charAt(0).toUpperCase() + tab.slice(1).replace("-", " ")}
-                      <span className="absolute left-0 -bottom-0.5 w-full h-0.5 bg-blue-600 scale-x-0 data-[state=active]:scale-x-100 transition-transform origin-left" />
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-              </Tabs>
-
-              {/* Published Subtabs */}
-              {currentTab === "published" && (
-                <Tabs
-                  value={publishedSubTab}
-                  onValueChange={(value) => setPublishedSubTab(value as "all" | "Internal" | "External")}
-                  className="w-auto"
-                >
-                  <TabsList className="flex gap-4 bg-transparent border-b-0 ml-4">
-                    {["all", "Internal", "External"].map((subtab) => (
-                      <TabsTrigger
-                        key={subtab}
-                        value={subtab}
-                        className="relative px-2 pb-2 text-xs font-medium text-gray-400 data-[state=active]:text-blue-500"
-                      >
-                        {subtab.charAt(0).toUpperCase() + subtab.slice(1)}
-                        <span className="absolute left-0 -bottom-0.5 w-full h-0.5 bg-blue-500 scale-x-0 data-[state=active]:scale-x-100 transition-transform origin-left" />
-                      </TabsTrigger>
-                    ))}
-                  </TabsList>
-                </Tabs>
-              )}
-            </div>
           </div>
 
           {/* Postings */}

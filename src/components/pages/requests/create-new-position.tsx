@@ -21,8 +21,8 @@ import {
   List,
   Link,
   AlignLeft,
-  AlignCenter, // Import AlignCenter for the button
-  AlignRight, // Import AlignRight for the button
+  AlignCenter,
+  AlignRight,
   Phone,
   FileText,
   Users,
@@ -32,10 +32,10 @@ import {
   Search,
   Clock,
   Move,
-  Mail, // Added for email icon
-  Linkedin, // Added for LinkedIn icon
-  Cake, // Added for birthday icon
-  Upload, // Added for upload icon
+  Mail,
+  Linkedin,
+  Cake,
+  Upload,
   Check,
   MoreHorizontal,
   AlertCircle
@@ -80,8 +80,8 @@ interface TeamMember {
   id: number
   name: string
   position: string
-  department: string // Added department field
-  process: string // This will be the process type from the step
+  department: string
+  process: string
 }
 
 interface Assessment {
@@ -95,13 +95,13 @@ interface Assessment {
   timeLimit?: string
 }
 
-// Updated Question Interface to include nonNegotiableOptions and parameter changes
+
 interface Question {
   id: number
   question: string
   description: string
-  type: string // "Multiple Choice", "Checkboxes", "Text Entry", "Paragraph"
-  mode: string // "Non-negotiable", "Parameter", "Optional"
+  type: string
+  mode: string
   options: string[] // For Multiple Choice and Checkboxes
   // New: For Parameter mode
   scorePerOption?: Array<{ option: string; score: number }> // For Multiple Choice/Checkboxes
@@ -5815,7 +5815,7 @@ export default function CreateNewPosition() {
               <Button
                 onClick={() => {
                   setShowPoolApplicantsPopup(false);
-                  setShowSuccessPage(true); // Navigate to success page
+                  setShowSuccessPage(true); //
                 }}
                 variant="ghost"
                 className="px-4 py-2 text-blue-600 hover:bg-blue-50"

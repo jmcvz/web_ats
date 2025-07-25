@@ -229,7 +229,7 @@ export default function Applicants() {
           size="sm"
           className="w-full sm:w-auto"
           style={{ backgroundColor: "#0056D2", color: "white" }}
-          onClick={() => navigate("/job/applicants/pool")}
+          onClick={() => navigate("/job/list/applicants/pool")}
         >
           Pool Applicant
         </Button>
